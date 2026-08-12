@@ -72,7 +72,7 @@ export const DARK_THEMES: ThemePreset[] = [
     label: "Mocha",
     hint: "Rich dark coffee mocha",
     mode: "dark",
-    swatch: ["#0f0705", "#1c0d08", "#8e5b44"],
+    swatch: ["#0f0705", "#130905ff", "#5e3d2eff"],
   },
 
   {
