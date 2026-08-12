@@ -48,6 +48,7 @@ export function GlobalSearch({
   const { library } = useLibrary();
   const { notes } = useNotes();
 
+  const q = query.toLowerCase().trim();
   const cleanQ = q.replace(/^#/, "").trim();
 
   const inLibrary = useMemo(
