@@ -120,8 +120,8 @@ function LibraryPage() {
         </div>
 
         {allTags.length ? (
-          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="font-medium text-foreground">Tags:</span>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin text-xs text-muted-foreground">
+            <span className="shrink-0 font-medium text-foreground">Tags:</span>
             {allTags.map((t) => (
               <button
                 key={t}
@@ -133,7 +133,7 @@ function LibraryPage() {
                   )
                 }
                 className={cn(
-                  "rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
+                  "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
                   query.toLowerCase().replace(/^#/, "") === t.toLowerCase()
                     ? "border-primary bg-primary/10 font-medium text-primary"
                     : "border-border hover:border-primary hover:text-foreground",
@@ -145,13 +145,13 @@ function LibraryPage() {
           </div>
         ) : null}
 
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
           {(["ALL", ...STATUS_ORDER] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatus(s)}
               className={cn(
-                "rounded-full border px-3 py-1 text-xs transition-colors",
+                "shrink-0 rounded-full border px-3 py-1 text-xs transition-colors whitespace-nowrap",
                 status === s
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border text-muted-foreground hover:text-foreground",

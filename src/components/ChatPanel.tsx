@@ -25,7 +25,8 @@ type Msg = ChatTurn & { sources?: { title: string; uri: string }[] };
 
 const BASE_SYSTEM =
   "You are Koka, a calm and knowledgeable anime assistant inside a personal anime dashboard. " +
-  "Answer in clean, compact markdown. Be direct and avoid filler.";
+  "Answer in clean, compact markdown. Be direct and avoid filler. " +
+  "When mentioning or recommending any specific title from the user's list or context, format it as a markdown link using its internal URL e.g. [Title Name](/anime/ID).";
 
 export function ChatPanel({
   title = "Ask Koka AI",
@@ -151,8 +152,8 @@ export function ChatPanel({
       <div
         ref={scroller}
         className={cn(
-          "mt-3 flex-1 space-y-3 overflow-y-auto",
-          compact ? "max-h-[320px]" : "max-h-[460px]",
+          "mt-3 flex-1 space-y-3 overflow-y-auto scrollbar-thin transition-all duration-200",
+          compact ? "max-h-[320px] min-h-[120px]" : "max-h-[460px] min-h-[160px]",
           messages.length ? "border-t border-border pt-3" : "",
         )}
       >

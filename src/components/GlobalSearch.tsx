@@ -48,35 +48,43 @@ export function GlobalSearch({
   const { library } = useLibrary();
   const { notes } = useNotes();
 
-  const q = query.toLowerCase().trim();
+  const cleanQ = q.replace(/^#/, "").trim();
 
   const inLibrary = useMemo(
     () =>
-      q
+      cleanQ
         ? library
-            .filter((e) => e.media.title.toLowerCase().includes(q))
-            .slice(0, 8)
+            .filter((e) => {
+              const titleMatch = e.media.title.toLowerCase().includes(cleanQ);
+              const tagMatch = e.tags?.some((t) => t.toLowerCase().includes(cleanQ));
+              const customListMatch = e.customLists?.some((c) =>
+                c.toLowerCase().includes(cleanQ),
+              );
+              return titleMatch || tagMatch || customListMatch;
+            })
+            .slice(0, 10)
         : library.slice(0, 5),
-    [library, q],
+    [library, cleanQ],
   );
 
   const noteHits = useMemo(
     () =>
-      q
+      cleanQ
         ? notes
             .filter(
               (n) =>
-                n.title.toLowerCase().includes(q) ||
-                n.body.toLowerCase().includes(q),
+                n.title.toLowerCase().includes(cleanQ) ||
+                n.body.toLowerCase().includes(cleanQ) ||
+                n.tags?.some((t) => t.toLowerCase().includes(cleanQ)),
             )
             .slice(0, 5)
         : [],
-    [notes, q],
+    [notes, cleanQ],
   );
 
   const pageHits = useMemo(
-    () => PAGES.filter((p) => !q || p.label.toLowerCase().includes(q)),
-    [q],
+    () => PAGES.filter((p) => !cleanQ || p.label.toLowerCase().includes(cleanQ)),
+    [cleanQ],
   );
 
   const { data: remote = [], isFetching } = useQuery({
@@ -97,7 +105,7 @@ export function GlobalSearch({
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder={`Search ${mode === "MANGA" ? "manga" : "anime"}, notes or pages…`}
+        placeholder={`Search ${mode === "MANGA" ? "manga" : "anime"}, tags (#ecchi), custom lists or notes…`}
         value={query}
         onValueChange={setQuery}
       />
@@ -107,20 +115,29 @@ export function GlobalSearch({
         </CommandEmpty>
 
         {inLibrary.length ? (
-          <CommandGroup heading={q ? "In your library" : "Recently updated"}>
-            {inLibrary.map((e) => (
-              <CommandItem
-                key={`lib-${e.media.id}`}
-                value={`${e.media.title} lib-${e.media.id}`}
-                onSelect={() => go("/anime/$id", { id: String(e.media.id) })}
-              >
-                <span className="truncate">{e.media.title}</span>
-                <span className="ml-auto text-[11px] text-muted-foreground">
-                  {statusLabel(e.status, mode)}
-                  {e.score ? ` · ${e.score}/10` : ""}
-                </span>
-              </CommandItem>
-            ))}
+          <CommandGroup heading={cleanQ ? "In your library" : "Recently updated"}>
+            {inLibrary.map((e) => {
+              const tagsStr = e.tags?.length ? ` #${e.tags.join(" #")}` : "";
+              const listsStr = e.customLists?.length ? ` ${e.customLists.join(" ")}` : "";
+              return (
+                <CommandItem
+                  key={`lib-${e.media.id}`}
+                  value={`${e.media.title}${tagsStr}${listsStr} lib-${e.media.id}`}
+                  onSelect={() => go("/anime/$id", { id: String(e.media.id) })}
+                >
+                  <span className="truncate">{e.media.title}</span>
+                  {e.tags?.length ? (
+                    <span className="ml-2 truncate text-[10px] text-primary/80">
+                      #{e.tags[0]}
+                    </span>
+                  ) : null}
+                  <span className="ml-auto text-[11px] text-muted-foreground">
+                    {statusLabel(e.status, mode)}
+                    {e.score ? ` · ${e.score}/10` : ""}
+                  </span>
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
         ) : null}
 
@@ -129,7 +146,7 @@ export function GlobalSearch({
             {noteHits.map((n) => (
               <CommandItem
                 key={`note-${n.animeId}`}
-                value={`${n.title} ${n.body.slice(0, 60)} note-${n.animeId}`}
+                value={`${n.title} ${n.body.slice(0, 60)} ${(n.tags ?? []).join(" ")} note-${n.animeId}`}
                 onSelect={() => go("/anime/$id", { id: String(n.animeId) })}
               >
                 <span className="truncate">{n.title}</span>

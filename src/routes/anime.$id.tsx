@@ -360,6 +360,15 @@ function AnimeDetail() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <AiPanel
+          title="Where was I? (AI Story Recap)"
+          description={`Spoiler-free recap strictly up to your progress (${progress}/${total ?? "?"} ${copy.unit}).`}
+          label="Generate Recap"
+          spoilerFree
+          prompt={() =>
+            `The user is currently at ${copy.noun} progress ${progress}/${total ?? "?"} ${copy.unit} for "${media.title}". Provide a concise 3-4 sentence story recap of key events that occurred up to ${copy.unit} ${progress}. CRITICAL: Do NOT spoil anything beyond ${copy.unit} ${progress}. Keep it clean and spoiler-free.`
+          }
+        />
+        <AiPanel
           title="Spoiler-free plot summary"
           description="Premise, tone and setting only — no characters, no twists."
           label="Summarise"
