@@ -7,7 +7,7 @@ import { AiPanel } from "@/components/AiPanel";
 import { ChatPanel } from "@/components/ChatPanel";
 import { NoteEditor } from "@/components/NoteEditor";
 import { fetchByIds } from "@/lib/anilist";
-import { useLibrary, useMediaMode } from "@/lib/store";
+import { useLibrary, useMediaMode, useNotes } from "@/lib/store";
 import {
   MODE_COPY,
   STATUS_ORDER,
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/anime/$id")({
       {
         name: "description",
         content:
-          "Track progress, write markdown notes and generate spoiler-free AI summaries and news for a single anime or manga.",
+          "Track progress, update scores, write notes and ask AI about this title.",
       },
       { property: "og:title", content: "Title details — Koka" },
       {
@@ -43,6 +43,8 @@ function AnimeDetail() {
   const { mode } = useMediaMode();
   const copy = MODE_COPY[mode];
   const { library, upsert, patch, remove } = useLibrary();
+  const { notes } = useNotes();
+  const note = notes.find((n) => n.animeId === animeId);
   const entry = library.find((e) => e.media.id === animeId);
 
   const { data, isLoading } = useQuery({

@@ -70,9 +70,9 @@ export const DARK_THEMES: ThemePreset[] = [
   {
     id: "sumi",
     label: "Mocha",
-    hint: "Dark roasted espresso mocha",
+    hint: "Rich dark coffee mocha",
     mode: "dark",
-    swatch: ["#140a07", "#24120c", "#e2cfc4"],
+    swatch: ["#0f0705", "#1c0d08", "#8e5b44"],
   },
 
   {
