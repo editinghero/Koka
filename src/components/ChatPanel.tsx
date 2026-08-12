@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
 import {
   Loader2,
+  NotebookPen,
   Send,
   ShieldCheck,
   ShieldOff,
@@ -32,6 +32,7 @@ export function ChatPanel({
   title = "Ask Koka AI",
   description,
   context,
+  notesContext,
   suggestions = [],
   defaultSpoilerFree = true,
   className,
@@ -42,6 +43,8 @@ export function ChatPanel({
   description?: string;
   /** Extra grounding context injected into the system prompt. */
   context?: string | undefined;
+  /** User's personal notes for this specific title. */
+  notesContext?: string | undefined;
   suggestions?: string[];
   defaultSpoilerFree?: boolean;
   className?: string;
@@ -57,6 +60,7 @@ export function ChatPanel({
   const [error, setError] = useState<string | null>(null);
   const [spoilerFree, setSpoilerFree] = useState(defaultSpoilerFree);
   const [search, setSearch] = useState(false);
+  const [includeNotes, setIncludeNotes] = useState(Boolean(notesContext));
   const scroller = useRef<HTMLDivElement>(null);
 
   // Sync message state changes to local storage
@@ -90,6 +94,9 @@ export function ChatPanel({
       const system = [
         BASE_SYSTEM,
         context ? `Context about the user:\n${context}` : "",
+        includeNotes && notesContext
+          ? `User's personal notes for this title:\n${notesContext}`
+          : "",
         spoilerFree
           ? SPOILER_FREE_SYSTEM
           : "Spoilers are allowed — the user asked for full detail.",
@@ -125,7 +132,15 @@ export function ChatPanel({
             </p>
           ) : null}
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {notesContext ? (
+            <Toggle
+              active={includeNotes}
+              onClick={() => setIncludeNotes((n) => !n)}
+              label={includeNotes ? "Notes on" : "Notes off"}
+              icon={NotebookPen}
+            />
+          ) : null}
           <Toggle
             active={spoilerFree}
             onClick={() => setSpoilerFree((s) => !s)}

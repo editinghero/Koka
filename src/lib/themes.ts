@@ -62,17 +62,17 @@ export const DARK_THEMES: ThemePreset[] = [
   },
   {
     id: "midnight",
-    label: "Midnight",
-    hint: "Deep navy blue",
+    label: "Warm Gold",
+    hint: "Warm golden monochrome",
     mode: "dark",
-    swatch: ["#0f1420", "#171d2c", "#7aa2f7"],
+    swatch: ["#141311", "#1e1c18", "#e6c887"],
   },
   {
     id: "sumi",
     label: "Mocha",
-    hint: "Soft mocha latte",
+    hint: "Deep roasted mocha",
     mode: "dark",
-    swatch: ["#2b241d", "#342c25", "#dba76c"],
+    swatch: ["#1b0e0a", "#2e1610", "#e2cfc4"],
   },
 
   {

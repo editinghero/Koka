@@ -341,8 +341,9 @@ function AnimeDetail() {
         <ChatPanel
           animeId={media.id}
           title={`Ask about ${media.title}`}
-          description="Toggle spoilers on when you want the full picture."
+          description="Toggle spoilers on when you want the full picture, or toggle notes to include your personal notes."
           compact
+          notesContext={note?.body}
           context={`The user is asking about the ${copy.noun} "${media.title}"${
             media.seasonYear ? ` (${media.season} ${media.seasonYear})` : ""
           }. Genres: ${media.genres?.join(", ") || "unknown"}. Their progress: ${progress}/${
