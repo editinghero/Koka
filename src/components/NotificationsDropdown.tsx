@@ -7,6 +7,7 @@ import {
   ExternalLink,
   RefreshCw,
   Sparkles,
+  Trash2,
   Volume2,
   X,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 const READ_NOTIFS_KEY = "koka_read_notif_keys";
+const DISMISSED_NOTIFS_KEY = "koka_dismissed_notif_keys";
 
 export function formatAiringTime(airingAtSeconds: number): {
   timeStr: string;
@@ -118,6 +120,37 @@ export function NotificationsDropdown() {
     }
   }, [readKeys]);
 
+  // Dismissed notification keys e.g. ["123:5"]
+  const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = localStorage.getItem(DISMISSED_NOTIFS_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return new Set(parsed);
+      }
+    } catch {
+      /* ignore */
+    }
+    return new Set();
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(
+        DISMISSED_NOTIFS_KEY,
+        JSON.stringify(Array.from(dismissedKeys)),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [dismissedKeys]);
+
+  const dismissItem = useCallback((key: string) => {
+    setDismissedKeys((prev) => new Set([...prev, key]));
+  }, []);
+
   // Live refresh airing schedule timestamps directly from AniList GraphQL
   const refreshSchedules = useCallback(async () => {
     const animeEntries = library.filter(
@@ -185,14 +218,16 @@ export function NotificationsDropdown() {
       const airingAt = entry.media.nextEpisode?.airingAt;
       if (airingAt) {
         const diffSec = airingAt - nowSec;
+        const ep = entry.media.nextEpisode.episode;
+        const key = `${entry.media.id}:${ep}`;
+        if (dismissedKeys.has(key)) return;
         // Include only if episode is airing within 14 days (or already past/airing today)
         if (diffSec <= fourteenDaysSec) {
           const { timeStr, countdownStr, isWithin3Hours, isPast } =
             formatAiringTime(airingAt);
-          const ep = entry.media.nextEpisode.episode;
           items.push({
             id: entry.media.id,
-            key: `${entry.media.id}:${ep}`,
+            key,
             entry,
             episode: ep,
             airingAt,
@@ -206,7 +241,15 @@ export function NotificationsDropdown() {
     });
 
     return items.sort((a, b) => a.airingAt - b.airingAt);
-  }, [library]);
+  }, [library, dismissedKeys]);
+
+  const clearReadNotifs = useCallback(() => {
+    const toDismiss = airingItems.filter((i) => readKeys.has(i.key)).map((i) => i.key);
+    if (toDismiss.length) {
+      setDismissedKeys((prev) => new Set([...prev, ...toDismiss]));
+      toast.success("Cleared read notifications");
+    }
+  }, [airingItems, readKeys]);
 
   const unreadCount = useMemo(() => {
     return airingItems.filter((x) => !readKeys.has(x.key)).length;
@@ -346,6 +389,14 @@ export function NotificationsDropdown() {
                 ) : null}
                 <button
                   type="button"
+                  onClick={clearReadNotifs}
+                  className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+                  title="Clear all read notifications"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
                   className="p-1 text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -404,18 +455,31 @@ export function NotificationsDropdown() {
                         className="h-12 w-9 rounded-md object-cover"
                       />
                       <div className="min-w-0 flex-1">
-                        <Link
-                          to="/anime/$id"
-                          params={{ id: String(item.id) }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleRead(item.key);
-                            setIsOpen(false);
-                          }}
-                          className="line-clamp-1 text-xs font-semibold hover:text-primary"
-                        >
-                          {item.entry.media.title}
-                        </Link>
+                        <div className="flex items-start justify-between gap-1">
+                          <Link
+                            to="/anime/$id"
+                            params={{ id: String(item.id) }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRead(item.key);
+                              setIsOpen(false);
+                            }}
+                            className="line-clamp-1 text-xs font-semibold hover:text-primary"
+                          >
+                            {item.entry.media.title}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              dismissItem(item.key);
+                            }}
+                            className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-70 hover:opacity-100"
+                            title="Dismiss notification"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                         <p className="mt-0.5 text-[11px] text-muted-foreground">
                           Episode {item.episode} · {item.timeStr}
                         </p>

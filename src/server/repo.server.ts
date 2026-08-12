@@ -126,6 +126,7 @@ const SCHEMA = [
      completed_at TEXT,
      repeat_count INTEGER,
      tags TEXT NOT NULL DEFAULT '[]',
+     custom_lists TEXT NOT NULL DEFAULT '[]',
      media TEXT NOT NULL,
      updated_at INTEGER NOT NULL,
      added_at INTEGER NOT NULL,
@@ -160,6 +161,15 @@ async function ensureSchema(db: D1Database) {
     await db
       .prepare(
         "ALTER TABLE library_entries ADD COLUMN tags TEXT NOT NULL DEFAULT '[]'",
+      )
+      .run();
+  } catch {
+    /* column already exists */
+  }
+  try {
+    await db
+      .prepare(
+        "ALTER TABLE library_entries ADD COLUMN custom_lists TEXT NOT NULL DEFAULT '[]'",
       )
       .run();
   } catch {
@@ -268,6 +278,7 @@ function d1Repo(db: D1Database): Repo {
         completedAt: (r["completed_at"] as string | null) ?? null,
         repeat: r["repeat_count"] === null ? null : Number(r["repeat_count"]),
         tags: normalizeTags(JSON.parse(String(r["tags"] ?? "[]")) as string[]),
+        customLists: normalizeTags(JSON.parse(String(r["custom_lists"] ?? "[]")) as string[]),
         updatedAt: Number(r["updated_at"] ?? Date.now()),
         addedAt: Number(r["added_at"] ?? Date.now()),
       }));
@@ -277,13 +288,13 @@ function d1Repo(db: D1Database): Repo {
       for (const e of entries) {
         await db
           .prepare(
-            `INSERT INTO library_entries (user_id, media_type, media_id, status, progress, score, favorite, started_at, completed_at, repeat_count, tags, media, updated_at, added_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `INSERT INTO library_entries (user_id, media_type, media_id, status, progress, score, favorite, started_at, completed_at, repeat_count, tags, custom_lists, media, updated_at, added_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(user_id, media_type, media_id) DO UPDATE SET
                status = excluded.status, progress = excluded.progress, score = excluded.score,
                favorite = excluded.favorite, started_at = excluded.started_at,
                completed_at = excluded.completed_at, repeat_count = excluded.repeat_count,
-               tags = excluded.tags,
+               tags = excluded.tags, custom_lists = excluded.custom_lists,
                media = excluded.media, updated_at = excluded.updated_at`,
           )
           .bind(
@@ -298,6 +309,7 @@ function d1Repo(db: D1Database): Repo {
             e.completedAt ?? null,
             e.repeat ?? null,
             JSON.stringify(normalizeTags(e.tags)),
+            JSON.stringify(normalizeTags(e.customLists)),
             JSON.stringify(e.media),
             e.updatedAt ?? Date.now(),
             e.addedAt ?? Date.now(),

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ExternalLink, Eye, EyeOff, Lock, LogOut, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ExternalLink, Eye, EyeOff, Lock, LogOut, Tag, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import {
   clearCache,
@@ -16,7 +16,7 @@ import {
   updateProfileName,
 } from "@/lib/auth.functions";
 import { clearPin, hasPin, lockNow, setPin } from "@/lib/pin";
-import { GEMINI_MODELS } from "@/lib/types";
+import { GEMINI_MODELS, normalizeTags } from "@/lib/types";
 import { DARK_THEMES, LIGHT_THEMES, type ThemePreset } from "@/lib/themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -216,6 +216,7 @@ function SettingsPage() {
         </section>
 
         <AccountSection />
+        <TagManagerSection />
         <PinSection />
 
         <section className="panel p-5">
@@ -467,6 +468,172 @@ function PinSection() {
             Set PIN
           </Button>
         </div>
+      )}
+    </section>
+  );
+}
+
+function TagManagerSection() {
+  const { library, patch } = useLibrary();
+  const { notes, saveNote } = useNotes();
+  const [editingTag, setEditingTag] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+
+  const tagCounts = useMemo(() => {
+    const map = new Map<string, { libraryCount: number; notesCount: number }>();
+
+    library.forEach((entry) => {
+      entry.tags?.forEach((t) => {
+        const clean = t.trim().toLowerCase();
+        if (!clean) return;
+        const current = map.get(clean) ?? { libraryCount: 0, notesCount: 0 };
+        current.libraryCount++;
+        map.set(clean, current);
+      });
+    });
+
+    notes.forEach((note) => {
+      note.tags?.forEach((t) => {
+        const clean = t.trim().toLowerCase();
+        if (!clean) return;
+        const current = map.get(clean) ?? { libraryCount: 0, notesCount: 0 };
+        current.notesCount++;
+        map.set(clean, current);
+      });
+    });
+
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+  }, [library, notes]);
+
+  const deleteTagGlobally = (targetTag: string) => {
+    const cleanTarget = targetTag.trim().toLowerCase();
+    library.forEach((entry) => {
+      if (entry.tags?.some((t) => t.trim().toLowerCase() === cleanTarget)) {
+        const nextTags = entry.tags.filter(
+          (t) => t.trim().toLowerCase() !== cleanTarget,
+        );
+        patch(entry.media.id, { tags: nextTags });
+      }
+    });
+
+    notes.forEach((note) => {
+      if (note.tags?.some((t) => t.trim().toLowerCase() === cleanTarget)) {
+        const nextTags = note.tags.filter(
+          (t) => t.trim().toLowerCase() !== cleanTarget,
+        );
+        saveNote({ ...note, tags: nextTags });
+      }
+    });
+    toast.success(`Tag "#${cleanTarget}" deleted globally`);
+  };
+
+  const renameTagGlobally = (oldTag: string, newTag: string) => {
+    const cleanOld = oldTag.trim().toLowerCase();
+    const cleanNew = newTag.trim().toLowerCase();
+    if (!cleanNew || cleanOld === cleanNew) {
+      setEditingTag(null);
+      return;
+    }
+
+    library.forEach((entry) => {
+      if (entry.tags?.some((t) => t.trim().toLowerCase() === cleanOld)) {
+        const nextTags = normalizeTags([
+          ...entry.tags.filter((t) => t.trim().toLowerCase() !== cleanOld),
+          cleanNew,
+        ]);
+        patch(entry.media.id, { tags: nextTags });
+      }
+    });
+
+    notes.forEach((note) => {
+      if (note.tags?.some((t) => t.trim().toLowerCase() === cleanOld)) {
+        const nextTags = normalizeTags([
+          ...note.tags.filter((t) => t.trim().toLowerCase() !== cleanOld),
+          cleanNew,
+        ]);
+        saveNote({ ...note, tags: nextTags });
+      }
+    });
+
+    toast.success(`Tag "#${cleanOld}" renamed to "#${cleanNew}"`);
+    setEditingTag(null);
+    setRenameValue("");
+  };
+
+  return (
+    <section className="panel p-5">
+      <h2 className="font-display text-sm font-semibold">Tag Manager</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Manage all custom tags across your library and notes. Renaming or deleting a tag updates all matching titles and notes globally.
+      </p>
+
+      {tagCounts.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {tagCounts.map(([tagName, counts]) => {
+            const isEditing = editingTag === tagName;
+            const total = counts.libraryCount + counts.notesCount;
+
+            if (isEditing) {
+              return (
+                <div key={tagName} className="flex items-center gap-1">
+                  <Input
+                    autoFocus
+                    value={renameValue}
+                    onChange={(e) => setRenameValue(e.target.value)}
+                    className="h-7 w-28 text-xs"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") renameTagGlobally(tagName, renameValue);
+                      if (e.key === "Escape") setEditingTag(null);
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => renameTagGlobally(tagName, renameValue)}
+                  >
+                    Save
+                  </Button>
+                </div>
+              );
+            }
+
+            return (
+              <div
+                key={tagName}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs"
+              >
+                <span className="font-medium text-foreground">#{tagName}</span>
+                <span className="rounded-full bg-secondary px-1.5 py-0.2 text-[10px] text-muted-foreground">
+                  {total}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingTag(tagName);
+                    setRenameValue(tagName);
+                  }}
+                  className="text-muted-foreground hover:text-primary transition-colors text-[11px]"
+                  title="Rename tag"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteTagGlobally(tagName)}
+                  className="text-muted-foreground hover:text-destructive transition-colors text-[11px]"
+                  title="Delete tag globally"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-muted-foreground">
+          No custom tags created yet. Add custom tags on any anime detail page or inside your notes.
+        </p>
       )}
     </section>
   );

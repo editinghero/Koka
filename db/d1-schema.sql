@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS library_entries (
   completed_at TEXT,
   repeat_count INTEGER,
   tags        TEXT    NOT NULL DEFAULT '[]',   -- JSON array
+  custom_lists TEXT   NOT NULL DEFAULT '[]',   -- JSON array
   media       TEXT    NOT NULL,     -- JSON snapshot of the AniList media
   updated_at   INTEGER NOT NULL,
   added_at     INTEGER NOT NULL,

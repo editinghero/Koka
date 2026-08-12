@@ -121,6 +121,8 @@ export type LibraryEntry = {
   repeat?: number | null;
   /** Custom user tags e.g. ["ecchi", "fav", "must-watch"] */
   tags?: string[];
+  /** Custom lists e.g. ["calm"] */
+  customLists?: string[];
   updatedAt: number;
   addedAt: number;
 };

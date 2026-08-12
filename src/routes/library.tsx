@@ -40,12 +40,21 @@ function LibraryPage() {
   const { library } = useLibrary();
   const [status, setStatus] = useState<WatchStatus | "ALL">("ALL");
   const [genre, setGenre] = useState("ALL");
+  const [customList, setCustomList] = useState("ALL");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("updated");
 
   const genres = useMemo(() => {
     const set = new Set<string>();
     library.forEach((e) => e.media.genres?.forEach((g) => set.add(g)));
+    return [...set].sort();
+  }, [library]);
+
+  const customLists = useMemo(() => {
+    const set = new Set<string>();
+    library.forEach((e) =>
+      e.customLists?.forEach((c) => set.add(c.trim().toLowerCase())),
+    );
     return [...set].sort();
   }, [library]);
 
@@ -62,6 +71,13 @@ function LibraryPage() {
     return library
       .filter((e) => status === "ALL" || e.status === status)
       .filter((e) => genre === "ALL" || e.media.genres?.includes(genre))
+      .filter(
+        (e) =>
+          customList === "ALL" ||
+          e.customLists?.some(
+            (c) => c.trim().toLowerCase() === customList.trim().toLowerCase(),
+          ),
+      )
       .filter((e) => {
         if (!q) return true;
         const titleMatch = e.media.title.toLowerCase().includes(q);
@@ -72,7 +88,10 @@ function LibraryPage() {
           s.toLowerCase().includes(q),
         );
         const tagMatch = e.tags?.some((t) => t.toLowerCase().includes(q));
-        return titleMatch || genreMatch || studioMatch || tagMatch;
+        const customListMatch = e.customLists?.some((c) =>
+          c.toLowerCase().includes(q),
+        );
+        return titleMatch || genreMatch || studioMatch || tagMatch || customListMatch;
       })
       .sort((a, b) => {
         if (sort === "title") return a.media.title.localeCompare(b.media.title);
@@ -80,7 +99,7 @@ function LibraryPage() {
         if (sort === "progress") return b.progress - a.progress;
         return b.updatedAt - a.updatedAt;
       });
-  }, [library, status, genre, query, sort]);
+  }, [library, status, genre, customList, query, sort]);
 
   return (
     <>
@@ -156,6 +175,20 @@ function LibraryPage() {
               </option>
             ))}
           </select>
+          {customLists.length > 0 ? (
+            <select
+              value={customList}
+              onChange={(e) => setCustomList(e.target.value)}
+              className="rounded-lg border border-border bg-surface px-2.5 py-1.5 capitalize"
+            >
+              <option value="ALL">All custom lists</option>
+              {customLists.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          ) : null}
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}

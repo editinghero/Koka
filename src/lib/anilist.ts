@@ -278,6 +278,8 @@ export async function fetchUserList(
   const data = await anilist<{
     MediaListCollection: {
       lists: {
+        name: string;
+        isCustomList?: boolean;
         entries: {
           status: WatchStatus;
           progress: number;
@@ -294,7 +296,7 @@ export async function fetchUserList(
   }>(
     `query ($user: String, $type: MediaType) {
       MediaListCollection(userName: $user, type: $type) {
-        lists { entries {
+        lists { name isCustomList entries {
           status progress score(format: POINT_10_DECIMAL) repeat notes updatedAt
           startedAt { year month day }
           completedAt { year month day }
@@ -305,24 +307,36 @@ export async function fetchUserList(
     { user: username, type },
   );
   const now = Date.now();
-  const entries: LibraryEntry[] = [];
+  const entriesMap = new Map<number, LibraryEntry>();
   const notes: Note[] = [];
 
   for (const list of data.MediaListCollection.lists) {
+    const listNameLower = list.name.trim().toLowerCase();
+    const isCustom = Boolean(list.isCustomList);
+
     for (const e of list.entries) {
       const media = normalizeMedia(e.media);
-      entries.push({
+      const existing = entriesMap.get(media.id);
+      const customLists = isCustom
+        ? Array.from(new Set([...(existing?.customLists ?? []), listNameLower]))
+        : existing?.customLists ?? [];
+
+      const entry: LibraryEntry = {
         media,
-        status: e.status,
-        progress: e.progress ?? 0,
-        score: Number(e.score) || null,
-        repeat: e.repeat ?? null,
-        startedAt: fuzzyToIso(e.startedAt),
-        completedAt: fuzzyToIso(e.completedAt),
+        status: e.status ?? existing?.status ?? "PLANNING",
+        progress: e.progress ?? existing?.progress ?? 0,
+        score: Number(e.score) || existing?.score || null,
+        repeat: e.repeat ?? existing?.repeat ?? null,
+        startedAt: fuzzyToIso(e.startedAt) ?? existing?.startedAt ?? null,
+        completedAt: fuzzyToIso(e.completedAt) ?? existing?.completedAt ?? null,
+        customLists,
         updatedAt: e.updatedAt ? e.updatedAt * 1000 : now,
-        addedAt: now,
-      });
-      if (e.notes?.trim()) {
+        addedAt: existing?.addedAt ?? now,
+      };
+
+      entriesMap.set(media.id, entry);
+
+      if (e.notes?.trim() && !notes.some((n) => n.animeId === media.id)) {
         notes.push({
           animeId: media.id,
           mediaType: media.type ?? "ANIME",
@@ -334,7 +348,8 @@ export async function fetchUserList(
       }
     }
   }
-  return { entries, notes };
+
+  return { entries: Array.from(entriesMap.values()), notes };
 }
 
 export function currentSeason(date = new Date()) {
