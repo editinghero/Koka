@@ -106,37 +106,93 @@ export async function anilist<T>(
   return json.data as T;
 }
 
+export type DiscoverParams = {
+  type?: MediaType;
+  season?: string | null;
+  seasonYear?: number | null;
+  sort?: string;
+  genre?: string | null;
+  isAdult?: boolean;
+  page?: number;
+};
+
+export async function fetchDiscover(params: DiscoverParams = {}): Promise<AnimeMedia[]> {
+  const {
+    type = "ANIME",
+    season,
+    seasonYear,
+    sort = "POPULARITY_DESC",
+    genre,
+    isAdult = false,
+    page = 1,
+  } = params;
+
+  const isAdultFlag = isAdult || genre === "Hentai" || genre === "Adult (18+)";
+  const genreParam =
+    genre === "Adult (18+)" || genre === "Hentai"
+      ? "Hentai"
+      : genre && genre !== "ALL"
+        ? genre
+        : undefined;
+
+  const variables: Record<string, unknown> = {
+    type,
+    sort: [sort],
+    isAdult: isAdultFlag,
+    page,
+  };
+  if (season && seasonYear) {
+    variables.season = season;
+    variables.seasonYear = seasonYear;
+  }
+  if (genreParam) {
+    variables.genre = genreParam;
+  }
+
+  const query = `query ($type: MediaType, $sort: [MediaSort], $genre: String, $season: MediaSeason, $seasonYear: Int, $isAdult: Boolean, $page: Int) {
+    Page(page: $page, perPage: 40) {
+      media(type: $type, sort: $sort, genre: $genre, season: $season, seasonYear: $seasonYear, isAdult: $isAdult) { ${MEDIA_FIELDS} }
+    }
+  }`;
+
+  const data = await anilist<{ Page: { media: RawMedia[] } }>(query, variables);
+  return data.Page.media.map(normalizeMedia);
+}
+
 export async function fetchSeason(
   season: string,
   seasonYear: number,
   page = 1,
+  sort = "POPULARITY_DESC",
+  genre?: string | null,
+  isAdult = false,
 ): Promise<AnimeMedia[]> {
-  const data = await anilist<{ Page: { media: RawMedia[] } }>(
-    `query ($season: MediaSeason, $seasonYear: Int, $page: Int) {
-      Page(page: $page, perPage: 40) {
-        media(season: $season, seasonYear: $seasonYear, type: ANIME, sort: POPULARITY_DESC, isAdult: false) { ${MEDIA_FIELDS} }
-      }
-    }`,
-    { season, seasonYear, page },
-  );
-  return data.Page.media.map(normalizeMedia);
+  return fetchDiscover({
+    type: "ANIME",
+    season,
+    seasonYear,
+    sort,
+    genre,
+    isAdult,
+    page,
+  });
 }
 
-/** Trending/popular list — used for the manga side, which has no seasons. */
+/** Trending/popular list — used for browse / discover with genre and adult support. */
 export async function fetchTrending(
   type: MediaType = "MANGA",
-  sort: "TRENDING_DESC" | "POPULARITY_DESC" | "SCORE_DESC" = "TRENDING_DESC",
+  sort: string = "TRENDING_DESC",
   page = 1,
+  genre?: string | null,
+  isAdult = false,
 ): Promise<AnimeMedia[]> {
-  const data = await anilist<{ Page: { media: RawMedia[] } }>(
-    `query ($type: MediaType, $sort: [MediaSort], $page: Int) {
-      Page(page: $page, perPage: 40) {
-        media(type: $type, sort: $sort, isAdult: false) { ${MEDIA_FIELDS} }
-      }
-    }`,
-    { type, sort, page },
-  );
-  return data.Page.media.map(normalizeMedia);
+  return fetchDiscover({
+    type,
+    sort,
+    genre,
+    isAdult,
+    page,
+  });
 }
 
 export async function searchAnime(

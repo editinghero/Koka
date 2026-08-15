@@ -397,18 +397,20 @@ function AnimeDetail() {
               : "Order, adaptations, filler and where the season ends."
           }
           label="Build guide"
+          search
           prompt={() =>
             mode === "MANGA"
-              ? `Create a spoiler-free reading guide for the manga "${media.title}": recommended reading order including spin-offs, arc/volume structure, where any anime adaptation stops, and total reading commitment. Markdown table where useful. No plot spoilers or character details.`
-              : `Create a spoiler-free watch guide for "${media.title}": recommended watch order across seasons/movies/OVAs, source-material mapping (volumes/chapters covered), any filler to skip, and total runtime. Markdown table where useful. No plot spoilers or character details.`
+              ? `Create an accurate, spoiler-free reading guide for the manga "${media.title}" (${media.volumes ? `${media.volumes} volumes` : ""}, ${media.chapters ? `${media.chapters} chapters` : ""}, status: ${media.airingStatus ?? "unknown"}). Search and verify real-world publication history. Include recommended reading order, canon spin-offs (if any), arc/volume milestones, and where any anime adaptation begins or ends. Markdown table where helpful. Do not hallucinate non-existent sequels. No plot spoilers.`
+              : `Create an accurate, spoiler-free watch guide for the anime "${media.title}" (Format: ${media.format ?? "TV"}, Episodes: ${total ?? "unknown"}, Release Year: ${media.seasonYear ?? "unknown"}, Status: ${media.airingStatus ?? "unknown"}). CRITICAL: Search and verify the exact real-world franchise history. If this title has only 1 season or is standalone, state clearly that it is a single-season / standalone release and do NOT fabricate extra seasons. If multiple seasons, movies, or OVAs officially exist, provide the chronological vs release watch order, filler episodes to skip, and source material continuation. Markdown table where helpful. No plot spoilers.`
           }
         />
         <AiPanel
           title="Similar titles"
-          description={`What to ${copy.verb} if you liked this.`}
+          description={`What to ${copy.verb} if you liked this (from across all anime & web).`}
           label="Find similar"
+          search
           prompt={() =>
-            `Recommend 5 ${copy.nounPlural} similar in tone and themes to "${media.title}" (genres: ${media.genres?.join(", ")}). One line each explaining the overlap. Spoiler-free, no character details.`
+            `Recommend 5 standout ${copy.nounPlural} from across the entire anime/manga universe and web (explore beyond any specific list — include both well-known classics and hidden gems) that share similar themes, tone, vibe, or plot premise with "${media.title}" (genres: ${media.genres?.join(", ") || "unknown"}). For each recommendation, provide the title in bold (e.g. **Title**) and a 1-2 sentence spoiler-free explanation of why fans of "${media.title}" will enjoy it.`
           }
         />
       </div>

@@ -27,7 +27,8 @@ type Msg = ChatTurn & { sources?: { title: string; uri: string }[] };
 const BASE_SYSTEM =
   "You are Koka, a calm and knowledgeable anime assistant inside a personal anime dashboard. " +
   "Answer in clean, compact markdown. Be direct and avoid filler. " +
-  "When mentioning or recommending any specific title from the user's list or context, format it as a markdown link using its internal URL e.g. [Title Name](/anime/ID).";
+  "When referencing any specific anime/manga title from the user's library or given context that has a known numeric ID, format it as [Title Name](/anime/ID). " +
+  "When recommending or discussing titles from the wider medium or web whose numeric ID is not known, write the title in bold (e.g. **Title Name**) or with an AniList link if known, and do NOT use placeholder IDs like /anime/ID.";
 
 export function ChatPanel({
   title = "Ask Koka AI",
@@ -53,9 +54,8 @@ export function ChatPanel({
   /** Optional animeId for per-anime title chat persistence */
   animeId?: number;
 }) {
-  const [messages, setMessages] = useState<Msg[]>(() => {
-    return animeId ? getAnimeChatHistory(animeId) : getGlobalChatHistory();
-  });
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [hydrated, setHydrated] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,14 +64,22 @@ export function ChatPanel({
   const [includeNotes, setIncludeNotes] = useState(Boolean(notesContext));
   const scroller = useRef<HTMLDivElement>(null);
 
-  // Sync message state changes to local storage
+  // Load chat history from localStorage after client hydration or when animeId changes
   useEffect(() => {
+    const initial = animeId ? getAnimeChatHistory(animeId) : getGlobalChatHistory();
+    setMessages(initial as Msg[]);
+    setHydrated(true);
+  }, [animeId]);
+
+  // Sync message state changes to local storage only after initial hydration
+  useEffect(() => {
+    if (!hydrated) return;
     if (animeId) {
-      saveAnimeChatHistory(animeId, messages);
+      saveAnimeChatHistory(animeId, messages as any);
     } else {
-      saveGlobalChatHistory(messages);
+      saveGlobalChatHistory(messages as any);
     }
-  }, [messages, animeId]);
+  }, [messages, animeId, hydrated]);
 
   function handleClear() {
     setMessages([]);
