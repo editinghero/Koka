@@ -244,7 +244,9 @@ export function NotificationsDropdown() {
   }, [library, dismissedKeys]);
 
   const clearReadNotifs = useCallback(() => {
-    const toDismiss = airingItems.filter((i) => readKeys.has(i.key)).map((i) => i.key);
+    const toDismiss = airingItems
+      .filter((i) => readKeys.has(i.key))
+      .map((i) => i.key);
     if (toDismiss.length) {
       setDismissedKeys((prev) => new Set([...prev, ...toDismiss]));
       toast.success("Cleared read notifications");

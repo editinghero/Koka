@@ -121,7 +121,9 @@ function SeasonsPage() {
             : isSeasonalActive
               ? `Seasonal anime chart for ${season.toLowerCase()} ${year}.`
               : `Explore ${genre === "ALL" ? "all anime" : genre} sorted by ${
-                  DISCOVER_SORTS.find((s) => s.value === sort)?.label.toLowerCase() ?? ""
+                  DISCOVER_SORTS.find(
+                    (s) => s.value === sort,
+                  )?.label.toLowerCase() ?? ""
                 }.`
         }
         action={
@@ -340,7 +342,9 @@ function SeasonsPage() {
               `Write a calm, spoiler-free markdown briefing for this curated list of ${
                 isManga ? "manga" : "anime"
               } (${genre === "ALL" ? "all genres" : `genre: ${genre}`}, sorted by ${
-                DISCOVER_SORTS.find((s) => s.value === sort)?.label.toLowerCase() ?? "popularity"
+                DISCOVER_SORTS.find(
+                  (s) => s.value === sort,
+                )?.label.toLowerCase() ?? "popularity"
               }). Highlight standout premises, tone, art style, and what kind of audience each is for. No character spoilers or twists.\n\nTitles: ${data
                 .slice(0, 25)
                 .map((m) => m.title)

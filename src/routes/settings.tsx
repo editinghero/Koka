@@ -1,6 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink, Eye, EyeOff, Lock, LogOut, Tag, Trash2 } from "lucide-react";
+import {
+  ExternalLink,
+  Eye,
+  EyeOff,
+  Lock,
+  LogOut,
+  Tag,
+  Trash2,
+} from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import {
   clearCache,
@@ -564,7 +572,8 @@ function TagManagerSection() {
     <section className="panel p-5">
       <h2 className="font-display text-sm font-semibold">Tag Manager</h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        Manage all custom tags across your library and notes. Renaming or deleting a tag updates all matching titles and notes globally.
+        Manage all custom tags across your library and notes. Renaming or
+        deleting a tag updates all matching titles and notes globally.
       </p>
 
       {tagCounts.length > 0 ? (
@@ -582,7 +591,8 @@ function TagManagerSection() {
                     onChange={(e) => setRenameValue(e.target.value)}
                     className="h-7 w-28 text-xs"
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") renameTagGlobally(tagName, renameValue);
+                      if (e.key === "Enter")
+                        renameTagGlobally(tagName, renameValue);
                       if (e.key === "Escape") setEditingTag(null);
                     }}
                   />
@@ -632,7 +642,8 @@ function TagManagerSection() {
         </div>
       ) : (
         <p className="mt-3 text-xs text-muted-foreground">
-          No custom tags created yet. Add custom tags on any anime detail page or inside your notes.
+          No custom tags created yet. Add custom tags on any anime detail page
+          or inside your notes.
         </p>
       )}
     </section>

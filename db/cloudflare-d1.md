@@ -36,16 +36,17 @@ npx wrangler deploy
 
 ## Table map
 
-| Table             | Holds                                                                       |
-| ----------------- | --------------------------------------------------------------------------- |
-| `users`           | id, email, name, PBKDF2 password hash                                         |
-| `settings`        | encrypted Gemini key, model, AniList username, spoiler mode, themes, media mode |
+| Table             | Holds                                                                                     |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `users`           | id, email, name, PBKDF2 password hash                                                     |
+| `settings`        | encrypted Gemini key, model, AniList username, spoiler mode, themes, media mode           |
 | `library_entries` | status, progress, decimal score, favourite, start/finish dates, rewatches, media snapshot |
-| `notes`           | markdown body, title, tags per title (anime and manga kept apart)             |
-| `import_log`      | source, merge/replace, count for the Import activity feed                     |
+| `notes`           | markdown body, title, tags per title (anime and manga kept apart)                         |
+| `import_log`      | source, merge/replace, count for the Import activity feed                                 |
 
 Every key includes `media_type`, so an anime and a manga with the same AniList
 id never collide.
+
 ## Security notes
 
 - Passwords: PBKDF2-SHA256, 100 000 iterations, per-user random salt.

@@ -9,8 +9,14 @@ function extractText(children: React.ReactNode): string {
   if (!children) return "";
   if (typeof children === "string") return children;
   if (Array.isArray(children)) return children.map(extractText).join("");
-  if (typeof children === "object" && children !== null && "props" in children) {
-    return extractText((children as { props: { children?: React.ReactNode } }).props.children);
+  if (
+    typeof children === "object" &&
+    children !== null &&
+    "props" in children
+  ) {
+    return extractText(
+      (children as { props: { children?: React.ReactNode } }).props.children,
+    );
   }
   return String(children);
 }
@@ -49,7 +55,10 @@ function hasLinkChild(children: React.ReactNode): boolean {
   if (!children) return false;
   if (Array.isArray(children)) return children.some(hasLinkChild);
   if (typeof children === "object" && children !== null && "type" in children) {
-    const el = children as { type?: unknown; props?: { href?: string; children?: React.ReactNode } };
+    const el = children as {
+      type?: unknown;
+      props?: { href?: string; children?: React.ReactNode };
+    };
     if (el.type === "a" || el.props?.href) return true;
     if (el.props?.children) return hasLinkChild(el.props.children);
   }
@@ -64,14 +73,22 @@ export function Markdown({ children }: { children: string }) {
         components={{
           strong: ({ children }) => {
             const titleText = extractText(children).trim();
-            const cleanTitle = titleText.replace(/^[:\s\-—]+|[:\s\-—]+$/g, "").replace(/^["'#]+|["'#]+$/g, "");
-            const isLabel = /^(note|summary|premise|themes|tone|overview|score|genre|status|format|warning|important|tip|caution|disclaimer|option \d+|season \d+|episodes?|chapters?):?$/i.test(cleanTitle);
+            const cleanTitle = titleText
+              .replace(/^[:\s\-—]+|[:\s\-—]+$/g, "")
+              .replace(/^["'#]+|["'#]+$/g, "");
+            const isLabel =
+              /^(note|summary|premise|themes|tone|overview|score|genre|status|format|warning|important|tip|caution|disclaimer|option \d+|season \d+|episodes?|chapters?):?$/i.test(
+                cleanTitle,
+              );
             const containsLink = hasLinkChild(children);
 
             return (
               <strong className="font-semibold text-foreground inline-flex items-center gap-0.5 flex-wrap">
                 <span>{children}</span>
-                {!containsLink && !isLabel && cleanTitle.length >= 2 && cleanTitle.length <= 90 ? (
+                {!containsLink &&
+                !isLabel &&
+                cleanTitle.length >= 2 &&
+                cleanTitle.length <= 90 ? (
                   <CopyAnimeButton text={cleanTitle} />
                 ) : null}
               </strong>
