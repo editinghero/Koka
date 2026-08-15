@@ -88,7 +88,9 @@ function LibraryListRow({
   const media = entry.media;
   const total = totalUnits(media);
   const unit = mediaTypeOf(media) === "MANGA" ? "ch" : "eps";
-  const pct = total ? Math.min(100, Math.round((entry.progress / total) * 100)) : 0;
+  const pct = total
+    ? Math.min(100, Math.round((entry.progress / total) * 100))
+    : 0;
 
   return (
     <div className="panel flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 transition-all duration-200 hover:border-primary/40 min-w-0 overflow-hidden">
@@ -99,7 +101,10 @@ function LibraryListRow({
           params={{ id: String(media.id) }}
           className="shrink-0 block overflow-hidden rounded"
         >
-          <Cover media={media} className="h-14 w-10 sm:h-16 sm:w-12 rounded object-cover" />
+          <Cover
+            media={media}
+            className="h-14 w-10 sm:h-16 sm:w-12 rounded object-cover"
+          />
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -125,7 +130,9 @@ function LibraryListRow({
           <p className="text-[11px] text-muted-foreground truncate mt-0.5">
             {[
               media.format ?? (unit === "ch" ? "MANGA" : "TV"),
-              media.seasonYear ? `${media.season ?? ""} ${media.seasonYear}` : null,
+              media.seasonYear
+                ? `${media.season ?? ""} ${media.seasonYear}`
+                : null,
               total ? `${total} ${copy.unitShort}` : null,
               media.studios?.[0],
             ]
@@ -167,7 +174,8 @@ function LibraryListRow({
 
             {media.nextEpisode ? (
               <span className="text-[10px] text-primary font-medium whitespace-nowrap">
-                EP{media.nextEpisode.episode} in {countdown(media.nextEpisode.airingAt)}
+                EP{media.nextEpisode.episode} in{" "}
+                {countdown(media.nextEpisode.airingAt)}
               </span>
             ) : null}
           </div>
@@ -225,7 +233,9 @@ function LibraryListRow({
               placeholder="—"
               onChange={(e) => {
                 const v = e.target.value;
-                onScoreChange(v === "" ? null : Math.min(10, Math.max(0, Number(v))));
+                onScoreChange(
+                  v === "" ? null : Math.min(10, Math.max(0, Number(v))),
+                );
               }}
               className="w-8 bg-transparent text-center font-medium focus:outline-none text-xs"
               title="Your Score"
@@ -336,7 +346,9 @@ function LibraryPage() {
         const customListMatch = e.customLists?.some((c) =>
           c.toLowerCase().includes(q),
         );
-        return titleMatch || genreMatch || studioMatch || tagMatch || customListMatch;
+        return (
+          titleMatch || genreMatch || studioMatch || tagMatch || customListMatch
+        );
       })
       .sort((a, b) => {
         if (sort === "title") return a.media.title.localeCompare(b.media.title);

@@ -184,6 +184,7 @@ function InsightsPage() {
         <ChatPanel
           title="Ask about your taste"
           description="A free-form chat that knows your ratings and backlog."
+          allowNoteFetching
           context={`Rated titles: ${profile || "none"}. Planned backlog: ${backlog || "empty"}.`}
           suggestions={[
             "What genres am I avoiding?",

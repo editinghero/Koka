@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Loader2,
   NotebookPen,
@@ -17,6 +17,7 @@ import {
   clearAnimeChatHistory,
   clearGlobalChatHistory,
 } from "@/lib/chat-storage";
+import { useNotes } from "@/lib/store";
 import { Markdown } from "./Markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ export function ChatPanel({
   className,
   compact = false,
   animeId,
+  allowNoteFetching = false,
 }: {
   title?: string;
   description?: string;
@@ -53,6 +55,8 @@ export function ChatPanel({
   compact?: boolean;
   /** Optional animeId for per-anime title chat persistence */
   animeId?: number;
+  /** If true, the AI can call the getAnimeNote tool to fetch arbitrary notes from the user's library. */
+  allowNoteFetching?: boolean;
 }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -63,10 +67,13 @@ export function ChatPanel({
   const [search, setSearch] = useState(false);
   const [includeNotes, setIncludeNotes] = useState(Boolean(notesContext));
   const scroller = useRef<HTMLDivElement>(null);
+  const { notes } = useNotes();
 
   // Load chat history from localStorage after client hydration or when animeId changes
   useEffect(() => {
-    const initial = animeId ? getAnimeChatHistory(animeId) : getGlobalChatHistory();
+    const initial = animeId
+      ? getAnimeChatHistory(animeId)
+      : getGlobalChatHistory();
     setMessages(initial as Msg[]);
     setHydrated(true);
   }, [animeId]);
@@ -91,10 +98,25 @@ export function ChatPanel({
     }
   }
 
+  const getAnimeNote = useCallback(
+    (targetTitle: string) => {
+      const query = targetTitle.toLowerCase();
+      const note = notes.find((n) => n.title.toLowerCase().includes(query));
+      if (note) {
+        return `Note for ${note.title}:\n\n${note.body}`;
+      }
+      return `No notes found for ${targetTitle}.`;
+    },
+    [notes],
+  );
+
   async function send(text: string) {
     const q = text.trim();
     if (!q || loading) return;
-    const next: Msg[] = [...messages, { role: "user", text: q }];
+    const next: Msg[] = [
+      ...messages,
+      { role: "user", parts: [{ text: q }], text: q },
+    ];
     setMessages(next);
     setInput("");
     setError(null);
@@ -102,6 +124,9 @@ export function ChatPanel({
     try {
       const system = [
         BASE_SYSTEM,
+        allowNoteFetching
+          ? "You can use the `getAnimeNote` tool to fetch the user's personal notes for any specific anime or manga. Only call this if the user asks about their notes, or if checking their thoughts on a specific title is highly relevant to answering their question."
+          : "",
         context ? `Context about the user:\n${context}` : "",
         includeNotes && notesContext
           ? `User's personal notes for this title:\n${notesContext}`
@@ -113,13 +138,32 @@ export function ChatPanel({
         .filter(Boolean)
         .join("\n\n");
       const res = await chatGemini(
-        next.map((m) => ({ role: m.role, text: m.text })),
-        { system, search },
+        next.map((m) => ({
+          role: m.role,
+          parts: m.parts ?? [{ text: m.text }],
+        })),
+        {
+          system,
+          search,
+          getAnimeNote: allowNoteFetching ? getAnimeNote : undefined,
+        },
       );
-      setMessages([
-        ...next,
-        { role: "model", text: res.text, sources: res.sources },
-      ]);
+
+      const newTurns = (res.newTurns ?? []).map((t) => ({
+        ...t,
+        text:
+          t.parts
+            ?.filter((p) => p.text)
+            .map((p) => p.text)
+            .join("") ?? "",
+      }));
+
+      // Find the final model response to append sources
+      if (newTurns.length > 0 && res.sources?.length) {
+        newTurns[newTurns.length - 1].sources = res.sources;
+      }
+
+      setMessages([...next, ...newTurns]);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -177,39 +221,43 @@ export function ChatPanel({
         ref={scroller}
         className={cn(
           "mt-3 flex-1 space-y-3 overflow-y-auto scrollbar-thin transition-all duration-200",
-          compact ? "max-h-[320px] min-h-[120px]" : "max-h-[460px] min-h-[160px]",
+          compact
+            ? "max-h-[320px] min-h-[120px]"
+            : "max-h-[460px] min-h-[160px]",
           messages.length ? "border-t border-border pt-3" : "",
         )}
       >
-        {messages.map((m, i) =>
-          m.role === "user" ? (
-            <p
-              key={i}
-              className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-1.5 text-[13px] text-primary-foreground"
-            >
-              {m.text}
-            </p>
-          ) : (
-            <div key={i} className="max-w-full text-[13px]">
-              <Markdown>{m.text}</Markdown>
-              {m.sources?.length ? (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {m.sources.slice(0, 6).map((s, j) => (
-                    <a
-                      key={j}
-                      href={s.uri}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:text-primary"
-                    >
-                      {s.title.slice(0, 34)}
-                    </a>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ),
-        )}
+        {messages
+          .filter((m) => m.role === "user" || (m.role === "model" && m.text))
+          .map((m, i) =>
+            m.role === "user" ? (
+              <p
+                key={i}
+                className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3 py-1.5 text-[13px] text-primary-foreground"
+              >
+                {m.text}
+              </p>
+            ) : (
+              <div key={i} className="max-w-full text-[13px]">
+                <Markdown>{m.text ?? ""}</Markdown>
+                {m.sources?.length ? (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {m.sources.slice(0, 6).map((s, j) => (
+                      <a
+                        key={j}
+                        href={s.uri}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-full border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:text-primary"
+                      >
+                        {s.title.slice(0, 34)}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ),
+          )}
         {loading ? (
           <p className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Thinking…

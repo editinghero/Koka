@@ -3,9 +3,9 @@
 A calm, full-stack anime and manga tracking workspace with AI news digests, custom tag search, airing schedule notifications, markdown notes, and serverless Cloudflare Pages SSR + D1 Database.
 
 <br/>
-  
-  **[→ Visit Live App](https://koka.pages.dev)**
-  
+
+**[→ Visit Live App](https://koka.pages.dev)**
+
   <br/>
 
 `Signups currently disabled (ALLOW_SIGNUPS=false)`
@@ -36,12 +36,14 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
 ### 2. Configure AI Features (Optional)
 
 **Option A: Use Gemini AI**
+
 1. Go to Settings.
 2. Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey).
 3. Paste your key and select your preferred model (e.g., `gemini-2.5-flash`).
 4. Your key is encrypted and stored securely on Cloudflare D1.
 
 **Option B: Skip AI**
+
 - The app works perfectly without AI. Manual tracking, custom tags, and AniList data are always available.
 
 > **Note:** Your Gemini API key is encrypted at rest using AES-256-GCM (`KOKA_ENCRYPTION_KEY`) and is never exposed to the client.
@@ -49,10 +51,12 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
 ### 3. Add Custom Tags & Search
 
 **Method 1: Add via Title Details**
+
 - Open any anime/manga detail page (`/anime/$id`).
 - Under Custom Tags, click `+ Add tag` and type a tag (e.g., `ecchi`, `fav`, `must-watch`).
 
 **Method 2: Filter in Library**
+
 - Type `#ecchi` or `ecchi` in the main library search bar.
 - Or click any active tag pill above the filter bar to filter matching titles instantly.
 
@@ -77,10 +81,12 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
 Koka is a Progressive Web App (PWA) — install it for a native app experience!
 
 **On Desktop:**
+
 - Look for the install icon in your browser's address bar.
 - Click to add to your desktop/dock.
 
 **On Mobile:**
+
 - Tap your browser's menu.
 - Select "Add to Home Screen" or "Install App".
 
@@ -107,9 +113,11 @@ Koka is a Progressive Web App (PWA) — install it for a native app experience!
 ## Need Help?
 
 **Can't find a series?**
+
 - Search by the full AniList title or check [anilist.co](https://anilist.co).
 
 **AI Features not working?**
+
 - Verify your Gemini API key in Settings.
 - Make sure you are using a valid free-tier model (e.g. `gemini-2.5-flash`).
 
@@ -136,11 +144,13 @@ npm run dev
 ### Database Setup
 
 1. Create database:
+
 ```bash
 npx wrangler d1 create koka
 ```
 
 2. Update configuration (`wrangler.toml`):
+
 ```toml
 name = "koka"
 compatibility_date = "2026-02-24"
@@ -154,6 +164,7 @@ database_id = "your-database-id-here"
 ```
 
 3. Push schema:
+
 ```bash
 npx wrangler d1 execute koka --local --file=docs/d1-schema.sql
 npx wrangler d1 execute koka --remote --file=docs/d1-schema.sql
@@ -162,6 +173,7 @@ npx wrangler d1 execute koka --remote --file=docs/d1-schema.sql
 ### Deploy to Cloudflare Pages
 
 **Direct Deploy:**
+
 ```bash
 npm run build
 npx wrangler pages deploy
@@ -170,6 +182,7 @@ npx wrangler pages deploy
 ### Environment Variables
 
 `.dev.vars`:
+
 ```env
 SESSION_SECRET=your-32-char-random-session-secret
 KOKA_ENCRYPTION_KEY=your-32-char-random-encryption-key

@@ -62,8 +62,10 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.04), 0 8px 24px -12px oklch(0 0 0 / 0.12);
-  --shadow-lift: 0 2px 4px oklch(0 0 0 / 0.05), 0 16px 40px -20px oklch(0 0 0 / 0.22);
+  --shadow-soft:
+    0 1px 2px oklch(0 0 0 / 0.04), 0 8px 24px -12px oklch(0 0 0 / 0.12);
+  --shadow-lift:
+    0 2px 4px oklch(0 0 0 / 0.05), 0 16px 40px -20px oklch(0 0 0 / 0.22);
 }
 
 :root {
@@ -167,7 +169,6 @@
       zoom: 1.2;
     }
   }
-
 
   body {
     background-color: var(--color-background);
@@ -396,7 +397,7 @@
   --primary-foreground: oklch(0.18 0 0);
   --secondary: oklch(0.25 0 0);
   --secondary-foreground: oklch(0.96 0.012 80);
-  --muted: oklch(0.25 0.0 0);
+  --muted: oklch(0.25 0 0);
   --muted-foreground: oklch(0.72 0.01 80);
   --accent: oklch(0.28 0.015 80);
   --accent-foreground: oklch(0.96 0.015 80);
@@ -423,7 +424,7 @@
   --primary: oklch(0.38 0.065 40);
   --primary-foreground: oklch(0.96 0.01 40);
   --secondary: oklch(0.15 0.032 30);
-  --secondary-foreground: oklch(0.90 0.02 55);
+  --secondary-foreground: oklch(0.9 0.02 55);
   --muted: oklch(0.15 0.032 30);
   --muted-foreground: oklch(0.62 0.03 55);
   --accent: oklch(0.18 0.035 30);
@@ -431,12 +432,12 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 13%);
   --ring: oklch(0.38 0.065 40);
-  --sidebar: oklch(0.10 0.02 30);
+  --sidebar: oklch(0.1 0.02 30);
   --sidebar-accent: oklch(0.14 0.03 30);
   --sidebar-border: oklch(1 0 0 / 9%);
   --chart-1: oklch(0.38 0.065 40);
   --chart-2: oklch(0.46 0.07 30);
-  --chart-3: oklch(0.50 0.06 70);
+  --chart-3: oklch(0.5 0.06 70);
   --chart-4: oklch(0.44 0.06 20);
   --chart-5: oklch(0.48 0.07 90);
 }
@@ -508,7 +509,6 @@
     background-position: -200% 0;
   }
 }
-
 
 .splash-shine {
   background-image: linear-gradient(
@@ -583,7 +583,6 @@
   --chart-4: oklch(0.78 0.1 80);
   --chart-5: oklch(0.72 0.08 130);
 }
-
 
 /* Matcha — soft green tea (light) */
 :root[data-theme="matcha"] {
@@ -663,4 +662,3 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-

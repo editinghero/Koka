@@ -116,7 +116,9 @@ export type DiscoverParams = {
   page?: number;
 };
 
-export async function fetchDiscover(params: DiscoverParams = {}): Promise<AnimeMedia[]> {
+export async function fetchDiscover(
+  params: DiscoverParams = {},
+): Promise<AnimeMedia[]> {
   const {
     type = "ANIME",
     season,
@@ -375,7 +377,7 @@ export async function fetchUserList(
       const existing = entriesMap.get(media.id);
       const customLists = isCustom
         ? Array.from(new Set([...(existing?.customLists ?? []), listNameLower]))
-        : existing?.customLists ?? [];
+        : (existing?.customLists ?? []);
 
       const entry: LibraryEntry = {
         media,

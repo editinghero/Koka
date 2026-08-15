@@ -57,7 +57,9 @@ export function GlobalSearch({
         ? library
             .filter((e) => {
               const titleMatch = e.media.title.toLowerCase().includes(cleanQ);
-              const tagMatch = e.tags?.some((t) => t.toLowerCase().includes(cleanQ));
+              const tagMatch = e.tags?.some((t) =>
+                t.toLowerCase().includes(cleanQ),
+              );
               const customListMatch = e.customLists?.some((c) =>
                 c.toLowerCase().includes(cleanQ),
               );
@@ -84,7 +86,8 @@ export function GlobalSearch({
   );
 
   const pageHits = useMemo(
-    () => PAGES.filter((p) => !cleanQ || p.label.toLowerCase().includes(cleanQ)),
+    () =>
+      PAGES.filter((p) => !cleanQ || p.label.toLowerCase().includes(cleanQ)),
     [cleanQ],
   );
 
@@ -116,10 +119,14 @@ export function GlobalSearch({
         </CommandEmpty>
 
         {inLibrary.length ? (
-          <CommandGroup heading={cleanQ ? "In your library" : "Recently updated"}>
+          <CommandGroup
+            heading={cleanQ ? "In your library" : "Recently updated"}
+          >
             {inLibrary.map((e) => {
               const tagsStr = e.tags?.length ? ` #${e.tags.join(" #")}` : "";
-              const listsStr = e.customLists?.length ? ` ${e.customLists.join(" ")}` : "";
+              const listsStr = e.customLists?.length
+                ? ` ${e.customLists.join(" ")}`
+                : "";
               return (
                 <CommandItem
                   key={`lib-${e.media.id}`}

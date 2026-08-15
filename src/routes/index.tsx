@@ -292,6 +292,7 @@ function Dashboard() {
           title="Ask Koka AI"
           description={`Chat about anything ${copy.noun} — grounded in your list.`}
           compact
+          allowNoteFetching
           context={
             listSummary ? `The user's library: ${listSummary}` : undefined
           }

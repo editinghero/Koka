@@ -278,7 +278,9 @@ function d1Repo(db: D1Database): Repo {
         completedAt: (r["completed_at"] as string | null) ?? null,
         repeat: r["repeat_count"] === null ? null : Number(r["repeat_count"]),
         tags: normalizeTags(JSON.parse(String(r["tags"] ?? "[]")) as string[]),
-        customLists: normalizeTags(JSON.parse(String(r["custom_lists"] ?? "[]")) as string[]),
+        customLists: normalizeTags(
+          JSON.parse(String(r["custom_lists"] ?? "[]")) as string[],
+        ),
         updatedAt: Number(r["updated_at"] ?? Date.now()),
         addedAt: Number(r["added_at"] ?? Date.now()),
       }));
