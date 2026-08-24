@@ -347,17 +347,17 @@ function LibraryPage() {
 
         const titleMatch = e.media.title.toLowerCase().includes(q);
         const genreMatch = e.media.genres?.some((g) =>
-          g.toLowerCase().includes(q),
+          g?.toLowerCase().includes(q),
         );
         const studioMatch = e.media.studios?.some((s) =>
-          s.toLowerCase().includes(q),
+          s?.toLowerCase().includes(q),
         );
         const customListMatch = e.customLists?.some((c) =>
-          c.toLowerCase().includes(q),
+          c?.toLowerCase().includes(q),
         );
 
         return (
-          titleMatch || genreMatch || studioMatch || tagMatch || customListMatch
+          !!titleMatch || !!genreMatch || !!studioMatch || !!tagMatch || !!customListMatch
         );
       })
       .sort((a, b) => {
