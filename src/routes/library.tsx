@@ -322,7 +322,10 @@ function LibraryPage() {
   }, [library]);
 
   const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim().replace(/^#/, "");
+    const rawQuery = (query || "").trim().toLowerCase();
+    const isHashtagSearch = rawQuery.startsWith("#");
+    const q = rawQuery.replace(/^#/, "");
+
     return library
       .filter((e) => status === "ALL" || e.status === status)
       .filter((e) => genre === "ALL" || e.media.genres?.includes(genre))
@@ -335,6 +338,13 @@ function LibraryPage() {
       )
       .filter((e) => {
         if (!q) return true;
+
+        const tagMatch = e.tags?.some((t) => t.toLowerCase().includes(q));
+
+        if (isHashtagSearch) {
+          return tagMatch;
+        }
+
         const titleMatch = e.media.title.toLowerCase().includes(q);
         const genreMatch = e.media.genres?.some((g) =>
           g.toLowerCase().includes(q),
@@ -342,10 +352,10 @@ function LibraryPage() {
         const studioMatch = e.media.studios?.some((s) =>
           s.toLowerCase().includes(q),
         );
-        const tagMatch = e.tags?.some((t) => t.toLowerCase().includes(q));
         const customListMatch = e.customLists?.some((c) =>
           c.toLowerCase().includes(q),
         );
+
         return (
           titleMatch || genreMatch || studioMatch || tagMatch || customListMatch
         );
