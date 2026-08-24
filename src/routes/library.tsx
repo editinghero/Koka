@@ -322,7 +322,7 @@ function LibraryPage() {
   }, [library]);
 
   const filtered = useMemo(() => {
-    const rawQuery = (query || "").trim().toLowerCase();
+    const rawQuery = query.trim().toLowerCase();
     const isHashtagSearch = rawQuery.startsWith("#");
     const q = rawQuery.replace(/^#/, "");
 
