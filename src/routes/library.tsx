@@ -322,7 +322,7 @@ function LibraryPage() {
   }, [library]);
 
   const filtered = useMemo(() => {
-    const rawQuery = (query || "").trim().toLowerCase();
+    const rawQuery = query.trim().toLowerCase();
     const isHashtagSearch = rawQuery.startsWith("#");
     const q = rawQuery.replace(/^#/, "");
 
@@ -339,13 +339,13 @@ function LibraryPage() {
       .filter((e) => {
         if (!q) return true;
 
-        const tagMatch = e.tags?.some((t) => t?.toLowerCase().includes(q));
+        const tagMatch = e.tags?.some((t) => t.toLowerCase().includes(q));
 
         if (isHashtagSearch) {
-          return !!tagMatch;
+          return tagMatch;
         }
 
-        const titleMatch = e.media.title?.toLowerCase().includes(q);
+        const titleMatch = e.media.title.toLowerCase().includes(q);
         const genreMatch = e.media.genres?.some((g) =>
           g?.toLowerCase().includes(q),
         );
