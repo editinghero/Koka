@@ -8,7 +8,8 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
 
   <br/>
 
-`Signups currently enabled (ALLOW_SIGNUPS=true) , maybe disabled if abuse is detected`
+` Signups currently enabled (ALLOW_SIGNUPS=true) , maybe disabled if abuse is detected `
+
 ---
 
 ## Features
