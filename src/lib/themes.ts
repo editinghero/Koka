@@ -13,42 +13,56 @@ export const LIGHT_THEMES: ThemePreset[] = [
     label: "Paper",
     hint: "Warm neutral default",
     mode: "light",
-    swatch: ["#faf9f6", "#ffffff", "#2f8f96"],
+    swatch: ["#faf9f6", "#fefefe", "#3d90a0"],
   },
   {
     id: "sakura",
     label: "Sakura — Spring",
     hint: "Soft blossom pink",
     mode: "light",
-    swatch: ["#fdf5f6", "#ffffff", "#ef7688"],
+    swatch: ["#fdf5f6", "#fef8f9", "#d97580"],
   },
   {
     id: "natsu",
     label: "Natsu — Summer",
     hint: "Sun-warmed amber gold",
     mode: "light",
-    swatch: ["#fdf8ee", "#ffffff", "#e08a2e"],
+    swatch: ["#fdf8ee", "#fdfaf2", "#c08a45"],
   },
   {
     id: "momiji",
     label: "Momiji — Autumn",
     hint: "Amber maple leaves",
     mode: "light",
-    swatch: ["#fdf6ee", "#fffdfa", "#b56a20"],
+    swatch: ["#fdf6ee", "#fffdfa", "#a06832"],
   },
   {
     id: "yuki",
     label: "Yuki — Winter",
     hint: "Cool pale frost",
     mode: "light",
-    swatch: ["#f5f7fa", "#ffffff", "#4a6fa5"],
+    swatch: ["#f5f7fa", "#f9fafe", "#4060a0"],
   },
   {
     id: "matcha",
     label: "Matcha",
     hint: "Soft green tea",
     mode: "light",
-    swatch: ["#f4f8f2", "#ffffff", "#3f8055"],
+    swatch: ["#f4f8f2", "#f9fdf8", "#3a7a52"],
+  },
+  {
+    id: "haze",
+    label: "Haze",
+    hint: "Lavender-mint mist",
+    mode: "light",
+    swatch: ["#F2EAE0", "#ece4f6", "#9B8EC7"],
+  },
+  {
+    id: "bara",
+    label: "Bara",
+    hint: "Coral rose blush",
+    mode: "light",
+    swatch: ["#FFF7F3", "#fffbf9", "#C599B6"],
   },
 ];
 
@@ -72,9 +86,25 @@ export const DARK_THEMES: ThemePreset[] = [
     label: "Mocha",
     hint: "Rich dark coffee mocha",
     mode: "dark",
-    swatch: ["#0f0705", "#130905ff", "#5e3d2eff"],
+    // bg #483434, surface #6B4F4F, primary caramel
+    swatch: ["#483434", "#5a4040", "#d4a87a"],
   },
-
+  {
+    id: "kurai",
+    label: "Kurai",
+    hint: "Deep purple-slate",
+    mode: "dark",
+    // bg #393646, surface #4F4557, primary muted violet
+    swatch: ["#393646", "#4F4557", "#9e6fc8"],
+  },
+  {
+    id: "tsuki",
+    label: "Tsuki",
+    hint: "Charcoal slate & teal",
+    mode: "dark",
+    // deep blue-charcoal, cyan-teal accent
+    swatch: ["#141c2b", "#1a2438", "#4ac8d8"],
+  },
   {
     id: "mori",
     label: "Mori",
