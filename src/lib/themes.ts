@@ -86,8 +86,7 @@ export const DARK_THEMES: ThemePreset[] = [
     label: "Mocha",
     hint: "Rich dark coffee mocha",
     mode: "dark",
-    // bg #483434, surface #6B4F4F, primary caramel
-    swatch: ["#483434", "#5a4040", "#d4a87a"],
+    swatch: ["#1F150C", "#3E3232", "#c4a87a"],
   },
   {
     id: "kurai",
@@ -100,10 +99,9 @@ export const DARK_THEMES: ThemePreset[] = [
   {
     id: "tsuki",
     label: "Tsuki",
-    hint: "Charcoal slate & teal",
+    hint: "Deep aubergine purple",
     mode: "dark",
-    // deep blue-charcoal, cyan-teal accent
-    swatch: ["#141c2b", "#1a2438", "#4ac8d8"],
+    swatch: ["#352F44", "#5C5470", "#B9B4C7"],
   },
   {
     id: "mori",
