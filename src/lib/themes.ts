@@ -64,20 +64,27 @@ export const LIGHT_THEMES: ThemePreset[] = [
     mode: "light",
     swatch: ["#F9ECEB", "#fef6f6", "#C599B6"],
   },
+  {
+    id: "suna",
+    label: "Suna",
+    hint: "Warm sand & biscuit",
+    mode: "light",
+    swatch: ["#F9F8F6", "#EFE9E3", "#C9B59C"],
+  },
 ];
 
 export const DARK_THEMES: ThemePreset[] = [
   {
     id: "koka",
     label: "Koka",
-    hint: "#141414 neutral black",
+    hint: "Neutral dark",
     mode: "dark",
     swatch: ["#141414", "#1c1c1c", "#6fd6dc"],
   },
   {
     id: "midnight",
     label: "Kintsugi",
-    hint: "Ivory gold on #141414 black",
+    hint: "Ivory gold",
     mode: "dark",
     swatch: ["#141414", "#1e1e1e", "#FFFAF3"],
   },
@@ -101,6 +108,13 @@ export const DARK_THEMES: ThemePreset[] = [
     hint: "Charcoal slate & teal",
     mode: "dark",
     swatch: ["#141c2b", "#1a2438", "#4ac8d8"],
+  },
+  {
+    id: "mono",
+    label: "Mono",
+    hint: "Pure black & white",
+    mode: "dark",
+    swatch: ["#121212", "#1a1a1a", "#eeeeee"],
   },
   {
     id: "mori",
