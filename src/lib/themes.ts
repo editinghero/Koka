@@ -34,7 +34,7 @@ export const LIGHT_THEMES: ThemePreset[] = [
     label: "Momiji — Autumn",
     hint: "Amber maple leaves",
     mode: "light",
-    swatch: ["#fdf6ee", "#fffdfa", "#a06832"],
+    swatch: ["#f7ece0", "#fdf8f2", "#a66228"],
   },
   {
     id: "yuki",
@@ -53,16 +53,16 @@ export const LIGHT_THEMES: ThemePreset[] = [
   {
     id: "haze",
     label: "Haze",
-    hint: "Lavender-mint mist",
+    hint: "Lavender & slate mist",
     mode: "light",
-    swatch: ["#F2EAE0", "#ece4f6", "#9B8EC7"],
+    swatch: ["#F2EAE0", "#f2edf8", "#98A1BC"],
   },
   {
     id: "bara",
     label: "Bara",
     hint: "Coral rose blush",
     mode: "light",
-    swatch: ["#FFF7F3", "#fffbf9", "#C599B6"],
+    swatch: ["#F9ECEB", "#fef6f6", "#C599B6"],
   },
 ];
 
@@ -86,22 +86,21 @@ export const DARK_THEMES: ThemePreset[] = [
     label: "Mocha",
     hint: "Rich dark coffee mocha",
     mode: "dark",
-    swatch: ["#1F150C", "#3E3232", "#c4a87a"],
+    swatch: ["#1F150C", "#3E3232", "#a88864"],
   },
   {
     id: "kurai",
     label: "Kurai",
     hint: "Deep purple-slate",
     mode: "dark",
-    // bg #393646, surface #4F4557, primary muted violet
-    swatch: ["#393646", "#4F4557", "#9e6fc8"],
+    swatch: ["#393646", "#4F4557", "#6D5D6E"],
   },
   {
     id: "tsuki",
     label: "Tsuki",
-    hint: "Deep aubergine purple",
+    hint: "Charcoal slate & teal",
     mode: "dark",
-    swatch: ["#352F44", "#5C5470", "#B9B4C7"],
+    swatch: ["#141c2b", "#1a2438", "#4ac8d8"],
   },
   {
     id: "mori",
