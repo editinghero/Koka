@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & Build
 node_modules
 dist
 dist-ssr
@@ -14,11 +15,16 @@ dist-ssr
 .vinxi
 .tanstack/**
 .nitro
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+.dev.vars
 *.local
 
 # Wrangler / Cloudflare
 .wrangler/
-.dev.vars
 
 # Editor directories and files
 .vscode/*
