@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageHeader } from "@/components/AppShell";
 import { AiPanel } from "@/components/AiPanel";
+import { LiveNewsFeed } from "@/components/LiveNewsFeed";
 import { useLibrary } from "@/lib/store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +14,12 @@ export const Route = createFileRoute("/news")({
       {
         name: "description",
         content:
-          "AI-curated anime news digests, trailer releases and production updates.",
+          "AI-curated anime news digests, trailer releases, production updates and live anime news feed.",
       },
       { property: "og:title", content: "Anime News Radar — Koka" },
       {
         property: "og:description",
-        content: "AI-generated news digests for the anime you actually watch.",
+        content: "Live anime news feed and AI-generated digests for the anime you watch.",
       },
     ],
   }),
@@ -60,7 +61,7 @@ function NewsPage() {
     <>
       <PageHeader
         title="News radar"
-        subtitle="Grounded, AI-written news digests for the shows you follow."
+        subtitle="Grounded, AI-written news digests and live RSS feeds from major anime networks."
       />
 
       <section className="panel mb-5 space-y-4 p-4">
@@ -146,6 +147,9 @@ function NewsPage() {
           }
         />
       </div>
+
+      <LiveNewsFeed />
     </>
   );
 }
+

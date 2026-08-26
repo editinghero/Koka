@@ -39,7 +39,7 @@ const BOTTOM_NAV = [
   { to: "/", label: "Home", icon: LayoutDashboard },
   { to: "/library", label: "Library", icon: Library },
   { to: "/seasons", label: "Discover", icon: Compass },
-  { to: "/insights", label: "Insights", icon: Sparkles },
+  { to: "/news", label: "News", icon: Newspaper },
 ] as const;
 
 /** Pages that already live in the floating bar are dropped from the sheet. */
@@ -266,7 +266,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className={cn(collapsed ? "md:pl-16" : "md:pl-60")}>
         {/* desktop top header */}
-        <header className="sticky top-0 z-20 hidden border-b border-border bg-background/85 px-8 py-3 backdrop-blur md:block">
+        <header className="sticky top-0 z-20 hidden border-b border-border bg-background/80 px-8 py-3 backdrop-blur-[14px] will-change-transform md:block">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4">
             <ModeSwitch />
             <div className="flex items-center gap-2">
@@ -280,7 +280,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         {/* mobile header */}
-        <header className="sticky top-0 z-20 border-b border-border bg-background/85 px-4 py-3 backdrop-blur md:hidden">
+        <header className="sticky top-0 z-20 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-[14px] will-change-transform md:hidden">
           <div className="flex items-center justify-between gap-2">
             <ModeSwitch />
             <div className="flex items-center gap-2">
@@ -315,7 +315,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
-        <div className="flex w-full max-w-sm items-center justify-between gap-1 rounded-full border border-border bg-background/90 px-2 py-1.5 shadow-[var(--shadow-soft)] backdrop-blur-md">
+        <div className="flex w-full max-w-sm items-center justify-between gap-1 rounded-full border border-border bg-background/80 px-2 py-1.5 shadow-[var(--shadow-soft)] backdrop-blur-[14px] will-change-transform">
           {BOTTOM_NAV.map((item) => {
             const active =
               item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);

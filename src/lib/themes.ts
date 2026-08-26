@@ -69,7 +69,7 @@ export const LIGHT_THEMES: ThemePreset[] = [
     label: "Suna",
     hint: "Warm sand & biscuit",
     mode: "light",
-    swatch: ["#F9F8F6", "#EFE9E3", "#C9B59C"],
+    swatch: ["#F9F8F6", "#F3EDE6", "#9E683E"],
   },
 ];
 
