@@ -419,7 +419,7 @@ function LibraryPage() {
         </div>
 
         {allTags.length ? (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs text-muted-foreground">
             <span className="shrink-0 font-medium text-foreground">Tags:</span>
             {allTags.map((t) => (
               <button
@@ -444,7 +444,7 @@ function LibraryPage() {
           </div>
         ) : null}
 
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {(["ALL", ...STATUS_ORDER] as const).map((s) => (
             <button
               key={s}
