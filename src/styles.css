@@ -68,6 +68,36 @@
     0 2px 4px oklch(0 0 0 / 0.05), 0 16px 40px -20px oklch(0 0 0 / 0.22);
 }
 
+@utility glass-header {
+  background-color: color-mix(in srgb, var(--background) 75%, transparent);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+}
+
+@utility glass-card {
+  background-color: color-mix(in srgb, var(--card) 75%, transparent);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  backdrop-filter: blur(32px) saturate(180%);
+}
+
+@utility glass-floating {
+  background-color: color-mix(in srgb, var(--background) 75%, transparent);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
+  backdrop-filter: blur(36px) saturate(190%);
+}
+
+@utility glass-bottom-bar {
+  background-color: color-mix(in srgb, var(--background) 75%, transparent);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
+  backdrop-filter: blur(36px) saturate(190%);
+}
+
+@utility glass-popup {
+  background-color: color-mix(in srgb, var(--background) 70%, transparent);
+  -webkit-backdrop-filter: blur(40px) saturate(190%);
+  backdrop-filter: blur(40px) saturate(190%);
+}
+
 :root {
   --radius: 0.75rem;
   --background: oklch(0.985 0.004 90);
