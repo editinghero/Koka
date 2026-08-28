@@ -351,7 +351,7 @@ export function NotificationsDropdown() {
         <>
           {/* Backdrop overlay for closing */}
           <div
-            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+            className="fixed inset-0 z-40 bg-black/20"
             onClick={() => setIsOpen(false)}
           />
 
