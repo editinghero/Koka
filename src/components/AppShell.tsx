@@ -54,7 +54,7 @@ function ThemeToggle() {
     <button
       onClick={() => update({ theme: dark ? "light" : "dark" })}
       aria-label="Toggle theme"
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95"
+      className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full md:rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95"
     >
       {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>
@@ -279,15 +279,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        {/* mobile header */}
-        <header className="sticky top-0 z-20 border-b border-border bg-background/80 px-4 py-3 backdrop-blur-[14px] will-change-transform md:hidden">
+        {/* mobile floating header */}
+        <header className="sticky top-3 z-30 mx-3 rounded-full border border-border/80 glass-header px-4 py-2 shadow-[var(--shadow-soft)] will-change-transform md:hidden">
           <div className="flex items-center justify-between gap-2">
             <ModeSwitch />
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
               >
                 <SearchIcon className="h-4 w-4" />
               </button>
@@ -295,7 +295,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 to="/settings"
                 aria-label="Settings"
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
               >
                 <SettingsIcon className="h-4 w-4" />
               </Link>
@@ -315,7 +315,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
-        <div className="flex w-full max-w-sm items-center justify-between gap-1 rounded-full border border-border bg-background/80 px-2 py-1.5 shadow-[var(--shadow-soft)] backdrop-blur-[14px] will-change-transform">
+        <div className="flex w-full max-w-sm items-center justify-between gap-1 rounded-full border border-border/80 glass-bottom-bar px-2 py-1.5 shadow-[var(--shadow-soft)] will-change-transform">
           {BOTTOM_NAV.map((item) => {
             const active =
               item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
@@ -326,14 +326,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                 aria-label={item.label}
                 onClick={() => setSheetOpen(false)}
                 className={cn(
-                  "flex flex-1 flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[10px] transition-all duration-200 active:scale-95",
+                  "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-[11px] font-medium transition-all duration-200",
                   active
-                    ? "bg-secondary font-medium text-foreground"
-                    : "text-muted-foreground",
+                    ? "bg-primary text-primary-foreground font-semibold"
+                    : "text-muted-foreground hover:text-foreground active:scale-95"
                 )}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span>{item.label}</span>
               </Link>
             );
           })}
@@ -342,13 +342,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label={sheetOpen ? "Close menu" : "More"}
             aria-expanded={sheetOpen}
             className={cn(
-              "flex flex-1 flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-[10px] transition-all duration-200 active:scale-95",
+              "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-[11px] font-medium transition-all duration-200",
               sheetOpen
-                ? "bg-secondary font-medium text-foreground"
-                : "text-muted-foreground",
+                ? "bg-primary text-primary-foreground font-semibold"
+                : "text-muted-foreground hover:text-foreground active:scale-95"
             )}
           >
-            <span className="relative flex h-4 w-4 items-center justify-center">
+            <span className="relative flex h-4 w-4 items-center justify-center shrink-0">
               <MoreHorizontal
                 className={cn(
                   "absolute h-4 w-4 transition-all duration-200",
@@ -362,7 +362,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 )}
               />
             </span>
-            {sheetOpen ? "Close" : "More"}
+            <span>{sheetOpen ? "Close" : "More"}</span>
           </button>
         </div>
       </nav>

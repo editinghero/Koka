@@ -329,7 +329,7 @@ export function NotificationsDropdown() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95",
+          "relative flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full md:rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95",
           hasUrgent ? "border-primary/50 text-primary" : "",
         )}
         title="Airing Schedule Notifications"
@@ -356,7 +356,7 @@ export function NotificationsDropdown() {
           />
 
           {/* Centered responsive popup on mobile, right-aligned dropdown on desktop */}
-          <div className="fixed inset-x-4 top-16 z-50 mx-auto w-auto max-w-sm rounded-2xl border border-border bg-popover p-4 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-none">
+          <div className="fixed inset-x-4 top-16 z-50 mx-auto w-auto max-w-sm rounded-2xl border border-border/80 glass-popup p-4 shadow-[var(--shadow-lift)] animate-in fade-in-0 zoom-in-95 duration-200 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-none">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
