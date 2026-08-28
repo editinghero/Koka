@@ -212,7 +212,7 @@ function SeasonsPage() {
         {/* Seasonal controls (if seasonal mode is active) */}
         {isSeasonalActive ? (
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
               {SEASONS.map((s) => (
                 <button
                   key={s}
@@ -245,7 +245,7 @@ function SeasonsPage() {
         ) : null}
 
         {/* Category / Genre Pills (with Adult 18+ placed at the very last) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin text-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
           <span className="shrink-0 font-medium text-foreground text-[11px]">
             Category:
           </span>

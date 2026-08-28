@@ -232,7 +232,7 @@ export function LiveNewsFeed() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {NEWS_SOURCES.map((source) => {
               const isSelected = selectedSources.includes(source.id);
               const isFailed = failedSources.includes(source.id);
