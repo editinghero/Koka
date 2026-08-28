@@ -329,7 +329,7 @@ export function NotificationsDropdown() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95",
+        "relative flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full md:rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95",
           hasUrgent ? "border-primary/50 text-primary" : "",
         )}
         title="Airing Schedule Notifications"
