@@ -99,9 +99,19 @@
 }
 
 @utility glass-popover {
-  background-color: color-mix(in srgb, var(--color-popover) 75%, transparent);
-  -webkit-backdrop-filter: blur(32px) saturate(180%);
-  backdrop-filter: blur(32px) saturate(180%);
+  background-color: color-mix(in srgb, var(--background) 75%, transparent);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
+  backdrop-filter: blur(36px) saturate(190%);
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
+}
+
+.glass-popover {
+  background-color: color-mix(in srgb, var(--background, #090a0f) 75%, transparent) !important;
+  -webkit-backdrop-filter: blur(36px) saturate(190%) !important;
+  backdrop-filter: blur(36px) saturate(190%) !important;
+  transform: translateZ(0);
+  will-change: transform, backdrop-filter;
 }
 
 :root {

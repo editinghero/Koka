@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
   Bell,
@@ -349,16 +350,17 @@ export function NotificationsDropdown() {
         ) : null}
       </button>
 
-      {isOpen ? (
-        <>
-          {/* Backdrop overlay for closing */}
-          <div
-            className="fixed inset-0 z-40 bg-black/20"
-            onClick={() => setIsOpen(false)}
-          />
+      {isOpen
+        ? createPortal(
+          <>
+            {/* Backdrop overlay for closing */}
+            <div
+              className="fixed inset-0 z-[125]"
+              onClick={() => setIsOpen(false)}
+            />
 
-          {/* Centered responsive popup on mobile, right-aligned dropdown on desktop */}
-          <div className="fixed inset-x-4 top-16 z-50 mx-auto w-auto max-w-sm rounded-2xl border border-border/80 glass-popover p-4 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-none">
+            {/* Portal popup — outside header so backdrop-filter:blur actually works */}
+            <div className="fixed inset-x-4 top-16 z-[130] mx-auto w-auto max-w-sm max-h-[80vh] overflow-y-auto sm:inset-auto sm:right-8 sm:top-14 sm:w-96 border border-border/80 glass-popover rounded-2xl shadow-2xl p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
@@ -526,9 +528,11 @@ export function NotificationsDropdown() {
                 <Volume2 className="h-3 w-3" /> Enable Browser Desktop Alerts
               </button>
             </div>
-          </div>
-        </>
-      ) : null}
+            </div>
+          </>,
+          document.body,
+        )
+        : null}
     </div>
   );
 }
