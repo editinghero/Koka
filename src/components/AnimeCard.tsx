@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "@tanstack/react-router";
 import { Star, Tv, UserRound } from "lucide-react";
 import type { AnimeMedia, LibraryEntry } from "@/lib/types";
@@ -15,7 +16,8 @@ export function countdown(airingAt: number) {
   return `${m}m`;
 }
 
-export function Cover({
+// ⚡ Bolt: Memoized Cover component to prevent unnecessary re-renders in large grids/lists
+export const Cover = memo(function Cover({
   media,
   className,
 }: {
@@ -44,9 +46,10 @@ export function Cover({
       )}
     </div>
   );
-}
+});
 
-export function AnimeCard({
+// ⚡ Bolt: Memoized AnimeCard component to prevent unnecessary re-renders in large grids/lists
+export const AnimeCard = memo(function AnimeCard({
   media,
   entry,
   footer,
@@ -138,7 +141,7 @@ export function AnimeCard({
       </div>
     </div>
   );
-}
+});
 
 export function GridSkeleton({ count = 12 }: { count?: number }) {
   return (
