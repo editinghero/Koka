@@ -215,22 +215,22 @@ export function NotificationsDropdown() {
     const fourteenDaysSec = 14 * 86400;
 
     library.forEach((entry) => {
-      const airingAt = entry.media.nextEpisode?.airingAt;
-      if (airingAt) {
-        const diffSec = airingAt - nowSec;
-        const ep = entry.media.nextEpisode.episode;
+      const nextEp = entry.media.nextEpisode;
+      if (nextEp?.airingAt) {
+        const diffSec = nextEp.airingAt - nowSec;
+        const ep = nextEp.episode;
         const key = `${entry.media.id}:${ep}`;
         if (dismissedKeys.has(key)) return;
         // Include only if episode is airing within 14 days (or already past/airing today)
         if (diffSec <= fourteenDaysSec) {
           const { timeStr, countdownStr, isWithin3Hours, isPast } =
-            formatAiringTime(airingAt);
+            formatAiringTime(nextEp.airingAt);
           items.push({
             id: entry.media.id,
             key,
             entry,
             episode: ep,
-            airingAt,
+            airingAt: nextEp.airingAt,
             timeStr,
             countdownStr,
             isWithin3Hours,
@@ -272,10 +272,11 @@ export function NotificationsDropdown() {
           !notifiedKeysRef.current.has(item.key)
         ) {
           notifiedKeysRef.current.add(item.key);
-          new Notification(`Koka Airing Alert 🎬`, {
+          const options: NotificationOptions = {
             body: `${item.entry.media.title} Episode ${item.episode} airs soon (${item.countdownStr})!`,
-            icon: item.entry.media.cover ?? undefined,
-          });
+            ...(item.entry.media.cover ? { icon: item.entry.media.cover } : {}),
+          };
+          new Notification("Koka Airing Alert", options);
         }
       });
     }
@@ -312,10 +313,11 @@ export function NotificationsDropdown() {
         toast.success("Desktop notifications enabled!");
         if (airingItems.length) {
           const item = airingItems[0];
-          new Notification("Koka Airing Alerts Active 🎬", {
+          const options: NotificationOptions = {
             body: `You will get desktop alerts when your anime episodes air! Next up: ${item?.entry.media.title ?? "Anime"}`,
-            icon: item?.entry.media.cover ?? undefined,
-          });
+            ...(item?.entry.media.cover ? { icon: item.entry.media.cover } : {}),
+          };
+          new Notification("Koka Airing Alerts Active", options);
         }
       } else {
         toast.error("Browser notification permission denied.");
@@ -356,7 +358,7 @@ export function NotificationsDropdown() {
           />
 
           {/* Centered responsive popup on mobile, right-aligned dropdown on desktop */}
-          <div className="fixed inset-x-4 top-16 z-50 mx-auto w-auto max-w-sm rounded-2xl border border-border bg-popover p-4 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-none">
+          <div className="fixed inset-x-4 top-16 z-50 mx-auto w-auto max-w-sm rounded-2xl border border-border/80 glass-popover p-4 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-none">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-primary" />
@@ -445,10 +447,10 @@ export function NotificationsDropdown() {
                       className={cn(
                         "group relative flex cursor-pointer gap-3 rounded-xl border p-2.5 transition-all duration-200 hover:border-primary/40",
                         isRead
-                          ? "border-border/60 bg-secondary/20 opacity-60"
+                          ? "border-border/40 bg-secondary/30 opacity-60"
                           : item.isWithin3Hours
-                            ? "border-primary/50 bg-primary/5"
-                            : "border-border bg-card",
+                            ? "border-primary/50 bg-primary/10"
+                            : "border-border/60 bg-card/60",
                       )}
                     >
                       <img

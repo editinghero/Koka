@@ -98,6 +98,12 @@
   backdrop-filter: blur(40px) saturate(190%);
 }
 
+@utility glass-popover {
+  background-color: color-mix(in srgb, var(--color-popover) 75%, transparent);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  backdrop-filter: blur(32px) saturate(180%);
+}
+
 :root {
   --radius: 0.75rem;
   --background: oklch(0.985 0.004 90);
