@@ -1,4 +1,4 @@
-﻿# Koka - All-in-One Anime & Manga Dashboard
+# Koka - All-in-One Anime & Manga Dashboard
 
 A calm, full-stack anime and manga tracking workspace with AI news digests, custom tag search, airing schedule notifications, markdown notes, and serverless Cloudflare Pages SSR + D1 Database.
 
@@ -9,6 +9,30 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
   <br/>
 
 ` Signups currently enabled (ALLOW_SIGNUPS=true) , maybe disabled if abuse is detected `
+
+---
+
+## Screenshots
+
+| Home | Library |
+|---|---|
+| ![Home](assets/home.png) | ![Library](assets/library.png) |
+
+| News | Discover |
+|---|---|
+| ![News](assets/newstop.png) | ![Discover](assets/discover.png) |
+
+| Settings | More Menu |
+|---|---|
+| ![Settings](assets/settingstop.png) | ![More Menu](assets/moremenu.png) |
+
+| Home — Bottom | News — Bottom |
+|---|---|
+| ![Home Bottom](assets/homebottom.png) | ![News Bottom](assets/newsbottom.png) |
+
+| Settings — Themes | PIN Lock |
+|---|---|
+| ![Settings Themes](assets/settingbottomthemes.png) | ![PIN Lock](assets/lock.png) |
 
 ---
 
@@ -221,7 +245,7 @@ src/
     store.ts             Client state management
     types.ts             TypeScript definitions
   routes/                TanStack Router pages
-    __root.tsx
+    __root__.tsx
     index.tsx
     library.tsx
     news.tsx
