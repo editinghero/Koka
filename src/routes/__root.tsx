@@ -23,6 +23,7 @@ import {
 import { clearPin, isLocked } from "@/lib/pin";
 import { signOut } from "@/lib/auth.functions";
 import { Toaster } from "@/components/ui/sonner";
+import { registerSW } from "virtual:pwa-register";
 
 function NotFoundComponent() {
   return (
@@ -176,6 +177,11 @@ function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyThemeFromSettings();
     void boot();
+
+    // Register PWA Service Worker
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      registerSW({ immediate: true });
+    }
   }, []);
 
   useEffect(() => {

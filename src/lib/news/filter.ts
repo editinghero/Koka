@@ -6,7 +6,10 @@ const MAX_AGE_MS = MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
 /**
  * Filter out articles older than freshness window and sort newest first.
  */
-export function filterAndSortArticles(articles: NewsArticle[], maxAgeMs = MAX_AGE_MS): NewsArticle[] {
+export function filterAndSortArticles(
+  articles: NewsArticle[],
+  maxAgeMs = MAX_AGE_MS,
+): NewsArticle[] {
   const now = Date.now();
   const minTimestamp = now - maxAgeMs;
 

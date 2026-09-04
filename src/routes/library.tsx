@@ -357,7 +357,11 @@ function LibraryPage() {
         );
 
         return (
-          !!titleMatch || !!genreMatch || !!studioMatch || !!tagMatch || !!customListMatch
+          !!titleMatch ||
+          !!genreMatch ||
+          !!studioMatch ||
+          !!tagMatch ||
+          !!customListMatch
         );
       })
       .sort((a, b) => {

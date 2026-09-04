@@ -79,7 +79,9 @@ export function useLiveNews() {
   );
 
   const [visibleCount, setVisibleCount] = useState<number>(INITIAL_NEWS_COUNT);
-  const [isLoading, setIsLoading] = useState<boolean>(() => !cachedFeed || cachedFeed.articles.length === 0);
+  const [isLoading, setIsLoading] = useState<boolean>(
+    () => !cachedFeed || cachedFeed.articles.length === 0,
+  );
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,12 +133,20 @@ export function useLiveNews() {
           failedSources: res.failedSources,
         });
 
-        if (res.articles.length === 0 && res.failedSources.length > 0 && res.successfulSources.length === 0) {
-          setError("Unable to connect to selected news sources. Please try again.");
+        if (
+          res.articles.length === 0 &&
+          res.failedSources.length > 0 &&
+          res.successfulSources.length === 0
+        ) {
+          setError(
+            "Unable to connect to selected news sources. Please try again.",
+          );
         }
       } catch (err) {
         console.error("Failed to fetch news feed:", err);
-        setError("Unable to load news right now. Please check your connection.");
+        setError(
+          "Unable to load news right now. Please check your connection.",
+        );
       } finally {
         setIsRefreshing(false);
         setIsLoading(false);
