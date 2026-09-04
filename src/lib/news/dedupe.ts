@@ -72,7 +72,8 @@ export function deduplicateArticles(articles: NewsArticle[]): NewsArticle[] {
 
       // Exact title match
       if (
-        article.title.trim().toLowerCase() === existing.title.trim().toLowerCase()
+        article.title.trim().toLowerCase() ===
+        existing.title.trim().toLowerCase()
       ) {
         isDuplicate = true;
         duplicateIndex = i;
@@ -96,12 +97,16 @@ export function deduplicateArticles(articles: NewsArticle[]): NewsArticle[] {
     } else {
       const existing = result[duplicateIndex];
       if (existing) {
-        const existingPriority = getSourceById(existing.sourceId)?.priority ?? 999;
-        const currentPriority = getSourceById(article.sourceId)?.priority ?? 999;
+        const existingPriority =
+          getSourceById(existing.sourceId)?.priority ?? 999;
+        const currentPriority =
+          getSourceById(article.sourceId)?.priority ?? 999;
 
         if (
           currentPriority < existingPriority ||
-          (!existing.imageUrl && article.imageUrl && currentPriority <= existingPriority + 2)
+          (!existing.imageUrl &&
+            article.imageUrl &&
+            currentPriority <= existingPriority + 2)
         ) {
           seenUrls.delete(canonicalUrl(existing.url));
           seenUrls.add(normUrl);

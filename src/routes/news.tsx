@@ -19,7 +19,8 @@ export const Route = createFileRoute("/news")({
       { property: "og:title", content: "Anime News Radar — Koka" },
       {
         property: "og:description",
-        content: "Live anime news feed and AI-generated digests for the anime you watch.",
+        content:
+          "Live anime news feed and AI-generated digests for the anime you watch.",
       },
     ],
   }),
@@ -152,4 +153,3 @@ function NewsPage() {
     </>
   );
 }
-

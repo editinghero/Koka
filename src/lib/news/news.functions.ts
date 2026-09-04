@@ -8,9 +8,10 @@ import { filterAndSortArticles } from "./filter";
 export const fetchNewsFeed = createServerFn({ method: "POST" })
   .inputValidator((data: { sourceIds?: string[] }) => data)
   .handler(async ({ data }): Promise<NewsFetchResponse> => {
-    const requestedIds = data?.sourceIds && data.sourceIds.length > 0
-      ? data.sourceIds
-      : NEWS_SOURCES.filter((s) => s.defaultEnabled).map((s) => s.id);
+    const requestedIds =
+      data?.sourceIds && data.sourceIds.length > 0
+        ? data.sourceIds
+        : NEWS_SOURCES.filter((s) => s.defaultEnabled).map((s) => s.id);
 
     const sources = requestedIds
       .map((id) => getSourceById(id))
@@ -32,7 +33,7 @@ export const fetchNewsFeed = createServerFn({ method: "POST" })
             headers: {
               "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-              "Accept":
+              Accept:
                 "application/rss+xml, application/xml, text/xml, application/atom+xml, text/html, */*",
               "Cache-Control": "no-cache",
             },

@@ -13,7 +13,8 @@ export const NEWS_SOURCES: NewsSource[] = [
     id: "crunchyroll",
     name: "Crunchyroll News",
     url: "https://cr-news-api-service.prd.crunchyrollsvc.com/v1/en-US/rss",
-    description: "Official Crunchyroll news updates, trailers & streaming announcements",
+    description:
+      "Official Crunchyroll news updates, trailers & streaming announcements",
     defaultEnabled: true,
     priority: 2,
   },

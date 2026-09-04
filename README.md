@@ -8,30 +8,30 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
 
   <br/>
 
-` Signups currently enabled (ALLOW_SIGNUPS=true) , maybe disabled if abuse is detected `
+`Signups currently enabled (ALLOW_SIGNUPS=true) , maybe disabled if abuse is detected`
 
 ---
 
 ## Screenshots
 
-| Home | Library |
-|---|---|
+| Home                     | Library                        |
+| ------------------------ | ------------------------------ |
 | ![Home](assets/home.png) | ![Library](assets/library.png) |
 
-| News | Discover |
-|---|---|
+| News                        | Discover                         |
+| --------------------------- | -------------------------------- |
 | ![News](assets/newstop.png) | ![Discover](assets/discover.png) |
 
-| Settings | More Menu |
-|---|---|
+| Settings                            | More Menu                         |
+| ----------------------------------- | --------------------------------- |
 | ![Settings](assets/settingstop.png) | ![More Menu](assets/moremenu.png) |
 
-| Home — Bottom | News — Bottom |
-|---|---|
+| Home — Bottom                         | News — Bottom                         |
+| ------------------------------------- | ------------------------------------- |
 | ![Home Bottom](assets/homebottom.png) | ![News Bottom](assets/newsbottom.png) |
 
-| Settings — Themes | PIN Lock |
-|---|---|
+| Settings — Themes                                  | PIN Lock                     |
+| -------------------------------------------------- | ---------------------------- |
 | ![Settings Themes](assets/settingbottomthemes.png) | ![PIN Lock](assets/lock.png) |
 
 ---

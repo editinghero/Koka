@@ -146,7 +146,9 @@ export function LiveNewsFeed() {
 
   const [showSourceSelector, setShowSourceSelector] = useState(false);
 
-  const updatedTimeStr = lastUpdated ? formatRelativeTime(new Date(lastUpdated).toISOString()) : null;
+  const updatedTimeStr = lastUpdated
+    ? formatRelativeTime(new Date(lastUpdated).toISOString())
+    : null;
 
   return (
     <section className="mt-8 space-y-4">
@@ -208,7 +210,9 @@ export function LiveNewsFeed() {
       >
         <div className="panel p-3 space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground pb-1">
-            <span className="font-medium text-foreground">Select Networks:</span>
+            <span className="font-medium text-foreground">
+              Select Networks:
+            </span>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -222,7 +226,9 @@ export function LiveNewsFeed() {
                 type="button"
                 onClick={() =>
                   selectAllSources(
-                    NEWS_SOURCES.filter((s) => s.defaultEnabled).map((s) => s.id),
+                    NEWS_SOURCES.filter((s) => s.defaultEnabled).map(
+                      (s) => s.id,
+                    ),
                   )
                 }
                 className="text-[11px] text-muted-foreground hover:text-primary transition-colors"
@@ -266,7 +272,9 @@ export function LiveNewsFeed() {
             <p className="text-[11px] text-amber-500/90 flex items-center gap-1 pt-1">
               <AlertCircle className="h-3 w-3 shrink-0" />
               <span>
-                {failedSources.length} source{failedSources.length > 1 ? "s" : ""} unavailable on last check ({failedSources.join(", ")}).
+                {failedSources.length} source
+                {failedSources.length > 1 ? "s" : ""} unavailable on last check
+                ({failedSources.join(", ")}).
               </span>
             </p>
           ) : null}
@@ -298,7 +306,10 @@ export function LiveNewsFeed() {
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={cn("mr-1.5 h-3.5 w-3.5", isRefreshing && "animate-spin")}
+                className={cn(
+                  "mr-1.5 h-3.5 w-3.5",
+                  isRefreshing && "animate-spin",
+                )}
               />
               Retry
             </Button>
@@ -312,7 +323,8 @@ export function LiveNewsFeed() {
             No recent articles found
           </h3>
           <p className="mx-auto max-w-md text-xs text-muted-foreground">
-            Selected news networks haven't published articles within the 14-day window. Try enabling more sources or refreshing.
+            Selected news networks haven't published articles within the 14-day
+            window. Try enabling more sources or refreshing.
           </p>
           <div className="pt-2">
             <Button
@@ -322,7 +334,10 @@ export function LiveNewsFeed() {
               disabled={isRefreshing}
             >
               <RefreshCw
-                className={cn("mr-1.5 h-3.5 w-3.5", isRefreshing && "animate-spin")}
+                className={cn(
+                  "mr-1.5 h-3.5 w-3.5",
+                  isRefreshing && "animate-spin",
+                )}
               />
               Refresh
             </Button>
