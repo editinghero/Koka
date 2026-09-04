@@ -241,7 +241,19 @@ function Dashboard() {
                           Episode {e.media.nextEpisode?.episode} · {timeStr}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {e.progress < (e.media.nextEpisode?.episode ?? 1) - 1 ? (
+                          <span
+                            className={cn(
+                              "inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                              isWithin3Hours
+                                ? "bg-destructive/15 text-destructive animate-pulse"
+                                : "bg-primary/10 text-primary",
+                            )}
+                          >
+                            {e.progress}/{(e.media.nextEpisode?.episode ?? 1) - 1}
+                          </span>
+                        ) : null}
                         <span
                           className={cn(
                             "inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold",
