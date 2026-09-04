@@ -490,16 +490,30 @@ export function NotificationsDropdown() {
                           Episode {item.episode} · {item.timeStr}
                         </p>
                         <div className="mt-1 flex items-center justify-between">
-                          <span
-                            className={cn(
-                              "inline-block rounded-full px-2 py-0.2 text-[10px] font-medium",
-                              item.isWithin3Hours
-                                ? "bg-destructive/15 text-destructive"
-                                : "bg-primary/10 text-primary",
-                            )}
-                          >
-                            {item.countdownStr}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            {item.entry.progress < item.episode - 1 ? (
+                              <span
+                                className={cn(
+                                  "inline-block rounded-full px-2 py-0.2 text-[10px] font-medium",
+                                  item.isWithin3Hours
+                                    ? "bg-destructive/15 text-destructive"
+                                    : "bg-primary/10 text-primary",
+                                )}
+                              >
+                                {item.entry.progress}/{item.episode - 1}
+                              </span>
+                            ) : null}
+                            <span
+                              className={cn(
+                                "inline-block rounded-full px-2 py-0.2 text-[10px] font-medium",
+                                item.isWithin3Hours
+                                  ? "bg-destructive/15 text-destructive"
+                                  : "bg-primary/10 text-primary",
+                              )}
+                            >
+                              {item.countdownStr}
+                            </span>
+                          </div>
                           <span className="text-[10px] text-muted-foreground group-hover:text-foreground">
                             {isRead
                               ? "Read (click to unread)"
