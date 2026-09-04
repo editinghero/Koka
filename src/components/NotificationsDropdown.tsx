@@ -316,9 +316,7 @@ export function NotificationsDropdown() {
           const item = airingItems[0];
           const options: NotificationOptions = {
             body: `You will get desktop alerts when your anime episodes air! Next up: ${item?.entry.media.title ?? "Anime"}`,
-            ...(item?.entry.media.cover
-              ? { icon: item.entry.media.cover }
-              : {}),
+            ...(item?.entry.media.cover ? { icon: item.entry.media.cover } : {}),
           };
           new Notification("Koka Airing Alerts Active", options);
         }
@@ -334,7 +332,7 @@ export function NotificationsDropdown() {
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className={cn(
-          "relative flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full md:rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95",
+        "relative flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full md:rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95",
           hasUrgent ? "border-primary/50 text-primary" : "",
         )}
         title="Airing Schedule Notifications"
@@ -354,144 +352,146 @@ export function NotificationsDropdown() {
 
       {isOpen
         ? createPortal(
-            <>
-              {/* Backdrop overlay for closing */}
-              <div
-                className="fixed inset-0 z-[125]"
-                onClick={() => setIsOpen(false)}
-              />
+          <>
+            {/* Backdrop overlay for closing */}
+            <div
+              className="fixed inset-0 z-[125]"
+              onClick={() => setIsOpen(false)}
+            />
 
-              {/* Portal popup — outside header so backdrop-filter:blur actually works */}
-              <div className="fixed inset-x-4 top-16 z-[130] mx-auto w-auto max-w-sm max-h-[80vh] overflow-y-auto sm:inset-auto sm:right-8 sm:top-14 sm:w-96 border border-border/80 glass-popover rounded-2xl shadow-2xl p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between pb-3 border-b border-border">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <h3 className="font-display text-sm font-semibold">
-                      Airing Schedule
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => void refreshSchedules()}
-                      disabled={refreshing}
-                      className="p-1 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
-                      title="Sync live schedules with AniList"
-                    >
-                      <RefreshCw
-                        className={cn(
-                          "h-4 w-4",
-                          refreshing ? "animate-spin text-primary" : "",
-                        )}
-                      />
-                    </button>
-                    {unreadCount > 0 ? (
-                      <button
-                        type="button"
-                        onClick={markAllRead}
-                        className="p-1 text-muted-foreground hover:text-primary transition-colors"
-                        title="Mark all as read"
-                      >
-                        <CheckCheck className="h-4 w-4" />
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={clearReadNotifs}
-                      className="p-1 text-muted-foreground hover:text-destructive transition-colors"
-                      title="Clear all read notifications"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsOpen(false)}
-                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+            {/* Portal popup — outside header so backdrop-filter:blur actually works */}
+            <div className="fixed inset-x-4 top-16 z-[130] mx-auto w-auto max-w-sm max-h-[80vh] overflow-y-auto sm:inset-auto sm:right-8 sm:top-14 sm:w-96 border border-border/80 glass-popover rounded-2xl shadow-2xl p-4 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                <h3 className="font-display text-sm font-semibold">
+                  Airing Schedule
+                </h3>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => void refreshSchedules()}
+                  disabled={refreshing}
+                  className="p-1 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                  title="Sync live schedules with AniList"
+                >
+                  <RefreshCw
+                    className={cn(
+                      "h-4 w-4",
+                      refreshing ? "animate-spin text-primary" : "",
+                    )}
+                  />
+                </button>
+                {unreadCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={markAllRead}
+                    className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                    title="Mark all as read"
+                  >
+                    <CheckCheck className="h-4 w-4" />
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={clearReadNotifs}
+                  className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+                  title="Clear all read notifications"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
 
-                {/* Filter Tabs */}
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {(
-                    [
-                      ["ALL", "All"],
-                      ["URGENT", "Airing Soon"],
-                      ["CURRENT", "Watching"],
-                      ["PLANNING", "Planned"],
-                    ] as const
-                  ).map(([tab, label]) => (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setFilterTab(tab)}
+            {/* Filter Tabs */}
+            <div className="mt-3 flex flex-wrap gap-1">
+              {(
+                [
+                  ["ALL", "All"],
+                  ["URGENT", "Airing Soon"],
+                  ["CURRENT", "Watching"],
+                  ["PLANNING", "Planned"],
+                ] as const
+              ).map(([tab, label]) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setFilterTab(tab)}
+                  className={cn(
+                    "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+                    filterTab === tab
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary/60 text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Notification items */}
+            <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+              {filteredItems.length ? (
+                filteredItems.map((item) => {
+                  const isRead = readKeys.has(item.key);
+                  return (
+                    <div
+                      key={item.key}
+                      onClick={() => toggleRead(item.key)}
                       className={cn(
-                        "rounded-full px-2.5 py-0.5 text-[11px] font-medium transition-colors",
-                        filterTab === tab
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary/60 text-muted-foreground hover:text-foreground",
+                        "group relative flex cursor-pointer gap-3 rounded-xl border p-2.5 transition-all duration-200 hover:border-primary/40",
+                        isRead
+                          ? "border-border/40 bg-secondary/30 opacity-60"
+                          : item.isWithin3Hours
+                            ? "border-primary/50 bg-primary/10"
+                            : "border-border/60 bg-card/60",
                       )}
                     >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Notification items */}
-                <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
-                  {filteredItems.length ? (
-                    filteredItems.map((item) => {
-                      const isRead = readKeys.has(item.key);
-                      return (
-                        <div
-                          key={item.key}
-                          onClick={() => toggleRead(item.key)}
-                          className={cn(
-                            "group relative flex cursor-pointer gap-3 rounded-xl border p-2.5 transition-all duration-200 hover:border-primary/40",
-                            isRead
-                              ? "border-border/40 bg-secondary/30 opacity-60"
-                              : item.isWithin3Hours
-                                ? "border-primary/50 bg-primary/10"
-                                : "border-border/60 bg-card/60",
-                          )}
-                        >
-                          <img
-                            src={item.entry.media.cover ?? ""}
-                            alt=""
-                            className="h-12 w-9 rounded-md object-cover"
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-1">
-                              <Link
-                                to="/anime/$id"
-                                params={{ id: String(item.id) }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleRead(item.key);
-                                  setIsOpen(false);
-                                }}
-                                className="line-clamp-1 text-xs font-semibold hover:text-primary"
-                              >
-                                {item.entry.media.title}
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  dismissItem(item.key);
-                                }}
-                                className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-70 hover:opacity-100"
-                                title="Dismiss notification"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                            <p className="mt-0.5 text-[11px] text-muted-foreground">
-                              Episode {item.episode} · {item.timeStr}
-                            </p>
-                            <div className="mt-1 flex items-center justify-between">
+                      <img
+                        src={item.entry.media.cover ?? ""}
+                        alt=""
+                        className="h-12 w-9 rounded-md object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-1">
+                          <Link
+                            to="/anime/$id"
+                            params={{ id: String(item.id) }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleRead(item.key);
+                              setIsOpen(false);
+                            }}
+                            className="line-clamp-1 text-xs font-semibold hover:text-primary"
+                          >
+                            {item.entry.media.title}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              dismissItem(item.key);
+                            }}
+                            className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-70 hover:opacity-100"
+                            title="Dismiss notification"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          Episode {item.episode} · {item.timeStr}
+                        </p>
+                        <div className="mt-1 flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            {item.entry.progress < item.episode - 1 ? (
                               <span
                                 className={cn(
                                   "inline-block rounded-full px-2 py-0.2 text-[10px] font-medium",
@@ -500,41 +500,52 @@ export function NotificationsDropdown() {
                                     : "bg-primary/10 text-primary",
                                 )}
                               >
-                                {item.countdownStr}
+                                {item.entry.progress}/{item.episode - 1}
                               </span>
-                              <span className="text-[10px] text-muted-foreground group-hover:text-foreground">
-                                {isRead
-                                  ? "Read (click to unread)"
-                                  : "Click to mark read"}
-                              </span>
-                            </div>
+                            ) : null}
+                            <span
+                              className={cn(
+                                "inline-block rounded-full px-2 py-0.2 text-[10px] font-medium",
+                                item.isWithin3Hours
+                                  ? "bg-destructive/15 text-destructive"
+                                  : "bg-primary/10 text-primary",
+                              )}
+                            >
+                              {item.countdownStr}
+                            </span>
                           </div>
+                          <span className="text-[10px] text-muted-foreground group-hover:text-foreground">
+                            {isRead
+                              ? "Read (click to unread)"
+                              : "Click to mark read"}
+                          </span>
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div className="py-8 text-center text-xs text-muted-foreground space-y-1">
-                      <Sparkles className="mx-auto h-5 w-5 text-muted-foreground/60" />
-                      <p>No upcoming episodes found in your schedule.</p>
+                      </div>
                     </div>
-                  )}
+                  );
+                })
+              ) : (
+                <div className="py-8 text-center text-xs text-muted-foreground space-y-1">
+                  <Sparkles className="mx-auto h-5 w-5 text-muted-foreground/60" />
+                  <p>No upcoming episodes found in your schedule.</p>
                 </div>
+              )}
+            </div>
 
-                {/* Desktop Notification Request */}
-                <div className="mt-3 border-t border-border pt-2.5 text-center">
-                  <button
-                    type="button"
-                    onClick={requestNotificationPermission}
-                    className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <Volume2 className="h-3 w-3" /> Enable Browser Desktop
-                    Alerts
-                  </button>
-                </div>
-              </div>
-            </>,
-            document.body,
-          )
+            {/* Desktop Notification Request */}
+            <div className="mt-3 border-t border-border pt-2.5 text-center">
+              <button
+                type="button"
+                onClick={requestNotificationPermission}
+                className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Volume2 className="h-3 w-3" /> Enable Browser Desktop Alerts
+              </button>
+            </div>
+            </div>
+          </>,
+          document.body,
+        )
         : null}
     </div>
   );

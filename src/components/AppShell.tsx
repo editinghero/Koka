@@ -280,7 +280,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         {/* mobile floating header */}
-        <header className="sticky top-[max(0.75rem,env(safe-area-inset-top))] z-30 mx-3 rounded-full border border-border/80 glass-header px-4 py-2 shadow-[var(--shadow-soft)] will-change-transform md:hidden">
+        <header className="sticky top-3 z-30 mx-3 rounded-full border border-border/80 glass-header px-4 py-2 shadow-[var(--shadow-soft)] will-change-transform md:hidden">
           <div className="flex items-center justify-between gap-2">
             <ModeSwitch />
             <div className="flex items-center gap-2">
@@ -329,7 +329,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-[11px] font-medium transition-all duration-200",
                   active
                     ? "bg-primary text-primary-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground active:scale-95",
+                    : "text-muted-foreground hover:text-foreground active:scale-95"
                 )}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
@@ -345,7 +345,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-[11px] font-medium transition-all duration-200",
               sheetOpen
                 ? "bg-primary text-primary-foreground font-semibold"
-                : "text-muted-foreground hover:text-foreground active:scale-95",
+                : "text-muted-foreground hover:text-foreground active:scale-95"
             )}
           >
             <span className="relative flex h-4 w-4 items-center justify-center shrink-0">

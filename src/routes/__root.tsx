@@ -23,7 +23,6 @@ import {
 import { clearPin, isLocked } from "@/lib/pin";
 import { signOut } from "@/lib/auth.functions";
 import { Toaster } from "@/components/ui/sonner";
-import { registerSW } from "virtual:pwa-register";
 
 function NotFoundComponent() {
   return (
@@ -90,18 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     head: () => ({
       meta: [
         { charSet: "utf-8" },
-        {
-          name: "viewport",
-          content:
-            "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=0",
-        },
-        { name: "mobile-web-app-capable", content: "yes" },
-        { name: "apple-mobile-web-app-capable", content: "yes" },
-        {
-          name: "apple-mobile-web-app-status-bar-style",
-          content: "black-translucent",
-        },
-        { name: "theme-color", content: "#141414" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
         { title: "Koka — All-in-one Anime Dashboard" },
         {
           name: "description",
@@ -188,11 +176,6 @@ function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyThemeFromSettings();
     void boot();
-
-    // Register PWA Service Worker
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      registerSW({ immediate: true });
-    }
   }, []);
 
   useEffect(() => {
