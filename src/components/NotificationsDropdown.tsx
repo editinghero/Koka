@@ -434,43 +434,64 @@ export function NotificationsDropdown() {
                           : "bg-secondary/60 text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      <img
-                        src={item.entry.media.cover ?? ""}
-                        alt=""
-                        className="h-12 w-9 rounded-md object-cover"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-1">
-                          <Link
-                            to="/anime/$id"
-                            params={{ id: String(item.id) }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleRead(item.key);
-                              setIsOpen(false);
-                            }}
-                            className="line-clamp-1 text-xs font-semibold hover:text-primary"
-                          >
-                            {item.entry.media.title}
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              dismissItem(item.key);
-                            }}
-                            className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-70 hover:opacity-100"
-                            title="Dismiss notification"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <p className="mt-0.5 text-[11px] text-muted-foreground">
-                          Episode {item.episode} · {item.timeStr}
-                        </p>
-                        <div className="mt-1 flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            {item.entry.progress < item.episode - 1 ? (
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Notification items */}
+                <div className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-1">
+                  {filteredItems.length ? (
+                    filteredItems.map((item) => {
+                      const isRead = readKeys.has(item.key);
+                      return (
+                        <div
+                          key={item.key}
+                          onClick={() => toggleRead(item.key)}
+                          className={cn(
+                            "group relative flex cursor-pointer gap-3 rounded-xl border p-2.5 transition-all duration-200 hover:border-primary/40",
+                            isRead
+                              ? "border-border/40 bg-secondary/30 opacity-60"
+                              : item.isWithin3Hours
+                                ? "border-primary/50 bg-primary/10"
+                                : "border-border/60 bg-card/60",
+                          )}
+                        >
+                          <img
+                            src={item.entry.media.cover ?? ""}
+                            alt=""
+                            className="h-12 w-9 rounded-md object-cover"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-1">
+                              <Link
+                                to="/anime/$id"
+                                params={{ id: String(item.id) }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleRead(item.key);
+                                  setIsOpen(false);
+                                }}
+                                className="line-clamp-1 text-xs font-semibold hover:text-primary"
+                              >
+                                {item.entry.media.title}
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dismissItem(item.key);
+                                }}
+                                className="p-0.5 text-muted-foreground hover:text-destructive transition-colors opacity-70 hover:opacity-100"
+                                title="Dismiss notification"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">
+                              Episode {item.episode} · {item.timeStr}
+                            </p>
+                            <div className="mt-1 flex items-center justify-between">
                               <span
                                 className={cn(
                                   "inline-block rounded-full px-2 py-0.2 text-[10px] font-medium",
@@ -479,25 +500,15 @@ export function NotificationsDropdown() {
                                     : "bg-primary/10 text-primary",
                                 )}
                               >
-                                {item.entry.progress}/{item.episode - 1}
+                                {item.countdownStr}
                               </span>
-                            ) : null}
-                            <span
-                              className={cn(
-                                "inline-block rounded-full px-2 py-0.2 text-[10px] font-medium",
-                                item.isWithin3Hours
-                                  ? "bg-destructive/15 text-destructive"
-                                  : "bg-primary/10 text-primary",
-                              )}
-                            >
-                              {item.countdownStr}
-                            </span>
+                              <span className="text-[10px] text-muted-foreground group-hover:text-foreground">
+                                {isRead
+                                  ? "Read (click to unread)"
+                                  : "Click to mark read"}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-[10px] text-muted-foreground group-hover:text-foreground">
-                            {isRead
-                              ? "Read (click to unread)"
-                              : "Click to mark read"}
-                          </span>
                         </div>
                       );
                     })
