@@ -80,8 +80,7 @@ function fromEntry(e: Loose): ImportItem | null {
     (typeof titleObj === "string" ? titleObj : undefined) ??
     (typeof titleObj === "object"
       ? ((titleObj["english"] ?? titleObj["romaji"] ?? titleObj["native"]) as
-          | string
-          | undefined)
+          string | undefined)
       : undefined) ??
     (e["anime_title"] as string | undefined) ??
     (e["manga_title"] as string | undefined) ??

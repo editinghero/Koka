@@ -1,12 +1,7 @@
 export type MediaType = "ANIME" | "MANGA";
 
 export type WatchStatus =
-  | "CURRENT"
-  | "PLANNING"
-  | "COMPLETED"
-  | "PAUSED"
-  | "DROPPED"
-  | "REPEATING";
+  "CURRENT" | "PLANNING" | "COMPLETED" | "PAUSED" | "DROPPED" | "REPEATING";
 
 export const STATUS_LABEL: Record<WatchStatus, string> = {
   CURRENT: "Watching",

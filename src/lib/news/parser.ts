@@ -40,7 +40,10 @@ export function stripHtml(html: string): string {
 
 /** Extract text inside a single XML tag or CDATA */
 export function getTagContent(xml: string, tagName: string): string {
-  const regex = new RegExp(`<${tagName}(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/${tagName}>`, "i");
+  const regex = new RegExp(
+    `<${tagName}(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/${tagName}>`,
+    "i",
+  );
   const match = xml.match(regex);
   if (!match || !match[1]) return "";
   let content = match[1].trim();
@@ -53,8 +56,15 @@ export function getTagContent(xml: string, tagName: string): string {
 }
 
 /** Extract an attribute value from a tag */
-export function getTagAttr(xml: string, tagName: string, attrName: string): string {
-  const regex = new RegExp(`<${tagName}[^>]*\\s+${attrName}=["']([^"']+)["'][^>]*\\/?>`, "i");
+export function getTagAttr(
+  xml: string,
+  tagName: string,
+  attrName: string,
+): string {
+  const regex = new RegExp(
+    `<${tagName}[^>]*\\s+${attrName}=["']([^"']+)["'][^>]*\\/?>`,
+    "i",
+  );
   const match = xml.match(regex);
   return match && match[1] ? match[1].trim() : "";
 }
@@ -62,7 +72,9 @@ export function getTagAttr(xml: string, tagName: string, attrName: string): stri
 /** Extract image URL from item XML across all RSS / Atom formats */
 export function extractImageUrl(itemXml: string): string | undefined {
   // 1. Check media:thumbnail tag content (e.g. MyAnimeList)
-  const mediaThumbContent = itemXml.match(/<media:thumbnail[^>]*>([\s\S]*?)<\/media:thumbnail>/i);
+  const mediaThumbContent = itemXml.match(
+    /<media:thumbnail[^>]*>([\s\S]*?)<\/media:thumbnail>/i,
+  );
   if (mediaThumbContent && mediaThumbContent[1]) {
     const candidate = decodeEntities(mediaThumbContent[1].trim());
     if (/^https?:\/\//i.test(candidate)) {
@@ -71,19 +83,33 @@ export function extractImageUrl(itemXml: string): string | undefined {
   }
 
   // 2. Check media:thumbnail url attribute
-  const mediaThumbAttr = itemXml.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
-  if (mediaThumbAttr && mediaThumbAttr[1] && /^https?:\/\//i.test(mediaThumbAttr[1])) {
+  const mediaThumbAttr = itemXml.match(
+    /<media:thumbnail[^>]*\burl=["']([^"']+)["']/i,
+  );
+  if (
+    mediaThumbAttr &&
+    mediaThumbAttr[1] &&
+    /^https?:\/\//i.test(mediaThumbAttr[1])
+  ) {
     return decodeEntities(mediaThumbAttr[1].trim());
   }
 
   // 3. Check media:content url attribute (e.g. Crunchyroll)
-  const mediaContentAttr = itemXml.match(/<media:content[^>]*\burl=["']([^"']+)["']/i);
-  if (mediaContentAttr && mediaContentAttr[1] && /^https?:\/\//i.test(mediaContentAttr[1])) {
+  const mediaContentAttr = itemXml.match(
+    /<media:content[^>]*\burl=["']([^"']+)["']/i,
+  );
+  if (
+    mediaContentAttr &&
+    mediaContentAttr[1] &&
+    /^https?:\/\//i.test(mediaContentAttr[1])
+  ) {
     return decodeEntities(mediaContentAttr[1].trim());
   }
 
   // 4. Check media:content tag content
-  const mediaContentTag = itemXml.match(/<media:content[^>]*>([\s\S]*?)<\/media:content>/i);
+  const mediaContentTag = itemXml.match(
+    /<media:content[^>]*>([\s\S]*?)<\/media:content>/i,
+  );
   if (mediaContentTag && mediaContentTag[1]) {
     const candidate = decodeEntities(mediaContentTag[1].trim());
     if (/^https?:\/\//i.test(candidate)) {
@@ -92,8 +118,14 @@ export function extractImageUrl(itemXml: string): string | undefined {
   }
 
   // 5. Check enclosure url with image MIME or image extension (e.g. Kotaku)
-  const enclosureMatch = itemXml.match(/<enclosure[^>]*\burl=["']([^"']+)["']/i);
-  if (enclosureMatch && enclosureMatch[1] && /^https?:\/\//i.test(enclosureMatch[1])) {
+  const enclosureMatch = itemXml.match(
+    /<enclosure[^>]*\burl=["']([^"']+)["']/i,
+  );
+  if (
+    enclosureMatch &&
+    enclosureMatch[1] &&
+    /^https?:\/\//i.test(enclosureMatch[1])
+  ) {
     const encUrl = decodeEntities(enclosureMatch[1].trim());
     if (
       /\.(jpe?g|png|webp|gif|avif)($|\?)/i.test(encUrl) ||
@@ -122,8 +154,16 @@ export function extractImageUrl(itemXml: string): string | undefined {
   }
 
   // 7. Direct image url match inside item
-  const urlMatch = itemXml.match(/https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|gif)(?:\?[^\s"'<>]*)?/i);
-  if (urlMatch && urlMatch[0] && !urlMatch[0].includes("1x1") && !urlMatch[0].includes("/emoji/") && !urlMatch[0].includes("s.w.org")) {
+  const urlMatch = itemXml.match(
+    /https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp|gif)(?:\?[^\s"'<>]*)?/i,
+  );
+  if (
+    urlMatch &&
+    urlMatch[0] &&
+    !urlMatch[0].includes("1x1") &&
+    !urlMatch[0].includes("/emoji/") &&
+    !urlMatch[0].includes("s.w.org")
+  ) {
     return decodeEntities(urlMatch[0]);
   }
 
@@ -131,12 +171,17 @@ export function extractImageUrl(itemXml: string): string | undefined {
 }
 
 /** Parse XML string into Raw Item list */
-export function parseRssFeed(xml: string, sourceId: string, sourceName: string): NewsArticle[] {
+export function parseRssFeed(
+  xml: string,
+  sourceId: string,
+  sourceName: string,
+): NewsArticle[] {
   const articles: NewsArticle[] = [];
   if (!xml) return articles;
 
   // Split items by <item> or <entry> (Atom)
-  const itemMatches = xml.match(/<(?:item|entry)(?:[\s>][\s\S]*?<\/(?:item|entry)>)/gi) || [];
+  const itemMatches =
+    xml.match(/<(?:item|entry)(?:[\s>][\s\S]*?<\/(?:item|entry)>)/gi) || [];
 
   for (const itemXml of itemMatches) {
     // Title
@@ -200,7 +245,8 @@ export function parseRssFeed(xml: string, sourceId: string, sourceName: string):
       sourceId,
       sourceName,
       publishedAt,
-      description: description && description.length > 0 ? description : undefined,
+      description:
+        description && description.length > 0 ? description : undefined,
       imageUrl,
       category,
     });

@@ -100,6 +100,22 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
+
+    // Dynamically update theme-color meta tag for PWA status bar matching
+    setTimeout(() => {
+      const bgColor =
+        getComputedStyle(document.body).getPropertyValue("background-color") ||
+        getComputedStyle(root).getPropertyValue("background-color");
+      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute("content", bgColor);
+      } else {
+        metaThemeColor = document.createElement("meta");
+        metaThemeColor.setAttribute("name", "theme-color");
+        metaThemeColor.setAttribute("content", bgColor);
+        document.head.appendChild(metaThemeColor);
+      }
+    }, 50); // slight delay to allow CSS to apply
   } catch {
     /* ignore */
   }
