@@ -3,7 +3,7 @@
   "short_name": "Koka",
   "description": "All-in-one anime workspace: tracking, seasons, AI news and notes.",
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#141414",
   "theme_color": "#141414",
   "icons": [
