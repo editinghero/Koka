@@ -36,14 +36,22 @@ export function formatAiringTime(airingAtSeconds: number): {
   const isWithin3Hours = !isPast && diffSeconds <= 3 * 3600;
 
   const dateObj = new Date(airingMs);
-  const timeStr = dateObj.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const day = dateObj.getDate();
+  const month = dateObj.toLocaleDateString("en-US", { month: "short" });
+  const timeFormatted = dateObj
+    .toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    })
+    .toLowerCase()
+    .replace(/\s+/g, "");
+
+  const fullDateStr = `${day} ${month} ${timeFormatted}`;
 
   if (isPast) {
     return {
-      timeStr: `Aired at ${timeStr}`,
+      timeStr: `Aired ${fullDateStr}`,
       countdownStr: "Airing now / Recently aired",
       isWithin3Hours: false,
       isPast: true,
@@ -64,7 +72,7 @@ export function formatAiringTime(airingAtSeconds: number): {
   }
 
   return {
-    timeStr: `Today at ${timeStr}`,
+    timeStr: fullDateStr,
     countdownStr,
     isWithin3Hours,
     isPast: false,

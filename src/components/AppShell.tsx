@@ -170,6 +170,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [dark, preset]);
 
   useEffect(() => {
+    if (typeof window !== "undefined" && !pathname.startsWith("/anime/")) {
+      try {
+        sessionStorage.setItem("koka:last_browse_path", pathname);
+      } catch {
+        /* ignore quota / private browsing errors */
+      }
+    }
+  }, [pathname]);
+
+  useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();

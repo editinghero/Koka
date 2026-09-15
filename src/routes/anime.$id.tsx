@@ -62,6 +62,29 @@ export const Route = createFileRoute("/anime/$id")({
   component: AnimeDetail,
 });
 
+function getBackDestination(): { label: string; to: string } {
+  if (typeof window === "undefined") {
+    return { label: "Back to library", to: "/library" };
+  }
+  try {
+    const lastPath = sessionStorage.getItem("koka:last_browse_path") || "";
+    const ref = document.referrer || "";
+
+    if (lastPath.startsWith("/seasons") || ref.includes("/seasons")) {
+      return { label: "Back to discover", to: "/seasons" };
+    }
+    if (lastPath === "/" || ref.endsWith("/")) {
+      return { label: "Back to dashboard", to: "/" };
+    }
+    if (lastPath.startsWith("/notes") || ref.includes("/notes")) {
+      return { label: "Back to notes", to: "/notes" };
+    }
+  } catch {
+    /* ignore storage errors */
+  }
+  return { label: "Back to library", to: "/library" };
+}
+
 function AnimeDetail() {
   const { id } = Route.useParams();
   const animeId = Number(id);
@@ -72,6 +95,14 @@ function AnimeDetail() {
   const note = notes.find((n) => n.animeId === animeId);
   const entry = library.find((e) => e.media.id === animeId);
   const [isEditing, setIsEditing] = useState(false);
+  const [backNav, setBackNav] = useState({
+    label: "Back to library",
+    to: "/library",
+  });
+
+  useEffect(() => {
+    setBackNav(getBackDestination());
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["media", mode, animeId],
@@ -220,10 +251,16 @@ function AnimeDetail() {
   return (
     <div className="animate-in duration-150 fade-in-0">
       <Link
-        to="/library"
+        to={backNav.to}
+        onClick={(e) => {
+          if (typeof window !== "undefined" && window.history.length > 1) {
+            e.preventDefault();
+            window.history.back();
+          }
+        }}
         className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to library
+        <ArrowLeft className="h-3.5 w-3.5" /> {backNav.label}
       </Link>
 
       <div className="panel relative overflow-hidden">

@@ -116,7 +116,7 @@ function Dashboard() {
     [library],
   );
 
-  // Show anime entries in library with an upcoming airing episode within 14 days, and only when started
+  // Show anime entries in library with an upcoming airing episode within 14 days
   const airing = useMemo(() => {
     const nowSec = Math.floor(Date.now() / 1000);
     const fourteenDaysSec = 14 * 86400;
@@ -125,14 +125,7 @@ function Dashboard() {
       .filter((e) => {
         const airingAt = e.media.nextEpisode?.airingAt;
         if (!airingAt) return false;
-        if (airingAt - nowSec > fourteenDaysSec) return false;
-        // Only show when started
-        const isStarted =
-          e.status === "CURRENT" ||
-          e.status === "REPEATING" ||
-          e.progress > 0 ||
-          Boolean(e.startedAt);
-        return isStarted;
+        return airingAt - nowSec <= fourteenDaysSec;
       })
       .sort(
         (a, b) =>
