@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS settings (
   spoiler_free INTEGER NOT NULL DEFAULT 1,
   theme        TEXT NOT NULL DEFAULT 'dark',
   light_theme  TEXT NOT NULL DEFAULT 'paper',
-  dark_theme   TEXT NOT NULL DEFAULT 'koka',
+  dark_theme   TEXT NOT NULL DEFAULT 'umi',
   media_mode   TEXT NOT NULL DEFAULT 'ANIME',
   updated_at   INTEGER
 );

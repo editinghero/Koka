@@ -181,7 +181,7 @@ export const DEFAULT_SETTINGS: Settings = {
   spoilerFree: true,
   theme: "dark",
   lightTheme: "paper",
-  darkTheme: "koka",
+  darkTheme: "umi",
   font: "default",
 };
 
