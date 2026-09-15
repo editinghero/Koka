@@ -363,8 +363,8 @@ button:not(:disabled):active,
 
 /* Minimal markdown typography, no plugin dependency */
 .md-body {
-  font-size: 0.925rem;
-  line-height: 1.7;
+  font-size: 0.835rem;
+  line-height: 1.65;
   color: var(--color-foreground);
 }
 .md-body > * + * {
@@ -425,7 +425,7 @@ button:not(:disabled):active,
 .md-body table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 .md-body th,
 .md-body td {
