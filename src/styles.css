@@ -390,6 +390,9 @@ button:not(:disabled):active,
   list-style: decimal;
   padding-left: 1.25rem;
 }
+.md-body li::marker {
+  color: color-mix(in srgb, var(--color-foreground) 80%, var(--color-muted-foreground) 20%);
+}
 .md-body li + li {
   margin-top: 0.25rem;
 }
