@@ -7,6 +7,9 @@ import {
   RefreshCw,
   FileSpreadsheet,
   Database,
+  Check,
+  X,
+  Trash2,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { fetchByIds, fetchByMalIds, fetchUserList } from "@/lib/anilist";
@@ -60,14 +63,84 @@ export const Route = createFileRoute("/import")({
 
 type Mode = "merge" | "replace";
 
+interface DiffItem {
+  id: number;
+  mediaType: MediaType;
+  title: string;
+  cover?: string | null;
+  status: string;
+  progress: number;
+  total?: number | null;
+}
+
 function ImportPage() {
   const { mode: mediaMode } = useMediaMode();
-  const { mergeMany, replaceMany, library } = useLibrary();
+  const { mergeMany, replaceMany, library, all, remove } = useLibrary();
   const { notes, setNotes, mergeNotes, replaceNotes } = useNotes();
   const { settings, update } = useSettings();
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("merge");
   const [log, setLog] = useState<string[]>([]);
+
+  const [pendingDiff, setPendingDiff] = useState<DiffItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem("koka:import_diff_review");
+      return raw ? (JSON.parse(raw) as DiffItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  function saveDiff(items: DiffItem[]) {
+    setPendingDiff(items);
+    if (typeof window !== "undefined") {
+      if (!items.length) {
+        window.localStorage.removeItem("koka:import_diff_review");
+      } else {
+        window.localStorage.setItem(
+          "koka:import_diff_review",
+          JSON.stringify(items),
+        );
+      }
+    }
+  }
+
+  function keepItem(id: number, mediaType: MediaType) {
+    const next = pendingDiff.filter(
+      (i) => !(i.id === id && i.mediaType === mediaType),
+    );
+    saveDiff(next);
+    toast.success("Entry kept");
+  }
+
+  function deleteItem(id: number, mediaType: MediaType) {
+    remove(id, mediaType);
+    const next = pendingDiff.filter(
+      (i) => !(i.id === id && i.mediaType === mediaType),
+    );
+    saveDiff(next);
+    toast.success("Entry deleted from library");
+  }
+
+  function keepAll() {
+    saveDiff([]);
+    toast.success("All unmatched entries kept");
+  }
+
+  function deleteAll() {
+    if (
+      !confirm(
+        `Are you sure you want to delete all ${pendingDiff.length} unmatched entries from your library? This cannot be undone.`,
+      )
+    )
+      return;
+    for (const item of pendingDiff) {
+      remove(item.id, item.mediaType);
+    }
+    saveDiff([]);
+    toast.success(`Deleted ${pendingDiff.length} entries`);
+  }
 
   const modeNoun = mediaMode === "MANGA" ? "manga" : "anime";
 
@@ -115,6 +188,26 @@ function ImportPage() {
       mergeMany(preservedEntries);
       if (incomingNotes.length) mergeNotes(incomingNotes);
     }
+
+    // Feature 6: Compute unmatched entries in local library not in imported list
+    const importedKeys = new Set(
+      entries.map((e) => `${e.media.type ?? "ANIME"}-${e.media.id}`),
+    );
+    const unmatched: DiffItem[] = all
+      .filter((e) => {
+        const t = e.media.type ?? "ANIME";
+        return types.includes(t) && !importedKeys.has(`${t}-${e.media.id}`);
+      })
+      .map((e) => ({
+        id: e.media.id,
+        mediaType: (e.media.type ?? "ANIME") as MediaType,
+        title: e.media.title,
+        cover: e.media.cover,
+        status: e.status,
+        progress: e.progress,
+        total: e.media.episodes ?? e.media.chapters ?? null,
+      }));
+    saveDiff(unmatched);
   }
 
   /** Resolve AniList metadata for parsed items of one media type. */
@@ -509,6 +602,90 @@ function ImportPage() {
             </p>
           )}
         </section>
+
+        {pendingDiff.length > 0 ? (
+          <section className="panel p-5 lg:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+              <div>
+                <h2 className="font-display text-sm font-semibold text-foreground">
+                  Unmatched library entries ({pendingDiff.length})
+                </h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  These entries are in your local library but were not present in
+                  your last import. Keep or delete them.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs active:scale-95"
+                  onClick={keepAll}
+                >
+                  <Check className="mr-1 h-3.5 w-3.5 text-green-500" /> Keep all
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs text-destructive hover:bg-destructive/10 active:scale-95"
+                  onClick={deleteAll}
+                >
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete all
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-3 max-h-96 divide-y divide-border overflow-y-auto pr-1">
+              {pendingDiff.map((item) => (
+                <div
+                  key={`${item.mediaType}-${item.id}`}
+                  className="flex items-center justify-between gap-3 py-2.5"
+                >
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    {item.cover ? (
+                      <img
+                        src={item.cover}
+                        alt=""
+                        loading="lazy"
+                        className="h-11 w-8 flex-shrink-0 rounded object-cover"
+                      />
+                    ) : (
+                      <div className="h-11 w-8 flex-shrink-0 rounded bg-muted" />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-foreground">
+                        {item.title}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {item.mediaType} · {item.status} · {item.progress}/
+                        {item.total ?? "?"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-shrink-0 items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => keepItem(item.id, item.mediaType)}
+                      title="Keep entry in library"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-surface text-green-500 transition-colors hover:border-green-500/40 hover:bg-green-500/10 active:scale-90"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => deleteItem(item.id, item.mediaType)}
+                      title="Delete entry from library and cloud"
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-surface text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10 active:scale-90"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </>
   );

@@ -31,6 +31,7 @@ export type SettingsRow = {
   theme: string;
   light_theme: string;
   dark_theme: string;
+  font: string;
   media_mode: string;
 };
 
@@ -50,6 +51,7 @@ export const DEFAULT_SETTINGS_ROW: SettingsRow = {
   theme: "dark",
   light_theme: "paper",
   dark_theme: "umi",
+  font: "default",
   media_mode: "ANIME",
 };
 
@@ -111,7 +113,8 @@ const SCHEMA = [
      spoiler_free INTEGER NOT NULL DEFAULT 1,
      theme TEXT NOT NULL DEFAULT 'dark',
      light_theme TEXT NOT NULL DEFAULT 'paper',
-     dark_theme TEXT NOT NULL DEFAULT 'kuro',
+     dark_theme TEXT NOT NULL DEFAULT 'umi',
+     font TEXT NOT NULL DEFAULT 'default',
      media_mode TEXT NOT NULL DEFAULT 'ANIME',
      updated_at INTEGER
    )`,
@@ -196,6 +199,15 @@ async function ensureSchema(db: D1Database) {
   } catch {
     /* column already exists */
   }
+  try {
+    await db
+      .prepare(
+        "ALTER TABLE settings ADD COLUMN font TEXT NOT NULL DEFAULT 'default'",
+      )
+      .run();
+  } catch {
+    /* column already exists */
+  }
   schemaReady = true;
 }
 
@@ -259,13 +271,14 @@ function d1Repo(db: D1Database): Repo {
       await ready();
       await db
         .prepare(
-          `INSERT INTO settings (user_id, gemini_key, model, anilist_user, spoiler_free, theme, light_theme, dark_theme, media_mode, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `INSERT INTO settings (user_id, gemini_key, model, anilist_user, spoiler_free, theme, light_theme, dark_theme, font, media_mode, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(user_id) DO UPDATE SET
              gemini_key = excluded.gemini_key, model = excluded.model,
              anilist_user = excluded.anilist_user, spoiler_free = excluded.spoiler_free,
              theme = excluded.theme, light_theme = excluded.light_theme,
-             dark_theme = excluded.dark_theme, media_mode = excluded.media_mode,
+             dark_theme = excluded.dark_theme, font = excluded.font,
+             media_mode = excluded.media_mode,
              updated_at = excluded.updated_at`,
         )
         .bind(
@@ -277,6 +290,7 @@ function d1Repo(db: D1Database): Repo {
           row.theme,
           row.light_theme,
           row.dark_theme,
+          row.font ?? "default",
           row.media_mode,
           Date.now(),
         )

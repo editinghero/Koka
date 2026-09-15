@@ -147,7 +147,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var f=localStorage.getItem("koka:font");if(f)document.documentElement.setAttribute("data-font",f);var c=localStorage.getItem("koka:cache");if(c){var p=JSON.parse(c);if(p&&p.settings){var dark=p.settings.theme==="dark";var t=dark?(p.settings.darkTheme||"umi"):(p.settings.lightTheme||"paper");document.documentElement.classList.toggle("dark",dark);document.documentElement.setAttribute("data-theme",t);}}}catch(e){}`,
+            __html: `try{var c=localStorage.getItem("koka:cache");var f=localStorage.getItem("koka:font");if(!f&&c){var p0=JSON.parse(c);if(p0&&p0.settings&&p0.settings.font)f=p0.settings.font;}if(f)document.documentElement.setAttribute("data-font",f);if(c){var p=JSON.parse(c);if(p&&p.settings){var dark=p.settings.theme==="dark";var t=dark?(p.settings.darkTheme||"umi"):(p.settings.lightTheme||"paper");document.documentElement.classList.toggle("dark",dark);document.documentElement.setAttribute("data-theme",t);}}}catch(e){}`,
           }}
         />
       </head>

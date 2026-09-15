@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { Markdown } from "@/components/Markdown";
 import { useMediaMode, useNotes } from "@/lib/store";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/notes")({
   head: () => ({
@@ -27,7 +28,7 @@ export const Route = createFileRoute("/notes")({
 
 function NotesPage() {
   const { mode } = useMediaMode();
-  const { notes } = useNotes();
+  const { notes, removeNote } = useNotes();
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState("ALL");
 
@@ -102,16 +103,35 @@ function NotesPage() {
               data-card-press
               className="panel card-pressable p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] active:scale-[0.98] active:opacity-85"
             >
-              <Link
-                to="/anime/$id"
-                params={{ id: String(n.animeId) }}
-                className="font-display text-sm font-semibold hover:text-primary transition-colors active:opacity-80"
-              >
-                {n.title}
-              </Link>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                Updated {new Date(n.updatedAt).toLocaleDateString()}
-              </p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to="/anime/$id"
+                    params={{ id: String(n.animeId) }}
+                    className="font-display block truncate text-sm font-semibold transition-colors hover:text-primary active:opacity-80"
+                  >
+                    {n.title}
+                  </Link>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    Updated {new Date(n.updatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (confirm(`Delete note for "${n.title}"?`)) {
+                      removeNote(n.animeId, n.mediaType ?? mode);
+                      toast.success("Note deleted");
+                    }
+                  }}
+                  title="Delete note"
+                  className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive active:scale-90"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
               <div className="mt-3 max-h-56 overflow-hidden">
                 <Markdown>{n.body || "_Empty note_"}</Markdown>
               </div>

@@ -41,6 +41,7 @@ export const getBootstrap = createServerFn({ method: "GET" }).handler(
         theme: row.theme === "light" ? "light" : "dark",
         lightTheme: row.light_theme,
         darkTheme: row.dark_theme,
+        font: (row.font as FontOption) || "default",
       },
       mode: row.media_mode === "MANGA" ? "MANGA" : "ANIME",
       library,
@@ -64,6 +65,7 @@ export const saveSettings = createServerFn({ method: "POST" })
       theme: data.settings.theme,
       light_theme: data.settings.lightTheme,
       dark_theme: data.settings.darkTheme,
+      font: data.settings.font ?? "default",
       media_mode: data.mode === "MANGA" ? "MANGA" : "ANIME",
     });
     return { ok: true };

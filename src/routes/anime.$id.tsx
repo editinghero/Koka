@@ -193,10 +193,9 @@ function AnimeDetail() {
     updateField("customLinks", current);
   }
 
+  const validLinks = (entry?.customLinks ?? []).filter((l) => l.url.trim());
   const primaryLink =
-    (entry?.customLinks ?? []).find((l) => l.isPrimary && l.url.trim()) ??
-    (entry?.customLinks ?? []).find((l) => l.url.trim()) ??
-    null;
+    validLinks.find((l) => l.isPrimary) ?? validLinks[0] ?? null;
 
   return (
     <div className="animate-in duration-150 fade-in-0">
@@ -340,24 +339,37 @@ function AnimeDetail() {
                     </Button>
                   </div>
 
-                  {/* Play Button: displayed if custom link exists */}
-                  {primaryLink ? (
-                    <a
-                      href={primaryLink.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-95"
-                      title={`Open ${primaryLink.url}`}
-                    >
-                      <Play className="h-3.5 w-3.5 fill-current" />
-                      <span>
-                        {primaryLink.label.trim()
-                          ? primaryLink.label
-                          : mode === "MANGA"
-                            ? "Read"
-                            : "Play"}
-                      </span>
-                    </a>
+                  {/* Play Buttons: shows all added custom links as buttons */}
+                  {validLinks.length > 0 ? (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {validLinks.map((link, idx) => {
+                        const label =
+                          link.label.trim() ||
+                          (mode === "MANGA" ? `Read ${idx + 1}` : `Play ${idx + 1}`);
+                        return (
+                          <a
+                            key={idx}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-150 active:scale-95 ${
+                              link.isPrimary
+                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                : "border border-border bg-surface text-foreground hover:bg-surface-2"
+                            }`}
+                            title={`Open ${link.url}${link.isPrimary ? " (Primary on Home screen)" : ""}`}
+                          >
+                            <Play
+                              className={`h-3.5 w-3.5 ${link.isPrimary ? "fill-current" : ""}`}
+                            />
+                            <span>{label}</span>
+                            {link.isPrimary ? (
+                              <Star className="ml-0.5 h-3 w-3 fill-amber-300 text-amber-300" />
+                            ) : null}
+                          </a>
+                        );
+                      })}
+                    </div>
                   ) : null}
 
                   {/* Read-only Score */}
@@ -620,8 +632,8 @@ function AnimeDetail() {
                         Custom Links
                       </span>
                       <p className="text-[11px] text-muted-foreground">
-                        Add streaming or platform links. Star one link to set it as
-                        primary for the Play button.
+                        Add streaming or platform links. The starred link is used
+                        for the Play button on the Home screen schedule.
                       </p>
                     </div>
                     <Button

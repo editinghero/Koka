@@ -11,11 +11,13 @@ import {
   CheckSquare,
   Eye,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { Markdown } from "./Markdown";
 import { Button } from "@/components/ui/button";
 import { useNotes } from "@/lib/store";
 import { normalizeTags, type MediaType } from "@/lib/types";
+import { toast } from "sonner";
 
 const TOOLS = [
   { icon: Bold, label: "Bold", wrap: ["**", "**"] },
@@ -38,7 +40,7 @@ export function NoteEditor({
   title: string;
   mediaType?: MediaType;
 }) {
-  const { notes, saveNote } = useNotes(mediaType);
+  const { notes, saveNote, removeNote } = useNotes(mediaType);
   const existing = notes.find((n) => n.animeId === animeId);
   const [body, setBody] = useState(existing?.body ?? "");
   const [tags, setTags] = useState((existing?.tags ?? []).join(", "));
@@ -99,7 +101,26 @@ export function NoteEditor({
             <t.icon className="h-3.5 w-3.5" />
           </button>
         ))}
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-1">
+          {existing && (existing.body.trim() || existing.tags.length) ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs text-muted-foreground hover:text-destructive"
+              title="Delete note"
+              onClick={() => {
+                if (confirm(`Delete note for "${title}"?`)) {
+                  removeNote(animeId, mediaType);
+                  setBody("");
+                  setTags("");
+                  saved.current = "";
+                  toast.success("Note deleted");
+                }
+              }}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          ) : null}
           <Button
             size="sm"
             variant="ghost"

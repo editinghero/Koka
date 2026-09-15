@@ -99,7 +99,7 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     const dark = settings.theme === "dark";
     const preset = dark ? settings.darkTheme : settings.lightTheme;
     const rawFont = typeof window !== "undefined" ? (window.localStorage.getItem("koka:font") as FontOption | null) : null;
-    const font = settingsOverride?.font ?? rawFont ?? settings.font ?? "default";
+    const font = settingsOverride?.font ?? settings.font ?? rawFont ?? "default";
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
@@ -166,25 +166,29 @@ export function boot(force = false): Promise<void> {
         setState({ ready: true, user: null }, false);
         return;
       }
-      const currentFont =
-        state.settings.font ??
-        (typeof window !== "undefined"
+      const fontFromData = data.settings?.font;
+      const localFont =
+        typeof window !== "undefined"
           ? (window.localStorage.getItem("koka:font") as FontOption | null)
-          : null) ??
-        "default";
+          : null;
+      const currentFont = fontFromData || localFont || state.settings.font || "default";
+      if (typeof window !== "undefined" && currentFont) {
+        window.localStorage.setItem("koka:font", currentFont);
+      }
+      const updatedSettings = {
+        ...DEFAULT_SETTINGS,
+        ...(data.settings ?? {}),
+        font: currentFont,
+      };
       setState({
         ready: true,
         user: data.user,
-        settings: {
-          ...DEFAULT_SETTINGS,
-          ...(data.settings ?? {}),
-          font: currentFont,
-        },
+        settings: updatedSettings,
         mode: data.mode,
         library: data.library,
         notes: data.notes,
       });
-      applyThemeFromSettings();
+      applyThemeFromSettings(updatedSettings);
     })
     .catch(() => setState({ ready: true }, false));
   return bootPromise;
@@ -317,16 +321,17 @@ export function useLibrary(forceMode?: MediaType) {
   );
 
   const remove = useCallback(
-    (id: number) => {
+    (id: number, explicitType?: MediaType) => {
+      const targetType = explicitType ?? mode;
       setState({
         library: state.library.filter(
-          (e) => !(e.media.id === id && typeOf(e) === mode),
+          (e) => !(e.media.id === id && typeOf(e) === targetType),
         ),
       });
       if (signedIn()) {
-        void removeEntry({ data: { mediaId: id, mediaType: mode } }).catch(
-          fail,
-        );
+        void removeEntry({
+          data: { mediaId: id, mediaType: targetType },
+        }).catch(fail);
       }
     },
     [mode],

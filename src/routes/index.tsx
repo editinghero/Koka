@@ -4,6 +4,7 @@ import {
   CalendarClock,
   Flame,
   ListChecks,
+  Play,
   RefreshCw,
   Star,
 } from "lucide-react";
@@ -254,7 +255,35 @@ function Dashboard() {
                           >
                             {e.progress}/{(e.media.nextEpisode?.episode ?? 1) - 1}
                           </span>
-                        ) : null}
+                        ) : (
+                          (() => {
+                            const primaryLink =
+                              (e.customLinks ?? []).find(
+                                (l) => l.isPrimary && l.url.trim(),
+                              ) ??
+                              (e.customLinks ?? []).find((l) => l.url.trim()) ??
+                              null;
+                            if (!primaryLink) return null;
+                            return (
+                              <button
+                                type="button"
+                                onClick={(evt) => {
+                                  evt.preventDefault();
+                                  evt.stopPropagation();
+                                  window.open(
+                                    primaryLink.url,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                  );
+                                }}
+                                title={`Play (${primaryLink.label || "External"})`}
+                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-90"
+                              >
+                                <Play className="ml-0.5 h-3 w-3 fill-current" />
+                              </button>
+                            );
+                          })()
+                        )}
                         <span
                           className={cn(
                             "inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold",
