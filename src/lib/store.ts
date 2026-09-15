@@ -98,8 +98,8 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     }
     const dark = settings.theme === "dark";
     const preset = dark ? settings.darkTheme : settings.lightTheme;
-    const rawFont = typeof window !== "undefined" ? window.localStorage.getItem("koka:font") : null;
-    const font = settings.font ?? (rawFont as FontOption) ?? "default";
+    const rawFont = typeof window !== "undefined" ? (window.localStorage.getItem("koka:font") as FontOption | null) : null;
+    const font = settingsOverride?.font ?? rawFont ?? settings.font ?? "default";
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
