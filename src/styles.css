@@ -1020,3 +1020,8 @@ button:not(:disabled):active,
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+::selection {
+  background-color: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
