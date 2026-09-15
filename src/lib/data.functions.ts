@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import type { LibraryEntry, MediaType, Note, Settings } from "./types";
+import type { FontOption, LibraryEntry, MediaType, Note, Settings } from "./types";
 
 export type Bootstrap = {
   user: { id: string; email: string; name: string } | null;

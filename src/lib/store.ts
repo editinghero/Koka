@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   DEFAULT_SETTINGS,
+  normalizeTags,
+  type FontOption,
   type LibraryEntry,
   type MediaType,
   type Note,

@@ -211,7 +211,7 @@ function ImportPage() {
         id: e.media.id,
         mediaType: (e.media.type === "MANGA" ? "MANGA" : "ANIME") as MediaType,
         title: e.media.title,
-        cover: e.media.cover,
+        cover: e.media.cover ?? null,
         status: e.status,
         progress: e.progress,
         total: e.media.episodes ?? e.media.chapters ?? null,

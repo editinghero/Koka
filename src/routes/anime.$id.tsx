@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -236,7 +236,7 @@ function AnimeDetail() {
     const current = [...(entry?.customLinks ?? [])];
     const wasPrimary = current[index]?.isPrimary;
     current.splice(index, 1);
-    if (wasPrimary && current.length > 0) {
+    if (wasPrimary && current[0]) {
       current[0].isPrimary = true;
     }
     updateField("customLinks", current);
