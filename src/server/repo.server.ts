@@ -8,6 +8,7 @@
  */
 import {
   normalizeTags,
+  type CustomLink,
   type LibraryEntry,
   type MediaType,
   type Note,
@@ -125,6 +126,8 @@ const SCHEMA = [
      started_at TEXT,
      completed_at TEXT,
      repeat_count INTEGER,
+     is_rewatching INTEGER NOT NULL DEFAULT 0,
+     custom_links TEXT NOT NULL DEFAULT '[]',
      tags TEXT NOT NULL DEFAULT '[]',
      custom_lists TEXT NOT NULL DEFAULT '[]',
      media TEXT NOT NULL,
@@ -170,6 +173,24 @@ async function ensureSchema(db: D1Database) {
     await db
       .prepare(
         "ALTER TABLE library_entries ADD COLUMN custom_lists TEXT NOT NULL DEFAULT '[]'",
+      )
+      .run();
+  } catch {
+    /* column already exists */
+  }
+  try {
+    await db
+      .prepare(
+        "ALTER TABLE library_entries ADD COLUMN is_rewatching INTEGER NOT NULL DEFAULT 0",
+      )
+      .run();
+  } catch {
+    /* column already exists */
+  }
+  try {
+    await db
+      .prepare(
+        "ALTER TABLE library_entries ADD COLUMN custom_links TEXT NOT NULL DEFAULT '[]'",
       )
       .run();
   } catch {
@@ -277,6 +298,14 @@ function d1Repo(db: D1Database): Repo {
         startedAt: (r["started_at"] as string | null) ?? null,
         completedAt: (r["completed_at"] as string | null) ?? null,
         repeat: r["repeat_count"] === null ? null : Number(r["repeat_count"]),
+        isRewatching: Number(r["is_rewatching"] ?? 0) === 1,
+        customLinks: (() => {
+          try {
+            return JSON.parse(String(r["custom_links"] ?? "[]")) as CustomLink[];
+          } catch {
+            return [];
+          }
+        })(),
         tags: normalizeTags(JSON.parse(String(r["tags"] ?? "[]")) as string[]),
         customLists: normalizeTags(
           JSON.parse(String(r["custom_lists"] ?? "[]")) as string[],
@@ -290,12 +319,13 @@ function d1Repo(db: D1Database): Repo {
       for (const e of entries) {
         await db
           .prepare(
-            `INSERT INTO library_entries (user_id, media_type, media_id, status, progress, score, favorite, started_at, completed_at, repeat_count, tags, custom_lists, media, updated_at, added_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `INSERT INTO library_entries (user_id, media_type, media_id, status, progress, score, favorite, started_at, completed_at, repeat_count, is_rewatching, custom_links, tags, custom_lists, media, updated_at, added_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(user_id, media_type, media_id) DO UPDATE SET
                status = excluded.status, progress = excluded.progress, score = excluded.score,
                favorite = excluded.favorite, started_at = excluded.started_at,
                completed_at = excluded.completed_at, repeat_count = excluded.repeat_count,
+               is_rewatching = excluded.is_rewatching, custom_links = excluded.custom_links,
                tags = excluded.tags, custom_lists = excluded.custom_lists,
                media = excluded.media, updated_at = excluded.updated_at`,
           )
@@ -310,6 +340,8 @@ function d1Repo(db: D1Database): Repo {
             e.startedAt ?? null,
             e.completedAt ?? null,
             e.repeat ?? null,
+            e.isRewatching ? 1 : 0,
+            JSON.stringify(e.customLinks ?? []),
             JSON.stringify(normalizeTags(e.tags)),
             JSON.stringify(normalizeTags(e.customLists)),
             JSON.stringify(e.media),

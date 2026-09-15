@@ -344,6 +344,11 @@ export function useLibrary(forceMode?: MediaType) {
         const next = {
           ...existing,
           ...entry,
+          tags: entry.tags ?? existing?.tags,
+          customLinks:
+            existing?.customLinks && existing.customLinks.length > 0
+              ? existing.customLinks
+              : (entry.customLinks ?? []),
           media: { ...existing?.media, ...entry.media },
           addedAt: existing?.addedAt ?? entry.addedAt,
         } as LibraryEntry;

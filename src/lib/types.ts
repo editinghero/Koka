@@ -112,6 +112,12 @@ export function mediaTypeOf(media: AnimeMedia): MediaType {
   return media.type === "MANGA" ? "MANGA" : "ANIME";
 }
 
+export type CustomLink = {
+  label: string;
+  url: string;
+  isPrimary: boolean;
+};
+
 export type LibraryEntry = {
   media: AnimeMedia;
   status: WatchStatus;
@@ -124,6 +130,10 @@ export type LibraryEntry = {
   completedAt?: string | null;
   /** times rewatched / reread */
   repeat?: number | null;
+  /** whether user is currently rewatching / rereading */
+  isRewatching?: boolean;
+  /** Custom user links (e.g. streaming site, seasons) */
+  customLinks?: CustomLink[];
   /** Custom user tags e.g. ["ecchi", "fav", "must-watch"] */
   tags?: string[];
   /** Custom lists e.g. ["calm"] */

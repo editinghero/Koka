@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS library_entries (
   started_at   TEXT,
   completed_at TEXT,
   repeat_count INTEGER,
+  is_rewatching INTEGER NOT NULL DEFAULT 0,
+  custom_links TEXT   NOT NULL DEFAULT '[]',   -- JSON array of {label, url, isPrimary}
   tags        TEXT    NOT NULL DEFAULT '[]',   -- JSON array
   custom_lists TEXT   NOT NULL DEFAULT '[]',   -- JSON array
   media       TEXT    NOT NULL,     -- JSON snapshot of the AniList media

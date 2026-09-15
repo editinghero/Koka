@@ -86,14 +86,25 @@ function ImportPage() {
         e.tags ?? [],
       ]),
     );
+    const existingLinksMap = new Map(
+      library.map((e) => [
+        `${e.media.type ?? "ANIME"}-${e.media.id}`,
+        e.customLinks ?? [],
+      ]),
+    );
 
     const preservedEntries = entries.map((entry) => {
       const typeKey = entry.media.type ?? "ANIME";
       const key = `${typeKey}-${entry.media.id}`;
       const existingTags = existingTagsMap.get(key) ?? [];
+      const existingLinks = existingLinksMap.get(key) ?? [];
       return {
         ...entry,
         tags: normalizeTags([...existingTags, ...(entry.tags ?? [])]),
+        customLinks:
+          existingLinks.length > 0
+            ? existingLinks
+            : (entry.customLinks ?? []),
       };
     });
 
