@@ -23,6 +23,7 @@ dist-ssr
 .dev.vars
 *.local
 custom.md 
+koka-push*
 
 # Wrangler / Cloudflare
 .wrangler/
