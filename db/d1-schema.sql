@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS settings (
   theme        TEXT NOT NULL DEFAULT 'dark',
   light_theme  TEXT NOT NULL DEFAULT 'paper',
   dark_theme   TEXT NOT NULL DEFAULT 'umi',
+  font         TEXT NOT NULL DEFAULT 'default',
   media_mode   TEXT NOT NULL DEFAULT 'ANIME',
   updated_at   INTEGER
 );
