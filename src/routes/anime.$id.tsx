@@ -97,7 +97,7 @@ function AnimeDetail() {
   }
 
   return (
-    <div className="animate-in duration-300 fade-in-0 slide-in-from-bottom-3">
+    <div className="animate-in duration-150 fade-in-0">
       <Link
         to="/library"
         className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"

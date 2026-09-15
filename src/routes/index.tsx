@@ -67,15 +67,15 @@ function Dashboard() {
 
   // Sync schedules with AniList GraphQL on dashboard load
   const syncSchedules = useCallback(async () => {
-    const animeEntries = library.filter(
-      (e) =>
-        e.media.type !== "MANGA" &&
-        (e.status === "CURRENT" || e.status === "PLANNING"),
-    );
-    if (!animeEntries.length) return;
-    const ids = animeEntries.map((e) => e.media.id);
     setRefreshing(true);
     try {
+      const animeEntries = library.filter(
+        (e) =>
+          e.media.type !== "MANGA" &&
+          (e.status === "CURRENT" || e.status === "PLANNING"),
+      );
+      if (!animeEntries.length) return;
+      const ids = animeEntries.map((e) => e.media.id);
       const map = await fetchNextAiringEpisodes(ids);
       map.forEach((nextEp, id) => {
         const existing = library.find((e) => e.media.id === id);
@@ -201,7 +201,7 @@ function Dashboard() {
                   type="button"
                   onClick={() => void syncSchedules()}
                   disabled={refreshing}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-all duration-150 active:scale-95 disabled:opacity-50"
                   title="Refresh schedule from AniList"
                 >
                   <RefreshCw
@@ -225,7 +225,8 @@ function Dashboard() {
                       key={e.media.id}
                       to="/anime/$id"
                       params={{ id: String(e.media.id) }}
-                      className="flex items-center gap-3 p-3 transition-colors hover:bg-secondary/60"
+                      data-card-press
+                      className="flex items-center gap-3 p-3 transition-all duration-150 hover:bg-secondary/60 active:scale-[0.98] active:opacity-80 card-pressable"
                     >
                       <img
                         src={e.media.cover ?? ""}

@@ -75,11 +75,11 @@ export const LIGHT_THEMES: ThemePreset[] = [
 
 export const DARK_THEMES: ThemePreset[] = [
   {
-    id: "koka",
-    label: "Koka",
-    hint: "Neutral dark",
+    id: "umi",
+    label: "Ume",
+    hint: "Warm coral rose",
     mode: "dark",
-    swatch: ["#141414", "#1c1c1c", "#6fd6dc"],
+    swatch: ["#191213", "#22191a", "#f0788a"],
   },
   {
     id: "midnight",
@@ -131,11 +131,11 @@ export const DARK_THEMES: ThemePreset[] = [
     swatch: ["#141019", "#1c1723", "#b58ce0"],
   },
   {
-    id: "umi",
-    label: "Ume",
-    hint: "Warm coral rose",
+    id: "koka",
+    label: "Coral",
+    hint: "Neutral dark",
     mode: "dark",
-    swatch: ["#140f10", "#1c1517", "#ef7688"],
+    swatch: ["#141414", "#1c1c1c", "#6fd6dc"],
   },
 ];
 

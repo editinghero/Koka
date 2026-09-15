@@ -24,13 +24,15 @@ import {
   updateProfileName,
 } from "@/lib/auth.functions";
 import { clearPin, hasPin, lockNow, setPin } from "@/lib/pin";
-import { GEMINI_MODELS, normalizeTags } from "@/lib/types";
+import { GEMINI_MODELS, normalizeTags, type FontOption } from "@/lib/types";
 import { DARK_THEMES, LIGHT_THEMES, type ThemePreset } from "@/lib/themes";
+import { FONT_OPTIONS } from "@/lib/fonts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -189,38 +191,48 @@ function SettingsPage() {
         <section className="panel p-5">
           <h2 className="font-display text-sm font-semibold">Appearance</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Pick a mode, then a palette. Light palettes follow the seasons; dark
+            Typography and palette presets. Light palettes follow the seasons; dark
             palettes stay deep and calm.
           </p>
 
-          <div className="mt-3 flex gap-2">
-            {(["light", "dark"] as const).map((t) => (
-              <button
-                key={t}
-                onClick={() => update({ theme: t })}
-                className={`flex-1 rounded-lg border p-3 text-sm capitalize transition-colors ${
-                  settings.theme === t
-                    ? "border-primary text-primary"
-                    : "border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
+          <FontPicker
+            active={settings.font ?? "default"}
+            onPick={(font) => update({ font })}
+          />
 
-          <ThemeGrid
-            title="Light palettes — seasonal"
-            themes={LIGHT_THEMES}
-            active={settings.lightTheme}
-            onPick={(id) => update({ lightTheme: id, theme: "light" })}
-          />
-          <ThemeGrid
-            title="Dark palettes"
-            themes={DARK_THEMES}
-            active={settings.darkTheme}
-            onPick={(id) => update({ darkTheme: id, theme: "dark" })}
-          />
+          <div className="mt-6 border-t border-border pt-4">
+            <p className="mb-2 text-xs font-medium text-muted-foreground">Theme mode</p>
+            <div className="flex gap-2">
+              {(["light", "dark"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => update({ theme: t })}
+                  className={cn(
+                    "flex-1 rounded-lg border p-3 text-sm capitalize transition-all duration-150 active:scale-95",
+                    settings.theme === t
+                      ? "border-primary text-primary font-medium"
+                      : "border-border text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            <ThemeGrid
+              title="Light palettes — seasonal"
+              themes={LIGHT_THEMES}
+              active={settings.lightTheme}
+              onPick={(id) => update({ lightTheme: id, theme: "light" })}
+            />
+            <ThemeGrid
+              title="Dark palettes"
+              themes={DARK_THEMES}
+              active={settings.darkTheme}
+              onPick={(id) => update({ darkTheme: id, theme: "dark" })}
+            />
+          </div>
         </section>
 
         <AccountSection />
@@ -253,6 +265,43 @@ function SettingsPage() {
   );
 }
 
+function FontPicker({
+  active,
+  onPick,
+}: {
+  active: FontOption;
+  onPick: (font: FontOption) => void;
+}) {
+  return (
+    <div className="mt-4">
+      <p className="mb-2 text-xs font-medium text-muted-foreground">
+        Font family
+      </p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {FONT_OPTIONS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => onPick(f.id)}
+            style={{ fontFamily: f.fontStack }}
+            className={cn(
+              "rounded-lg border p-3 text-left transition-all duration-150 active:scale-95",
+              active === f.id
+                ? "border-primary bg-primary/10 text-primary font-medium"
+                : "border-border hover:border-muted-foreground/40 text-foreground",
+            )}
+          >
+            <span className="block text-sm font-semibold">{f.label}</span>
+            <span className="mt-0.5 block text-[11px] text-muted-foreground">
+              {f.description}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ThemeGrid({
   title,
   themes,
@@ -271,12 +320,14 @@ function ThemeGrid({
         {themes.map((t) => (
           <button
             key={t.id}
+            type="button"
             onClick={() => onPick(t.id)}
-            className={`rounded-lg border p-2.5 text-left transition-colors ${
+            className={cn(
+              "rounded-lg border p-2.5 text-left transition-all duration-150 active:scale-95",
               active === t.id
                 ? "border-primary"
-                : "border-border hover:border-muted-foreground/40"
-            }`}
+                : "border-border hover:border-muted-foreground/40",
+            )}
           >
             <span className="flex gap-1">
               {t.swatch.map((c) => (

@@ -48,7 +48,7 @@ export const DEFAULT_SETTINGS_ROW: SettingsRow = {
   spoiler_free: 1,
   theme: "dark",
   light_theme: "paper",
-  dark_theme: "koka",
+  dark_theme: "umi",
   media_mode: "ANIME",
 };
 

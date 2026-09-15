@@ -23,6 +23,7 @@ import {
 import { clearPin, isLocked } from "@/lib/pin";
 import { signOut } from "@/lib/auth.functions";
 import { Toaster } from "@/components/ui/sonner";
+import { initTapLock } from "@/lib/tap-lock";
 
 function NotFoundComponent() {
   return (
@@ -175,6 +176,7 @@ function AuthGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyThemeFromSettings();
+    initTapLock();
     void boot();
   }, []);
 

@@ -154,15 +154,15 @@ export function NotificationsDropdown() {
 
   // Live refresh airing schedule timestamps directly from AniList GraphQL
   const refreshSchedules = useCallback(async () => {
-    const animeEntries = library.filter(
-      (e) =>
-        e.media.type !== "MANGA" &&
-        (e.status === "CURRENT" || e.status === "PLANNING"),
-    );
-    if (!animeEntries.length) return;
-    const ids = animeEntries.map((e) => e.media.id);
     setRefreshing(true);
     try {
+      const animeEntries = library.filter(
+        (e) =>
+          e.media.type !== "MANGA" &&
+          (e.status === "CURRENT" || e.status === "PLANNING"),
+      );
+      if (!animeEntries.length) return;
+      const ids = animeEntries.map((e) => e.media.id);
       const map = await fetchNextAiringEpisodes(ids);
       map.forEach((nextEp, id) => {
         const existing = library.find((e) => e.media.id === id);
@@ -373,7 +373,7 @@ export function NotificationsDropdown() {
                   type="button"
                   onClick={() => void refreshSchedules()}
                   disabled={refreshing}
-                  className="p-1 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                  className="p-1 text-muted-foreground hover:text-primary transition-all duration-150 active:scale-90 disabled:opacity-50"
                   title="Sync live schedules with AniList"
                 >
                   <RefreshCw

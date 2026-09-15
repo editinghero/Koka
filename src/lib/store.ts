@@ -7,6 +7,7 @@ import {
   type Settings,
   type WatchStatus,
 } from "./types";
+import { loadFontAssets } from "./fonts";
 import {
   getBootstrap,
   logImport as logImportFn,
@@ -97,9 +98,16 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     }
     const dark = settings.theme === "dark";
     const preset = dark ? settings.darkTheme : settings.lightTheme;
+    const rawFont = typeof window !== "undefined" ? window.localStorage.getItem("koka:font") : null;
+    const font = settings.font ?? (rawFont as FontOption) ?? "default";
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
+    root.dataset["font"] = font;
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("koka:font", font);
+    }
+    loadFontAssets(font);
   } catch {
     /* ignore */
   }
@@ -111,12 +119,17 @@ function hydrateFromCache() {
   hydratedFromCache = true;
   try {
     const raw = window.localStorage.getItem(CACHE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw) as Partial<State>;
+    const rawFont = window.localStorage.getItem("koka:font") as FontOption | null;
+    if (!raw && !rawFont) return;
+    const parsed = raw ? (JSON.parse(raw) as Partial<State>) : {};
     state = {
       ...state,
       user: parsed.user ?? null,
-      settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
+      settings: {
+        ...DEFAULT_SETTINGS,
+        ...(parsed.settings ?? {}),
+        ...(rawFont ? { font: rawFont } : {}),
+      },
       mode: parsed.mode === "MANGA" ? "MANGA" : "ANIME",
       library: parsed.library ?? EMPTY_LIBRARY,
       notes: parsed.notes ?? EMPTY_NOTES,
@@ -153,14 +166,25 @@ export function boot(force = false): Promise<void> {
         setState({ ready: true, user: null }, false);
         return;
       }
+      const currentFont =
+        state.settings.font ??
+        (typeof window !== "undefined"
+          ? (window.localStorage.getItem("koka:font") as FontOption | null)
+          : null) ??
+        "default";
       setState({
         ready: true,
         user: data.user,
-        settings: { ...DEFAULT_SETTINGS, ...(data.settings ?? {}) },
+        settings: {
+          ...DEFAULT_SETTINGS,
+          ...(data.settings ?? {}),
+          font: currentFont,
+        },
         mode: data.mode,
         library: data.library,
         notes: data.notes,
       });
+      applyThemeFromSettings();
     })
     .catch(() => setState({ ready: true }, false));
   return bootPromise;
@@ -505,6 +529,9 @@ export function useSettings() {
   const s = useSnapshot();
   const update = useCallback((changes: Partial<Settings>) => {
     const settings = { ...state.settings, ...changes };
+    if (changes.font && typeof window !== "undefined") {
+      window.localStorage.setItem("koka:font", changes.font);
+    }
     setState({ settings });
     applyThemeFromSettings(settings);
     if (!signedIn()) return;

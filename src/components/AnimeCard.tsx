@@ -65,11 +65,14 @@ export const AnimeCard = memo(function AnimeCard({
       : 0;
 
   return (
-    <div className="group panel animate-in overflow-hidden transition-all duration-300 fade-in-0 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]">
+    <div
+      data-card-press
+      className="group panel card-pressable overflow-hidden transition-all duration-150 active:scale-[0.97] active:opacity-80 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]"
+    >
       <Link
         to="/anime/$id"
         params={{ id: String(media.id) }}
-        className="block overflow-hidden"
+        className="block overflow-hidden transition-opacity duration-150 active:opacity-80"
         aria-label={media.title}
       >
         <Cover
@@ -82,7 +85,7 @@ export const AnimeCard = memo(function AnimeCard({
         <Link
           to="/anime/$id"
           params={{ id: String(media.id) }}
-          className="line-clamp-2 text-[13px] leading-snug font-medium transition-colors hover:text-primary"
+          className="line-clamp-2 text-[13px] leading-snug font-medium transition-colors hover:text-primary active:opacity-80"
         >
           {media.title}
         </Link>
