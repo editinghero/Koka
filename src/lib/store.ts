@@ -7,6 +7,7 @@ import {
   type Settings,
   type WatchStatus,
 } from "./types";
+import { loadFontAssets } from "./fonts";
 import {
   getBootstrap,
   logImport as logImportFn,
@@ -97,9 +98,12 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     }
     const dark = settings.theme === "dark";
     const preset = dark ? settings.darkTheme : settings.lightTheme;
+    const font = settings.font ?? "default";
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
+    root.dataset["font"] = font;
+    loadFontAssets(font);
   } catch {
     /* ignore */
   }

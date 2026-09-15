@@ -81,7 +81,7 @@ function NotesPage() {
               <button
                 key={t}
                 onClick={() => setTag(t)}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+                className={`rounded-full border px-3 py-1 text-xs transition-all duration-150 active:scale-95 pill-pressable ${
                   tag === t
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border text-muted-foreground hover:text-foreground"
@@ -99,12 +99,13 @@ function NotesPage() {
           {filtered.map((n) => (
             <article
               key={n.animeId}
-              className="panel animate-in p-4 transition-all duration-300 fade-in-0 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)]"
+              data-card-press
+              className="panel card-pressable p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] active:scale-[0.98] active:opacity-85"
             >
               <Link
                 to="/anime/$id"
                 params={{ id: String(n.animeId) }}
-                className="font-display text-sm font-semibold hover:text-primary"
+                className="font-display text-sm font-semibold hover:text-primary transition-colors active:opacity-80"
               >
                 {n.title}
               </Link>

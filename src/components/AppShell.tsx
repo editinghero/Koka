@@ -307,7 +307,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main className="mx-auto w-full max-w-6xl px-4 pt-6 pb-28 md:px-8 md:pt-8 md:pb-12">
           <div
             key={pathname}
-            className="animate-in duration-200 fade-in-0 slide-in-from-bottom-1 ease-out"
+            className="animate-in duration-150 fade-in-0 ease-out"
           >
             {children}
           </div>

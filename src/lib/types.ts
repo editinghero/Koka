@@ -159,6 +159,8 @@ export type Note = {
   updatedAt: number;
 };
 
+export type FontOption = "default" | "satoshi" | "baloo2" | "outfit";
+
 export type Settings = {
   geminiKey: string;
   model: string;
@@ -169,6 +171,7 @@ export type Settings = {
   lightTheme: string;
   /** preset id used while in dark mode */
   darkTheme: string;
+  font?: FontOption;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -179,6 +182,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
   lightTheme: "paper",
   darkTheme: "koka",
+  font: "default",
 };
 
 /** Models available on Google's free tier of the Gemini API. */

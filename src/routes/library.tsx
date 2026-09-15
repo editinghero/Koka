@@ -93,13 +93,16 @@ function LibraryListRow({
     : 0;
 
   return (
-    <div className="panel flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 transition-all duration-200 hover:border-primary/40 min-w-0 overflow-hidden">
+    <div
+      data-card-press
+      className="panel card-pressable flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 transition-all duration-150 active:scale-[0.99] active:opacity-90 hover:border-primary/40 min-w-0 overflow-hidden"
+    >
       {/* Cover & Title */}
       <div className="flex items-center gap-3 min-w-0 flex-1 w-full md:w-auto">
         <Link
           to="/anime/$id"
           params={{ id: String(media.id) }}
-          className="shrink-0 block overflow-hidden rounded"
+          className="shrink-0 block overflow-hidden rounded transition-opacity duration-150 active:opacity-80"
         >
           <Cover
             media={media}
@@ -111,7 +114,7 @@ function LibraryListRow({
             <Link
               to="/anime/$id"
               params={{ id: String(media.id) }}
-              className="truncate text-sm font-semibold hover:text-primary transition-colors block"
+              className="truncate text-sm font-semibold hover:text-primary transition-colors active:opacity-80 block"
             >
               {media.title}
             </Link>
@@ -432,7 +435,7 @@ function LibraryPage() {
                   )
                 }
                 className={cn(
-                  "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
+                  "shrink-0 rounded-full border px-2.5 py-0.5 text-[11px] transition-all duration-150 active:scale-95 pill-pressable",
                   query.toLowerCase().replace(/^#/, "") === t.toLowerCase()
                     ? "border-primary bg-primary/10 font-medium text-primary"
                     : "border-border hover:border-primary hover:text-foreground",
@@ -450,9 +453,9 @@ function LibraryPage() {
               key={s}
               onClick={() => setStatus(s)}
               className={cn(
-                "shrink-0 rounded-full border px-3 py-1 text-xs transition-colors whitespace-nowrap",
+                "shrink-0 rounded-full border px-3 py-1 text-xs transition-all duration-150 active:scale-95 pill-pressable",
                 status === s
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-primary bg-primary text-primary-foreground font-medium"
                   : "border-border text-muted-foreground hover:text-foreground",
               )}
             >

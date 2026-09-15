@@ -135,7 +135,7 @@ export const DARK_THEMES: ThemePreset[] = [
     label: "Ume",
     hint: "Warm coral rose",
     mode: "dark",
-    swatch: ["#140f10", "#1c1517", "#ef7688"],
+    swatch: ["#191213", "#22191a", "#f0788a"],
   },
 ];
 
