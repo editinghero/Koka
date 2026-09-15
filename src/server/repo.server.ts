@@ -82,6 +82,7 @@ export type Repo = {
     notes: Note[],
     types: MediaType[],
   ): Promise<void>;
+  clearLibraryAndNotes(userId: string): Promise<void>;
 
   logImport(
     userId: string,
@@ -444,6 +445,17 @@ function d1Repo(db: D1Database): Repo {
       }
       await this.saveNotes(userId, notes);
     },
+    async clearLibraryAndNotes(userId) {
+      await ready();
+      await db
+        .prepare("DELETE FROM library_entries WHERE user_id = ?")
+        .bind(userId)
+        .run();
+      await db
+        .prepare("DELETE FROM notes WHERE user_id = ?")
+        .bind(userId)
+        .run();
+    },
 
     async logImport(userId, entry) {
       await ready();
@@ -600,6 +612,12 @@ function localRepo(): Repo {
         ),
         ...notes,
       ];
+      await persistLocal();
+    },
+    async clearLibraryAndNotes(userId) {
+      const s = await loadLocal();
+      s.library[userId] = [];
+      s.notes[userId] = [];
       await persistLocal();
     },
 

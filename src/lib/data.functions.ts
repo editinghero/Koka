@@ -144,3 +144,14 @@ export const logImport = createServerFn({ method: "POST" })
     await getRepo().logImport(user.id, data);
     return { ok: true };
   });
+
+export const clearLibraryAndNotes = createServerFn({ method: "POST" })
+  .handler(async () => {
+    const { currentUser } = await import("@/server/session.server");
+    const { getRepo } = await import("@/server/repo.server");
+    const user = await currentUser();
+    if (!user) return { ok: true };
+    await getRepo().clearLibraryAndNotes(user.id);
+    return { ok: true };
+  });
+

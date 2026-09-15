@@ -71,6 +71,11 @@ export function Markdown({ children }: { children: string }) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
+          table: ({ children, ...props }) => (
+            <div className="overflow-x-auto max-w-full my-2">
+              <table {...props}>{children}</table>
+            </div>
+          ),
           strong: ({ children }) => {
             const titleText = extractText(children).trim();
             const cleanTitle = titleText

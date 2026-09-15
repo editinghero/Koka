@@ -23,6 +23,7 @@ import {
   signOut,
   updateProfileName,
 } from "@/lib/auth.functions";
+import { clearLibraryAndNotes } from "@/lib/data.functions";
 import { clearPin, hasPin, lockNow, setPin } from "@/lib/pin";
 import { GEMINI_MODELS, normalizeTags, type FontOption } from "@/lib/types";
 import { DARK_THEMES, LIGHT_THEMES, type ThemePreset } from "@/lib/themes";
@@ -58,6 +59,7 @@ function SettingsPage() {
   const { setLibrary } = useLibrary();
   const { setNotes } = useNotes();
   const [show, setShow] = useState(false);
+  const [clearing, setClearing] = useState(false);
 
   return (
     <>
@@ -250,14 +252,26 @@ function SettingsPage() {
             variant="outline"
             size="sm"
             className="mt-4 text-destructive"
-            onClick={() => {
+            disabled={clearing}
+            onClick={async () => {
               if (!confirm("Delete your library and all notes?")) return;
-              setLibrary([]);
-              setNotes([]);
-              toast.success("Library and notes cleared");
+              setClearing(true);
+              try {
+                await clearLibraryAndNotes();
+                setLibrary([]);
+                setNotes([]);
+                toast.success("Library and notes cleared");
+              } catch (e) {
+                toast.error(
+                  e instanceof Error ? e.message : "Could not clear data",
+                );
+              } finally {
+                setClearing(false);
+              }
             }}
           >
-            <Trash2 className="h-3.5 w-3.5" /> Clear library and notes
+            <Trash2 className="h-3.5 w-3.5" />{" "}
+            {clearing ? "Clearing…" : "Clear library and notes"}
           </Button>
         </section>
       </div>

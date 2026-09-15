@@ -369,6 +369,7 @@ button:not(:disabled):active,
   font-size: 0.84rem;
   line-height: 1.6;
   color: var(--color-foreground);
+  overflow-wrap: anywhere;
 }
 
 .md-body>*+* {
