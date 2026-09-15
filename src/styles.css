@@ -793,23 +793,23 @@ button:not(:disabled):active,
   --card: #22191a;
   --popover: #22191a;
   --foreground: #fff3e0;
-  --primary: #f0788a;
+  --primary: #d66879;
   --primary-foreground: #ffffff;
   --secondary: #2c2022;
   --secondary-foreground: #fff3e0;
   --muted: rgba(255, 243, 224, 0.05);
   --muted-foreground: #968677;
-  --accent: #f0788a;
+  --accent: #d66879;
   --accent-foreground: #ffffff;
   --destructive: #e02e2a;
   --destructive-foreground: #fff3e0;
   --border: rgba(255, 243, 224, 0.08);
   --input: rgba(255, 243, 224, 0.06);
-  --ring: #f0788a;
+  --ring: #d66879;
   --sidebar: #1d1416;
   --sidebar-accent: #2c2022;
   --sidebar-border: rgba(255, 243, 224, 0.08);
-  --chart-1: #f0788a;
+  --chart-1: #d66879;
   /* status: watching / planning */
   --chart-2: #e5a93b;
   /* status: on hold */
@@ -818,11 +818,6 @@ button:not(:disabled):active,
   --chart-4: #e02e2a;
   /* status: dropped */
   --chart-5: #968677;
-
-  --shadow-glow: 0 0 24px 0 rgba(240, 120, 138, 0.22);
-  --border-glow: rgba(240, 120, 138, 0.2);
-  --gradient-hero: linear-gradient(180deg, #1d1416 0%, #191213 100%);
-  --gradient-accent: linear-gradient(135deg, #f0788a 0%, #ff9a9e 100%);
 }
 
 /* Mono — pure black & white monochrome (dark) */
