@@ -101,7 +101,7 @@ function NotesPage() {
             <article
               key={n.animeId}
               data-card-press
-              className="panel card-pressable p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-soft)] active:scale-[0.98] active:opacity-85"
+              className="panel card-pressable p-4 transition-all duration-150 active:scale-[0.98] active:opacity-85"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">

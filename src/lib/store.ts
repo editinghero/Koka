@@ -294,12 +294,34 @@ export function useLibrary(forceMode?: MediaType) {
         (e) => e.media.id === entry.media.id && typeOf(e) === type,
       );
       const next = [...prev];
-      const merged =
-        idx === -1 ? entry : { ...next[idx], ...entry, updatedAt: Date.now() };
+      const existing = idx === -1 ? null : next[idx];
+      const tags =
+        existing && existing.tags && existing.tags.length > 0
+          ? entry.tags && entry.tags.length > 0
+            ? normalizeTags([...existing.tags, ...entry.tags])
+            : existing.tags
+          : (entry.tags ?? []);
+      const customLinks =
+        existing?.customLinks && existing.customLinks.length > 0
+          ? entry.customLinks && entry.customLinks.length > 0
+            ? entry.customLinks
+            : existing.customLinks
+          : (entry.customLinks ?? []);
+
+      const merged: LibraryEntry =
+        idx === -1
+          ? entry
+          : {
+              ...existing,
+              ...entry,
+              tags,
+              customLinks,
+              updatedAt: Date.now(),
+            };
       if (idx === -1) next.push(merged);
-      else next[idx] = merged as LibraryEntry;
+      else next[idx] = merged;
       setState({ library: next });
-      push([merged as LibraryEntry]);
+      push([merged]);
     },
     [push],
   );
@@ -346,14 +368,26 @@ export function useLibrary(forceMode?: MediaType) {
       for (const entry of entries) {
         const k = keyOf(typeOf(entry), entry.media.id);
         const existing = map.get(k);
+
+        // Tags: existing tags must NEVER be wiped on import
+        const existingTags = existing?.tags ?? [];
+        const incomingTags = entry.tags ?? [];
+        const tags =
+          existingTags.length > 0
+            ? normalizeTags([...existingTags, ...incomingTags])
+            : incomingTags;
+
+        // Custom links: existing links must NEVER be wiped on import
+        const customLinks =
+          existing?.customLinks && existing.customLinks.length > 0
+            ? existing.customLinks
+            : (entry.customLinks ?? []);
+
         const next = {
           ...existing,
           ...entry,
-          tags: entry.tags ?? existing?.tags,
-          customLinks:
-            existing?.customLinks && existing.customLinks.length > 0
-              ? existing.customLinks
-              : (entry.customLinks ?? []),
+          tags,
+          customLinks,
           media: { ...existing?.media, ...entry.media },
           addedAt: existing?.addedAt ?? entry.addedAt,
         } as LibraryEntry;
@@ -369,14 +403,35 @@ export function useLibrary(forceMode?: MediaType) {
   /** Replace every entry of the given media types with the incoming ones. */
   const replaceMany = useCallback(
     (entries: LibraryEntry[], types: MediaType[]) => {
+      const existingMap = new Map(
+        state.library.map((e) => [keyOf(typeOf(e), e.media.id), e]),
+      );
+      const sanitizedEntries = entries.map((entry) => {
+        const existing = existingMap.get(keyOf(typeOf(entry), entry.media.id));
+        if (!existing) return entry;
+        return {
+          ...entry,
+          tags:
+            existing.tags && existing.tags.length > 0
+              ? normalizeTags([...existing.tags, ...(entry.tags ?? [])])
+              : (entry.tags ?? []),
+          customLinks:
+            existing.customLinks && existing.customLinks.length > 0
+              ? existing.customLinks
+              : (entry.customLinks ?? []),
+        };
+      });
+
       setState({
         library: [
           ...state.library.filter((e) => !types.includes(typeOf(e))),
-          ...entries,
+          ...sanitizedEntries,
         ],
       });
       if (signedIn())
-        void replaceLibraryFn({ data: { entries, types } }).catch(fail);
+        void replaceLibraryFn({
+          data: { entries: sanitizedEntries, types },
+        }).catch(fail);
     },
     [],
   );

@@ -67,7 +67,7 @@ export const AnimeCard = memo(function AnimeCard({
   return (
     <div
       data-card-press
-      className="group panel card-pressable overflow-hidden transition-all duration-150 active:scale-[0.97] active:opacity-80 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]"
+      className="group panel card-pressable overflow-hidden transition-all duration-150 active:scale-[0.97] active:opacity-80"
     >
       <Link
         to="/anime/$id"

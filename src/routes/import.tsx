@@ -153,31 +153,38 @@ function ImportPage() {
     incomingNotes: Note[],
     types: MediaType[],
   ) {
-    const existingTagsMap = new Map(
-      library.map((e) => [
-        `${e.media.type ?? "ANIME"}-${e.media.id}`,
-        e.tags ?? [],
-      ]),
-    );
-    const existingLinksMap = new Map(
-      library.map((e) => [
-        `${e.media.type ?? "ANIME"}-${e.media.id}`,
-        e.customLinks ?? [],
-      ]),
-    );
+    const existingMap = new Map<string, LibraryEntry>();
+    for (const e of all) {
+      const t = e.media.type === "MANGA" ? "MANGA" : "ANIME";
+      existingMap.set(`${t}:${e.media.id}`, e);
+      existingMap.set(`${t}-${e.media.id}`, e);
+      existingMap.set(`${e.media.id}`, e);
+    }
 
     const preservedEntries = entries.map((entry) => {
-      const typeKey = entry.media.type ?? "ANIME";
-      const key = `${typeKey}-${entry.media.id}`;
-      const existingTags = existingTagsMap.get(key) ?? [];
-      const existingLinks = existingLinksMap.get(key) ?? [];
+      const t = entry.media.type === "MANGA" ? "MANGA" : "ANIME";
+      const existing =
+        existingMap.get(`${t}:${entry.media.id}`) ??
+        existingMap.get(`${t}-${entry.media.id}`) ??
+        existingMap.get(`${entry.media.id}`);
+
+      const existingTags = existing?.tags ?? [];
+      const incomingTags = entry.tags ?? [];
+      const finalTags =
+        existingTags.length > 0
+          ? normalizeTags([...existingTags, ...incomingTags])
+          : normalizeTags(incomingTags);
+
+      const existingLinks = existing?.customLinks ?? [];
+      const finalLinks =
+        existingLinks.length > 0
+          ? existingLinks
+          : (entry.customLinks ?? []);
+
       return {
         ...entry,
-        tags: normalizeTags([...existingTags, ...(entry.tags ?? [])]),
-        customLinks:
-          existingLinks.length > 0
-            ? existingLinks
-            : (entry.customLinks ?? []),
+        tags: finalTags,
+        customLinks: finalLinks,
       };
     });
 
@@ -191,16 +198,18 @@ function ImportPage() {
 
     // Feature 6: Compute unmatched entries in local library not in imported list
     const importedKeys = new Set(
-      entries.map((e) => `${e.media.type ?? "ANIME"}-${e.media.id}`),
+      entries.map(
+        (e) => `${e.media.type === "MANGA" ? "MANGA" : "ANIME"}:${e.media.id}`,
+      ),
     );
     const unmatched: DiffItem[] = all
       .filter((e) => {
-        const t = e.media.type ?? "ANIME";
-        return types.includes(t) && !importedKeys.has(`${t}-${e.media.id}`);
+        const t = e.media.type === "MANGA" ? "MANGA" : "ANIME";
+        return types.includes(t) && !importedKeys.has(`${t}:${e.media.id}`);
       })
       .map((e) => ({
         id: e.media.id,
-        mediaType: (e.media.type ?? "ANIME") as MediaType,
+        mediaType: (e.media.type === "MANGA" ? "MANGA" : "ANIME") as MediaType,
         title: e.media.title,
         cover: e.media.cover,
         status: e.status,
@@ -604,9 +613,9 @@ function ImportPage() {
         </section>
 
         {pendingDiff.length > 0 ? (
-          <section className="panel p-5 lg:col-span-2">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
-              <div>
+          <section className="panel p-4 sm:p-5 lg:col-span-2 overflow-hidden">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-3">
+              <div className="min-w-0">
                 <h2 className="font-display text-sm font-semibold text-foreground">
                   Unmatched library entries ({pendingDiff.length})
                 </h2>
@@ -615,11 +624,11 @@ function ImportPage() {
                   your last import. Keep or delete them.
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs active:scale-95"
+                  className="h-8 sm:h-7 text-xs active:scale-95 flex-1 sm:flex-none"
                   onClick={keepAll}
                 >
                   <Check className="mr-1 h-3.5 w-3.5 text-green-500" /> Keep all
@@ -627,7 +636,7 @@ function ImportPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 text-xs text-destructive hover:bg-destructive/10 active:scale-95"
+                  className="h-8 sm:h-7 text-xs text-destructive hover:bg-destructive/10 active:scale-95 flex-1 sm:flex-none"
                   onClick={deleteAll}
                 >
                   <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete all
@@ -635,50 +644,55 @@ function ImportPage() {
               </div>
             </div>
 
-            <div className="mt-3 max-h-96 divide-y divide-border overflow-y-auto pr-1">
+            <div className="mt-3 max-h-96 divide-y divide-border overflow-y-auto overflow-x-hidden pr-1">
               {pendingDiff.map((item) => (
                 <div
                   key={`${item.mediaType}-${item.id}`}
-                  className="flex items-center justify-between gap-3 py-2.5"
+                  className="flex items-center justify-between gap-2.5 py-2.5"
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
                     {item.cover ? (
                       <img
                         src={item.cover}
                         alt=""
                         loading="lazy"
-                        className="h-11 w-8 flex-shrink-0 rounded object-cover"
+                        className="h-12 w-9 sm:h-11 sm:w-8 flex-shrink-0 rounded object-cover"
                       />
                     ) : (
-                      <div className="h-11 w-8 flex-shrink-0 rounded bg-muted" />
+                      <div className="h-12 w-9 sm:h-11 sm:w-8 flex-shrink-0 rounded bg-muted" />
                     )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-semibold text-foreground">
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <p
+                        className="truncate text-xs font-semibold text-foreground"
+                        title={item.title}
+                      >
                         {item.title}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {item.mediaType} · {item.status} · {item.progress}/
-                        {item.total ?? "?"}
+                      <p className="truncate text-[11px] text-muted-foreground mt-0.5">
+                        <span className="font-medium text-foreground/85">
+                          {item.mediaType}
+                        </span>{" "}
+                        · {item.status} · {item.progress}/{item.total ?? "?"}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-shrink-0 items-center gap-1.5">
+                  <div className="flex shrink-0 items-center gap-1.5 ml-1">
                     <button
                       type="button"
                       onClick={() => keepItem(item.id, item.mediaType)}
                       title="Keep entry in library"
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-surface text-green-500 transition-colors hover:border-green-500/40 hover:bg-green-500/10 active:scale-90"
+                      className="inline-flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border bg-surface text-green-500 transition-colors hover:border-green-500/40 hover:bg-green-500/10 active:scale-90"
                     >
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                     </button>
                     <button
                       type="button"
                       onClick={() => deleteItem(item.id, item.mediaType)}
                       title="Delete entry from library and cloud"
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-surface text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10 active:scale-90"
+                      className="inline-flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border bg-surface text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10 active:scale-90"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                     </button>
                   </div>
                 </div>
