@@ -72,6 +72,21 @@ export const STATUS_ORDER: WatchStatus[] = [
   "DROPPED",
 ];
 
+export type StatusDistributionItem = {
+  status: string;
+  amount: number;
+};
+
+export type MediaRanking = {
+  id: number;
+  rank: number;
+  type: string;
+  context: string;
+  year?: number | null;
+  season?: string | null;
+  allTime?: boolean | null;
+};
+
 export type AnimeMedia = {
   id: number;
   malId?: number | null;
@@ -94,11 +109,14 @@ export type AnimeMedia = {
   genres?: string[];
   studios?: string[];
   averageScore?: number | null;
+  meanScore?: number | null;
   popularity?: number | null;
   siteUrl?: string | null;
   description?: string | null;
   startDate?: string | null;
   nextEpisode?: { episode: number; airingAt: number } | null;
+  rankings?: MediaRanking[];
+  statusDistribution?: StatusDistributionItem[];
 };
 
 /** Total units (episodes for anime, chapters for manga). */

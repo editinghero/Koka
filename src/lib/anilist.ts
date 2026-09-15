@@ -1,8 +1,10 @@
 import type {
   AnimeMedia,
   LibraryEntry,
+  MediaRanking,
   MediaType,
   Note,
+  StatusDistributionItem,
   WatchStatus,
 } from "./types";
 
@@ -25,12 +27,28 @@ const MEDIA_FIELDS = `
   seasonYear
   genres
   averageScore
+  meanScore
   popularity
   siteUrl
   description(asHtml: false)
   startDate { year month day }
   studios(isMain: true) { nodes { name } }
   nextAiringEpisode { episode airingAt }
+  rankings {
+    id
+    rank
+    type
+    context
+    year
+    season
+    allTime
+  }
+  stats {
+    statusDistribution {
+      status
+      amount
+    }
+  }
 `;
 
 type RawMedia = {
@@ -50,12 +68,17 @@ type RawMedia = {
   seasonYear?: number | null;
   genres?: string[];
   averageScore?: number | null;
+  meanScore?: number | null;
   popularity?: number | null;
   siteUrl?: string | null;
   description?: string | null;
   startDate?: { year?: number; month?: number; day?: number };
   studios?: { nodes?: { name: string }[] };
   nextAiringEpisode?: { episode: number; airingAt: number } | null;
+  rankings?: MediaRanking[];
+  stats?: {
+    statusDistribution?: StatusDistributionItem[];
+  };
 };
 
 export function normalizeMedia(m: RawMedia): AnimeMedia {
@@ -79,11 +102,14 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
     genres: m.genres ?? [],
     studios: m.studios?.nodes?.map((s) => s.name) ?? [],
     averageScore: m.averageScore ?? null,
+    meanScore: m.meanScore ?? null,
     popularity: m.popularity ?? null,
     siteUrl: m.siteUrl ?? null,
     description: m.description ? m.description.replace(/<[^>]+>/g, "") : null,
     startDate: d?.year ? `${d.year}-${d.month ?? 1}-${d.day ?? 1}` : null,
     nextEpisode: m.nextAiringEpisode ?? null,
+    rankings: m.rankings ?? [],
+    statusDistribution: m.stats?.statusDistribution ?? [],
   };
 }
 

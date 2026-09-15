@@ -8,6 +8,7 @@ import {
   UserRound,
   Plus,
   Minus,
+  Play,
   ExternalLink,
 } from "lucide-react";
 import { AnimeCard, Cover, countdown } from "@/components/AnimeCard";
@@ -91,6 +92,11 @@ function LibraryListRow({
   const pct = total
     ? Math.min(100, Math.round((entry.progress / total) * 100))
     : 0;
+
+  const primaryLink =
+    (entry.customLinks ?? []).find((l) => l.isPrimary && l.url.trim()) ??
+    (entry.customLinks ?? []).find((l) => l.url.trim()) ??
+    null;
 
   return (
     <div
@@ -221,6 +227,19 @@ function LibraryListRow({
           >
             <Plus className="h-3 w-3" />
           </Button>
+
+          {primaryLink ? (
+            <a
+              href={primaryLink.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              title={`Play (${primaryLink.label || "External"})`}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-surface text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground active:scale-95"
+            >
+              <Play className="h-3 w-3" />
+            </a>
+          ) : null}
         </div>
 
         {/* Score */}

@@ -116,7 +116,7 @@ function Dashboard() {
     [library],
   );
 
-  // Show anime entries in library with an upcoming airing episode within 14 days
+  // Show anime entries in library with an upcoming airing episode within 14 days, and only when started
   const airing = useMemo(() => {
     const nowSec = Math.floor(Date.now() / 1000);
     const fourteenDaysSec = 14 * 86400;
@@ -125,7 +125,14 @@ function Dashboard() {
       .filter((e) => {
         const airingAt = e.media.nextEpisode?.airingAt;
         if (!airingAt) return false;
-        return airingAt - nowSec <= fourteenDaysSec;
+        if (airingAt - nowSec > fourteenDaysSec) return false;
+        // Only show when started
+        const isStarted =
+          e.status === "CURRENT" ||
+          e.status === "REPEATING" ||
+          e.progress > 0 ||
+          Boolean(e.startedAt);
+        return isStarted;
       })
       .sort(
         (a, b) =>
@@ -255,35 +262,41 @@ function Dashboard() {
                           >
                             {e.progress}/{(e.media.nextEpisode?.episode ?? 1) - 1}
                           </span>
-                        ) : (
-                          (() => {
-                            const primaryLink =
-                              (e.customLinks ?? []).find(
-                                (l) => l.isPrimary && l.url.trim(),
-                              ) ??
-                              (e.customLinks ?? []).find((l) => l.url.trim()) ??
-                              null;
-                            if (!primaryLink) return null;
-                            return (
-                              <button
-                                type="button"
-                                onClick={(evt) => {
-                                  evt.preventDefault();
-                                  evt.stopPropagation();
-                                  window.open(
-                                    primaryLink.url,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                  );
-                                }}
-                                title={`Play (${primaryLink.label || "External"})`}
-                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm transition-all duration-150 hover:bg-primary/90 active:scale-90"
-                              >
-                                <Play className="ml-0.5 h-3 w-3 fill-current" />
-                              </button>
-                            );
-                          })()
-                        )}
+                        ) : null}
+
+                        {(() => {
+                          const primaryLink =
+                            (e.customLinks ?? []).find(
+                              (l) => l.isPrimary && l.url.trim(),
+                            ) ??
+                            (e.customLinks ?? []).find((l) => l.url.trim()) ??
+                            null;
+                          if (!primaryLink) return null;
+                          return (
+                            <button
+                              type="button"
+                              onClick={(evt) => {
+                                evt.preventDefault();
+                                evt.stopPropagation();
+                                window.open(
+                                  primaryLink.url,
+                                  "_blank",
+                                  "noopener,noreferrer",
+                                );
+                              }}
+                              title={`Play (${primaryLink.label || "External"})`}
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-all duration-150 active:scale-95",
+                                isWithin3Hours
+                                  ? "bg-destructive/15 text-destructive hover:bg-destructive/25"
+                                  : "bg-primary/10 text-primary hover:bg-primary/20",
+                              )}
+                            >
+                              <Play className="h-3 w-3 fill-current" />
+                              <span>Play</span>
+                            </button>
+                          );
+                        })()}
                         <span
                           className={cn(
                             "inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold",

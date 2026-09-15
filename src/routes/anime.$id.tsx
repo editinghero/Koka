@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  BarChart3,
   Check,
   Edit3,
   ExternalLink,
@@ -12,6 +13,7 @@ import {
   RefreshCw,
   Star,
   Trash2,
+  Trophy,
 } from "lucide-react";
 import { Cover, countdown } from "@/components/AnimeCard";
 import { AiPanel } from "@/components/AiPanel";
@@ -29,6 +31,16 @@ import {
   type WatchStatus,
 } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const STATUS_COLORS: Record<string, string> = {
+  CURRENT: "#f0788a",
+  PLANNING: "#94a3b8",
+  COMPLETED: "#10b981",
+  DROPPED: "#ef4444",
+  PAUSED: "#e5a93b",
+  REPEATING: "#06b6d4",
+};
 
 export const Route = createFileRoute("/anime/$id")({
   head: () => ({
@@ -64,11 +76,17 @@ function AnimeDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["media", mode, animeId],
     queryFn: async () => (await fetchByIds([animeId], mode))[0] ?? null,
-    enabled: !entry,
     staleTime: 1000 * 60 * 30,
   });
 
-  const media = entry?.media ?? data ?? null;
+  const media = data
+    ? { ...(entry?.media ?? {}), ...data }
+    : (entry?.media ?? null);
+
+  const totalStatusAmount = (media?.statusDistribution || []).reduce(
+    (sum, item) => sum + (item.amount || 0),
+    0,
+  );
 
   if (!media) {
     return (
@@ -193,9 +211,11 @@ function AnimeDetail() {
     updateField("customLinks", current);
   }
 
-  const validLinks = (entry?.customLinks ?? []).filter((l) => l.url.trim());
-  const primaryLink =
-    validLinks.find((l) => l.isPrimary) ?? validLinks[0] ?? null;
+  const rawLinks = (entry?.customLinks ?? []).filter((l) => l.url.trim());
+  const validLinks = [...rawLinks].sort(
+    (a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0),
+  );
+  const primaryLink = validLinks[0] ?? null;
 
   return (
     <div className="animate-in duration-150 fade-in-0">
@@ -339,7 +359,7 @@ function AnimeDetail() {
                     </Button>
                   </div>
 
-                  {/* Play Buttons: shows all added custom links as buttons */}
+                  {/* Play Buttons: shows all added custom links as buttons (primary first, unhighlighted consistent design) */}
                   {validLinks.length > 0 ? (
                     <div className="flex flex-wrap items-center gap-1.5">
                       {validLinks.map((link, idx) => {
@@ -352,20 +372,11 @@ function AnimeDetail() {
                             href={link.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-all duration-150 active:scale-95 ${
-                              link.isPrimary
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                                : "border border-border bg-surface text-foreground hover:bg-surface-2"
-                            }`}
-                            title={`Open ${link.url}${link.isPrimary ? " (Primary on Home screen)" : ""}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-foreground shadow-sm transition-all duration-150 hover:bg-surface-2 active:scale-95"
+                            title={`Open ${link.url}`}
                           >
-                            <Play
-                              className={`h-3.5 w-3.5 ${link.isPrimary ? "fill-current" : ""}`}
-                            />
+                            <Play className="h-3.5 w-3.5 text-muted-foreground" />
                             <span>{label}</span>
-                            {link.isPrimary ? (
-                              <Star className="ml-0.5 h-3 w-3 fill-amber-300 text-amber-300" />
-                            ) : null}
                           </a>
                         );
                       })}
@@ -783,6 +794,121 @@ function AnimeDetail() {
         </div>
       </div>
 
+      {/* Synopsis Section (Moved to top before AI Chat) */}
+      {media.description ? (
+        <section className="panel mt-6 p-5">
+          <h2 className="font-display text-sm font-semibold">Synopsis</h2>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
+            {media.description}
+          </p>
+        </section>
+      ) : null}
+
+      {/* Stats Distribution & Rankings (From anistash, styled with Koka design system) */}
+      {((media.statusDistribution && media.statusDistribution.length > 0) ||
+        (media.rankings && media.rankings.length > 0)) && (
+        <div
+          className={cn(
+            "mt-6 grid gap-4",
+            media.statusDistribution?.length && media.rankings?.length
+              ? "lg:grid-cols-2"
+              : "grid-cols-1",
+          )}
+        >
+          {/* Status Distribution */}
+          {media.statusDistribution && media.statusDistribution.length > 0 ? (
+            <div className="panel space-y-3 p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                  <BarChart3 className="h-3.5 w-3.5 text-primary" />
+                  <span>Status Distribution</span>
+                </div>
+                {totalStatusAmount > 0 && (
+                  <span className="text-[11px] text-muted-foreground">
+                    {totalStatusAmount.toLocaleString()} total members
+                  </span>
+                )}
+              </div>
+
+              {/* Progress Bar */}
+              {totalStatusAmount > 0 && (
+                <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-secondary">
+                  {media.statusDistribution.map((item) => {
+                    const pct = (item.amount / totalStatusAmount) * 100;
+                    return (
+                      <div
+                        key={item.status}
+                        style={{
+                          width: `${pct}%`,
+                          backgroundColor:
+                            STATUS_COLORS[item.status] ||
+                            "var(--muted-foreground)",
+                        }}
+                        title={`${item.status}: ${item.amount.toLocaleString()} (${pct.toFixed(1)}%)`}
+                        className="transition-all duration-300"
+                      />
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Status Pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-xs">
+                {media.statusDistribution.map((item) => (
+                  <div
+                    key={item.status}
+                    className="flex items-center justify-between rounded-xl border border-border/60 bg-surface/60 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor:
+                            STATUS_COLORS[item.status] ||
+                            "var(--muted-foreground)",
+                        }}
+                      />
+                      <span className="truncate text-[11px] font-medium capitalize text-muted-foreground">
+                        {item.status.toLowerCase()}
+                      </span>
+                    </div>
+                    <span className="ml-1.5 shrink-0 tabular-nums text-[11px] font-semibold text-foreground">
+                      {item.amount.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Rankings & Achievements */}
+          {media.rankings && media.rankings.length > 0 ? (
+            <div className="panel space-y-3 p-5">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+                <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                <span>Rankings & Achievements</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {media.rankings.slice(0, 6).map((r) => (
+                  <div
+                    key={r.id}
+                    className="flex items-center gap-2.5 rounded-xl border border-border/60 bg-surface/60 px-3 py-2 text-xs"
+                  >
+                    <span className="shrink-0 tabular-nums font-bold text-primary">
+                      #{r.rank}
+                    </span>
+                    <span className="truncate text-muted-foreground">
+                      {r.context} {r.season ? `${r.season} ` : ""}
+                      {r.year ? r.year : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
+
       <div className="mt-6">
         <ChatPanel
           animeId={media.id}
@@ -859,14 +985,6 @@ function AnimeDetail() {
         />
       </div>
 
-      {media.description ? (
-        <section className="panel mt-4 p-5">
-          <h2 className="font-display text-sm font-semibold">Synopsis</h2>
-          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            {media.description}
-          </p>
-        </section>
-      ) : null}
 
       <div className="mt-6">
         <h2 className="mb-3 font-display text-lg font-semibold">Your notes</h2>
