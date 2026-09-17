@@ -1,3 +1,4 @@
+import { vibrate } from "@/lib/haptics";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard,
@@ -52,7 +53,7 @@ function ThemeToggle() {
   const dark = settings.theme === "dark";
   return (
     <button
-      onClick={() => update({ theme: dark ? "light" : "dark" })}
+      onClick={() => { vibrate(10); update({ theme: dark ? "light" : "dark" }); }}
       aria-label="Toggle theme"
       className="flex h-8 w-8 md:h-9 md:w-9 items-center justify-center rounded-full md:rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95"
     >
@@ -83,7 +84,7 @@ function ModeSwitch({ className }: { className?: string }) {
             key={o.value}
             role="tab"
             aria-selected={active}
-            onClick={() => setMode(o.value)}
+            onClick={() => { vibrate(10); setMode(o.value); }}
             className={cn(
               "rounded-full px-3 py-1 text-xs font-medium transition-all duration-300 active:scale-95",
               active
