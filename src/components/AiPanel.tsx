@@ -1,3 +1,4 @@
+import { vibrate } from "@/lib/haptics";
 import { useState } from "react";
 import { Sparkles, Loader2, AlertCircle } from "lucide-react";
 import { askGemini, SPOILER_FREE_SYSTEM } from "@/lib/gemini";
@@ -54,7 +55,7 @@ export function AiPanel({
             </p>
           ) : null}
         </div>
-        <Button size="sm" onClick={run} disabled={loading}>
+        <Button size="sm" onClick={() => { vibrate(10); run(); }} disabled={loading}>
           {loading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (

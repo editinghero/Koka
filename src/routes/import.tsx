@@ -1,3 +1,4 @@
+import { vibrate } from "@/lib/haptics";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
@@ -404,7 +405,7 @@ function ImportPage() {
           {(["merge", "replace"] as const).map((m) => (
             <button
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => { vibrate(10); setMode(m); }}
               className={cn(
                 "rounded-full px-3 py-1 text-xs capitalize transition-all duration-200 active:scale-95",
                 mode === m
@@ -582,6 +583,7 @@ function ImportPage() {
               size="sm"
               disabled={!notes.length}
               onClick={() => {
+                vibrate(20);
                 if (!confirm("Delete all notes? Export them first.")) return;
                 setNotes([]);
                 toast.success("Notes cleared");
@@ -637,7 +639,7 @@ function ImportPage() {
                   variant="outline"
                   size="sm"
                   className="h-8 sm:h-7 text-xs text-destructive hover:bg-destructive/10 active:scale-95 flex-1 sm:flex-none"
-                  onClick={deleteAll}
+                  onClick={() => { vibrate(20); deleteAll(); }}
                 >
                   <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete all
                 </Button>
@@ -688,7 +690,7 @@ function ImportPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => deleteItem(item.id, item.mediaType)}
+                      onClick={() => { vibrate(20); deleteItem(item.id, item.mediaType); }}
                       title="Delete entry from library and cloud"
                       className="inline-flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border bg-surface text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10 active:scale-90"
                     >

@@ -16,6 +16,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { Cover, countdown } from "@/components/AnimeCard";
+import { vibrate } from "@/lib/haptics";
 import { AiPanel } from "@/components/AiPanel";
 import { ChatPanel } from "@/components/ChatPanel";
 import { NoteEditor } from "@/components/NoteEditor";
@@ -282,7 +283,7 @@ function AnimeDetail() {
           <div className="absolute right-3 top-3 z-10">
             <button
               type="button"
-              onClick={() => setIsEditing((prev) => !prev)}
+              onClick={() => { vibrate(10); setIsEditing((prev) => !prev); }}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shadow-md backdrop-blur-md transition-all duration-150 active:scale-95 ${
                 isEditing
                   ? "border border-primary/40 bg-primary text-primary-foreground hover:bg-primary/90"
@@ -377,7 +378,7 @@ function AnimeDetail() {
                       size="icon"
                       variant="outline"
                       className="h-7 w-7 active:scale-95"
-                      onClick={() => bump(-1)}
+                      onClick={() => { vibrate(10); bump(-1); }}
                       aria-label="Decrease progress"
                     >
                       <Minus className="h-3.5 w-3.5" />
@@ -389,7 +390,7 @@ function AnimeDetail() {
                       size="icon"
                       variant="outline"
                       className="h-7 w-7 active:scale-95"
-                      onClick={() => bump(1)}
+                      onClick={() => { vibrate(10); bump(1); }}
                       aria-label="Increase progress"
                     >
                       <Plus className="h-3.5 w-3.5" />
@@ -504,7 +505,7 @@ function AnimeDetail() {
                       <button
                         key={s}
                         type="button"
-                        onClick={() => setStatus(s)}
+                        onClick={() => { vibrate(10); setStatus(s); }}
                         className={`rounded-full border px-3 py-1 text-xs transition-all duration-200 active:scale-95 ${
                           entry?.status === s
                             ? "border-primary bg-primary font-semibold text-primary-foreground"
@@ -528,7 +529,7 @@ function AnimeDetail() {
                         size="icon"
                         variant="outline"
                         className="h-8 w-8 active:scale-95"
-                        onClick={() => bump(-1)}
+                        onClick={() => { vibrate(10); bump(-1); }}
                         aria-label="Decrease progress"
                       >
                         <Minus className="h-3.5 w-3.5" />
@@ -554,7 +555,7 @@ function AnimeDetail() {
                         size="icon"
                         variant="outline"
                         className="h-8 w-8 active:scale-95"
-                        onClick={() => bump(1)}
+                        onClick={() => { vibrate(10); bump(1); }}
                         aria-label="Increase progress"
                       >
                         <Plus className="h-3.5 w-3.5" />
@@ -594,6 +595,7 @@ function AnimeDetail() {
                       <button
                         type="button"
                         onClick={() => {
+                          vibrate(20);
                           remove(media.id);
                           setIsEditing(false);
                         }}
@@ -726,7 +728,7 @@ function AnimeDetail() {
                           />
                           <button
                             type="button"
-                            onClick={() => togglePrimaryLink(idx)}
+                            onClick={() => { vibrate(10); togglePrimaryLink(idx); }}
                             className={`rounded p-1.5 transition-all active:scale-95 ${
                               link.isPrimary
                                 ? "bg-amber-500/20 text-amber-500"
@@ -748,7 +750,7 @@ function AnimeDetail() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => removeLink(idx)}
+                            onClick={() => { vibrate(20); removeLink(idx); }}
                             className="rounded p-1.5 text-muted-foreground transition-colors hover:text-destructive active:scale-95"
                             title="Remove link"
                           >
@@ -777,6 +779,7 @@ function AnimeDetail() {
                           <button
                             type="button"
                             onClick={() => {
+                              vibrate(20);
                               const nextTags = (entry?.tags ?? []).filter(
                                 (tag) => tag.trim().toLowerCase() !== tagLower,
                               );
@@ -819,7 +822,7 @@ function AnimeDetail() {
                 <div className="pt-2">
                   <Button
                     type="button"
-                    onClick={() => setIsEditing(false)}
+                    onClick={() => { vibrate(10); setIsEditing(false); }}
                     className="h-8 w-full text-xs font-semibold active:scale-95"
                   >
                     <Check className="mr-1.5 h-3.5 w-3.5" /> Done Editing

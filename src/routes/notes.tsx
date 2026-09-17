@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { vibrate } from "@/lib/haptics";
 import { Search, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { Markdown } from "@/components/Markdown";
@@ -121,6 +122,7 @@ function NotesPage() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
+                    vibrate(20);
                     if (confirm(`Delete note for "${n.title}"?`)) {
                       removeNote(n.animeId, n.mediaType ?? mode);
                       toast.success("Note deleted");
