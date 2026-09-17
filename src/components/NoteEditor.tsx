@@ -1,4 +1,3 @@
-import { vibrate } from "@/lib/haptics";
 import { useEffect, useRef, useState } from "react";
 import {
   Bold,
@@ -110,7 +109,6 @@ export function NoteEditor({
               className="h-7 text-xs text-muted-foreground hover:text-destructive"
               title="Delete note"
               onClick={() => {
-                vibrate(20);
                 if (confirm(`Delete note for "${title}"?`)) {
                   removeNote(animeId, mediaType);
                   setBody("");

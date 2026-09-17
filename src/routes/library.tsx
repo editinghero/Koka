@@ -1,4 +1,3 @@
-import { vibrate } from "@/lib/haptics";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -214,7 +213,7 @@ function LibraryListRow({
             size="icon"
             variant="outline"
             className="h-7 w-7"
-            onClick={() => { vibrate(10); onBump(-1); }}
+            onClick={() => onBump(-1)}
             aria-label="Decrease progress"
           >
             <Minus className="h-3 w-3" />
@@ -223,7 +222,7 @@ function LibraryListRow({
             size="icon"
             variant="outline"
             className="h-7 w-7"
-            onClick={() => { vibrate(10); onBump(1); }}
+            onClick={() => onBump(1)}
             aria-label="Increase progress"
           >
             <Plus className="h-3 w-3" />
@@ -400,7 +399,7 @@ function LibraryPage() {
           <div className="flex items-center rounded-lg border border-border bg-surface p-0.5">
             <button
               type="button"
-              onClick={() => { vibrate(10); setViewMode("grid"); }}
+              onClick={() => setViewMode("grid")}
               className={cn(
                 "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors",
                 viewMode === "grid"
@@ -414,7 +413,7 @@ function LibraryPage() {
             </button>
             <button
               type="button"
-              onClick={() => { vibrate(10); setViewMode("list"); }}
+              onClick={() => setViewMode("list")}
               className={cn(
                 "flex items-center gap-1 rounded-md px-2.5 py-1 text-xs transition-colors",
                 viewMode === "list"
@@ -471,7 +470,7 @@ function LibraryPage() {
           {(["ALL", ...STATUS_ORDER] as const).map((s) => (
             <button
               key={s}
-              onClick={() => { vibrate(10); setStatus(s); }}
+              onClick={() => setStatus(s)}
               className={cn(
                 "shrink-0 rounded-full border px-3 py-1 text-xs transition-all duration-150 active:scale-95 pill-pressable",
                 status === s

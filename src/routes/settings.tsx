@@ -1,4 +1,3 @@
-import { vibrate } from "@/lib/haptics";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -210,7 +209,7 @@ function SettingsPage() {
                 <button
                   key={t}
                   type="button"
-                  onClick={() => { vibrate(10); update({ theme: t }); }}
+                  onClick={() => update({ theme: t })}
                   className={cn(
                     "flex-1 rounded-lg border p-3 text-sm capitalize transition-all duration-150 active:scale-95",
                     settings.theme === t
@@ -227,13 +226,13 @@ function SettingsPage() {
               title="Light palettes — seasonal"
               themes={LIGHT_THEMES}
               active={settings.lightTheme}
-              onPick={(id) => { vibrate(10); update({ lightTheme: id, theme: "light" }); }}
+              onPick={(id) => update({ lightTheme: id, theme: "light" })}
             />
             <ThemeGrid
               title="Dark palettes"
               themes={DARK_THEMES}
               active={settings.darkTheme}
-              onPick={(id) => { vibrate(10); update({ darkTheme: id, theme: "dark" }); }}
+              onPick={(id) => update({ darkTheme: id, theme: "dark" })}
             />
           </div>
         </section>
@@ -255,7 +254,6 @@ function SettingsPage() {
             className="mt-4 text-destructive"
             disabled={clearing}
             onClick={async () => {
-              vibrate(20);
               if (!confirm("Delete your library and all notes?")) return;
               setClearing(true);
               try {
