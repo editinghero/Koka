@@ -420,10 +420,14 @@ export async function fetchUserList(
 
       entriesMap.set(media.id, entry);
 
-      if (e.notes?.trim() && !notes.some((n) => n.animeId === media.id)) {
+      if (
+        e.notes?.trim() &&
+        !notes.some((n) => n.animeId === media.id && n.mediaType === type)
+      ) {
         notes.push({
           animeId: media.id,
-          mediaType: media.type ?? "ANIME",
+          // The requested list type is authoritative even if an API payload is incomplete.
+          mediaType: type,
           title: media.title,
           body: e.notes.trim(),
           tags: ["anilist"],
