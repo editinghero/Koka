@@ -133,7 +133,9 @@ function NotesPage() {
                 </button>
               </div>
               <div className="mt-3 max-h-56 overflow-hidden">
-                <Markdown>{n.body || "_Empty note_"}</Markdown>
+                <Markdown copyAnimeTitles={false}>
+                  {n.body || "_Empty note_"}
+                </Markdown>
               </div>
               {n.tags.length ? (
                 <div className="mt-3 flex flex-wrap gap-1.5">
