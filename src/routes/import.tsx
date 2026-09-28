@@ -48,7 +48,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Markdown } from "@/components/Markdown";
 
 export const Route = createFileRoute("/import")({
   head: () => ({
@@ -86,16 +85,10 @@ interface ReviewItem {
   entry: LibraryEntry;
   mediaType: MediaType;
   incoming?: LibraryEntry;
-  incomingNote?: Note | undefined;
+  incomingNote?: Note;
   diffs: FieldDiff[];
   selected: boolean;
 }
-
-type NoteReview = {
-  title: string;
-  before: string;
-  after: string;
-};
 
 const entryKey = (entry: LibraryEntry) =>
   `${entry.media.type === "MANGA" ? "MANGA" : "ANIME"}:${entry.media.id}`;
@@ -106,7 +99,7 @@ const showValue = (value: string | number | null | undefined) =>
 function ImportPage() {
   const { mode: mediaMode } = useMediaMode();
   const { mergeMany, library, all, remove } = useLibrary();
-  const { notes, all: allNotes, setNotes, mergeNotes, removeNote } = useNotes();
+  const { notes, setNotes, mergeNotes, removeNote } = useNotes();
   const { settings, update } = useSettings();
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("merge");
@@ -114,7 +107,6 @@ function ImportPage() {
 
   const [review, setReview] = useState<ReviewItem[] | null>(null);
   const [reviewType, setReviewType] = useState<MediaType | "ALL">("ALL");
-  const [noteReview, setNoteReview] = useState<NoteReview | null>(null);
 
   const modeNoun = mediaMode === "MANGA" ? "manga" : "anime";
 
@@ -167,7 +159,7 @@ function ImportPage() {
       ]),
     );
     const existingNotes = new Map(
-      allNotes.map((note) => [
+      notes.map((note) => [
         `${note.mediaType ?? "ANIME"}:${note.animeId}`,
         note,
       ]),
@@ -221,11 +213,11 @@ function ImportPage() {
             });
         }
       }
-      if (incomingNote && oldNote?.body.trim() !== incomingNote.body.trim()) {
+      if (incomingNote && oldNote?.body !== incomingNote.body) {
         diffs.push({
           label: "Notes",
-          before: showValue(oldNote?.body.trim()),
-          after: showValue(incomingNote.body.trim()),
+          before: showValue(oldNote?.body),
+          after: showValue(incomingNote.body),
         });
       }
       if (!existing || diffs.length) {
@@ -241,6 +233,9 @@ function ImportPage() {
         });
       }
     }
+    return changes;
+  }
+
     for (const existing of all) {
       const key = entryKey(existing);
       if (
@@ -276,7 +271,7 @@ function ImportPage() {
     for (const item of deletions) {
       remove(item.entry.media.id, item.mediaType);
       if (
-        allNotes.some(
+        notes.some(
           (note) => `${note.mediaType ?? "ANIME"}:${note.animeId}` === item.key,
         )
       ) {
@@ -292,12 +287,9 @@ function ImportPage() {
 
   const visibleReview = useMemo(
     () =>
-      (review ?? [])
-        .filter((item) => reviewType === "ALL" || item.mediaType === reviewType)
-        .sort(
-          (a, b) =>
-            Number(b.action === "delete") - Number(a.action === "delete"),
-        ),
+      (review ?? []).filter(
+        (item) => reviewType === "ALL" || item.mediaType === reviewType,
+      ),
     [review, reviewType],
   );
 
@@ -699,8 +691,8 @@ function ImportPage() {
           if (!open) setReview(null);
         }}
       >
-        <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-xl border-border bg-background p-0 sm:w-full">
-          <DialogHeader className="shrink-0 border-b border-border px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5">
+        <DialogContent className="max-h-[90vh] max-w-3xl overflow-hidden border-border bg-background p-0">
+          <DialogHeader className="border-b border-border px-5 pb-4 pt-5 sm:px-6">
             <DialogTitle className="font-display">
               Review sync changes
             </DialogTitle>
@@ -709,14 +701,14 @@ function ImportPage() {
               updates, and deletions you want to apply.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid shrink-0 grid-cols-3 gap-1 border-b border-border px-4 py-2.5 sm:flex sm:px-6 sm:py-3">
+          <div className="flex items-center gap-1 border-b border-border px-5 py-3 sm:px-6">
             {(["ALL", "ANIME", "MANGA"] as const).map((type) => (
               <button
                 key={type}
                 type="button"
                 onClick={() => setReviewType(type)}
                 className={cn(
-                  "rounded-full px-2 py-1.5 text-xs font-medium transition-all duration-200 active:scale-95 sm:px-3 sm:py-1",
+                  "rounded-full px-3 py-1 text-xs font-medium transition-colors",
                   reviewType === type
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -726,12 +718,12 @@ function ImportPage() {
               </button>
             ))}
           </div>
-          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4">
+          <div className="max-h-[55vh] space-y-2 overflow-y-auto px-5 py-4 sm:px-6">
             {visibleReview.length ? (
               visibleReview.map((item) => (
                 <label
                   key={item.key}
-                  className="animate-in fade-in-0 slide-in-from-bottom-2 grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-2.5 rounded-xl border border-border bg-secondary/20 p-3 duration-200 transition-all hover:bg-secondary/45 active:scale-[0.99] sm:grid-cols-[auto_auto_minmax(0,1fr)] sm:gap-3"
+                  className="flex cursor-pointer gap-3 rounded-lg border border-border bg-secondary/20 p-3 transition-colors hover:bg-secondary/45"
                 >
                   <Checkbox
                     checked={item.selected}
@@ -751,12 +743,12 @@ function ImportPage() {
                     <img
                       src={item.entry.media.cover}
                       alt=""
-                      className="col-start-2 h-11 w-8 rounded object-cover sm:col-start-auto sm:h-12 sm:w-9"
+                      className="h-12 w-9 rounded object-cover"
                     />
                   ) : (
-                    <div className="col-start-2 h-11 w-8 rounded bg-muted sm:col-start-auto sm:h-12 sm:w-9" />
+                    <div className="h-12 w-9 rounded bg-muted" />
                   )}
-                  <div className="col-span-2 col-start-1 row-start-2 min-w-0 sm:col-auto sm:col-start-auto sm:row-auto">
+                  <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-sm font-semibold">
                         {item.entry.media.title}
@@ -787,36 +779,29 @@ function ImportPage() {
                         {item.incoming?.progress}
                       </p>
                     ) : (
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          Updates:{" "}
-                          {item.diffs
-                            .filter((diff) => diff.label !== "Notes")
-                            .map((diff) => diff.label)
-                            .join(" · ") || "note"}
-                        </span>
-                        {item.diffs.find((diff) => diff.label === "Notes") ? (
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              const noteDiff = item.diffs.find(
-                                (diff) => diff.label === "Notes",
-                              );
-                              if (noteDiff)
-                                setNoteReview({
-                                  title: item.entry.media.title,
-                                  before: noteDiff.before,
-                                  after: noteDiff.after,
-                                });
-                            }}
-                            className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary transition-all duration-200 hover:bg-primary/20 active:scale-95"
+                      <dl className="mt-2 space-y-1 text-xs">
+                        {item.diffs.map((diff) => (
+                          <div
+                            key={diff.label}
+                            className="grid grid-cols-[5.5rem_1fr] gap-2"
                           >
-                            Notes diff
-                          </button>
-                        ) : null}
-                      </div>
+                            <dt className="text-muted-foreground">
+                              {diff.label}
+                            </dt>
+                            <dd className="min-w-0 break-words">
+                              <span className="text-destructive/80 line-through">
+                                {diff.before}
+                              </span>
+                              <span className="mx-1.5 text-muted-foreground">
+                                →
+                              </span>
+                              <span className="text-green-500">
+                                {diff.after}
+                              </span>
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
                     )}
                   </div>
                 </label>
@@ -827,68 +812,15 @@ function ImportPage() {
               </p>
             )}
           </div>
-          <DialogFooter className="grid shrink-0 grid-cols-2 gap-2 border-t border-border px-4 py-3 sm:flex sm:px-6 sm:py-4">
-            <Button
-              variant="outline"
-              className="active:scale-95"
-              onClick={() => setReview(null)}
-            >
+          <DialogFooter className="border-t border-border px-5 py-4 sm:px-6">
+            <Button variant="outline" onClick={() => setReview(null)}>
               <X className="h-4 w-4" /> Cancel
             </Button>
             <Button
               onClick={confirmReview}
               disabled={!review?.some((item) => item.selected)}
-              className="active:scale-95"
             >
               <Check className="h-4 w-4" /> Confirm selected changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={noteReview !== null}
-        onOpenChange={(open) => !open && setNoteReview(null)}
-      >
-        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl border-border bg-background p-0 sm:w-full">
-          <DialogHeader className="border-b border-border px-4 py-4 sm:px-6">
-            <DialogTitle className="font-display text-base">
-              Notes diff
-            </DialogTitle>
-            <DialogDescription className="truncate">
-              {noteReview?.title}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid min-h-0 gap-px overflow-y-auto bg-border sm:grid-cols-2">
-            <section className="bg-background p-4 sm:p-5">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-destructive">
-                Before
-              </p>
-              <div className="rounded-lg bg-destructive/5 p-3 text-sm">
-                <Markdown copyAnimeTitles={false}>
-                  {noteReview?.before === "—"
-                    ? "_No note_"
-                    : (noteReview?.before ?? "")}
-                </Markdown>
-              </div>
-            </section>
-            <section className="bg-background p-4 sm:p-5">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-green-500">
-                After
-              </p>
-              <div className="rounded-lg bg-green-500/5 p-3 text-sm">
-                <Markdown copyAnimeTitles={false}>
-                  {noteReview?.after ?? ""}
-                </Markdown>
-              </div>
-            </section>
-          </div>
-          <DialogFooter className="border-t border-border px-4 py-3 sm:px-6">
-            <Button
-              className="active:scale-95"
-              onClick={() => setNoteReview(null)}
-            >
-              Done
             </Button>
           </DialogFooter>
         </DialogContent>
