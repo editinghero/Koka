@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Loader2,
   Upload,
@@ -9,7 +9,6 @@ import {
   Database,
   Check,
   X,
-  Trash2,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { fetchByIds, fetchByMalIds, fetchUserList } from "@/lib/anilist";
@@ -40,6 +39,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Markdown } from "@/components/Markdown";
 
 export const Route = createFileRoute("/import")({
   head: () => ({
@@ -63,84 +72,49 @@ export const Route = createFileRoute("/import")({
 
 type Mode = "merge" | "replace";
 
-interface DiffItem {
-  id: number;
-  mediaType: MediaType;
-  title: string;
-  cover?: string | null;
-  status: string;
-  progress: number;
-  total?: number | null;
+type ReviewAction = "add" | "update" | "delete";
+
+interface FieldDiff {
+  label: string;
+  before: string;
+  after: string;
 }
+
+interface ReviewItem {
+  key: string;
+  action: ReviewAction;
+  entry: LibraryEntry;
+  mediaType: MediaType;
+  incoming?: LibraryEntry;
+  incomingNote?: Note;
+  diffs: FieldDiff[];
+  selected: boolean;
+}
+
+type NoteReview = {
+  title: string;
+  before: string;
+  after: string;
+};
+
+const entryKey = (entry: LibraryEntry) =>
+  `${entry.media.type === "MANGA" ? "MANGA" : "ANIME"}:${entry.media.id}`;
+
+const showValue = (value: string | number | null | undefined) =>
+  value === null || value === undefined || value === "" ? "—" : String(value);
 
 function ImportPage() {
   const { mode: mediaMode } = useMediaMode();
-  const { mergeMany, replaceMany, library, all, remove } = useLibrary();
-  const { notes, setNotes, mergeNotes, replaceNotes } = useNotes();
+  const { mergeMany, library, all, remove } = useLibrary();
+  const { notes, all: allNotes, setNotes, mergeNotes, removeNote } = useNotes();
   const { settings, update } = useSettings();
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("merge");
   const [log, setLog] = useState<string[]>([]);
 
-  const [pendingDiff, setPendingDiff] = useState<DiffItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = window.localStorage.getItem("koka:import_diff_review");
-      return raw ? (JSON.parse(raw) as DiffItem[]) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  function saveDiff(items: DiffItem[]) {
-    setPendingDiff(items);
-    if (typeof window !== "undefined") {
-      if (!items.length) {
-        window.localStorage.removeItem("koka:import_diff_review");
-      } else {
-        window.localStorage.setItem(
-          "koka:import_diff_review",
-          JSON.stringify(items),
-        );
-      }
-    }
-  }
-
-  function keepItem(id: number, mediaType: MediaType) {
-    const next = pendingDiff.filter(
-      (i) => !(i.id === id && i.mediaType === mediaType),
-    );
-    saveDiff(next);
-    toast.success("Entry kept");
-  }
-
-  function deleteItem(id: number, mediaType: MediaType) {
-    remove(id, mediaType);
-    const next = pendingDiff.filter(
-      (i) => !(i.id === id && i.mediaType === mediaType),
-    );
-    saveDiff(next);
-    toast.success("Entry deleted from library");
-  }
-
-  function keepAll() {
-    saveDiff([]);
-    toast.success("All unmatched entries kept");
-  }
-
-  function deleteAll() {
-    if (
-      !confirm(
-        `Are you sure you want to delete all ${pendingDiff.length} unmatched entries from your library? This cannot be undone.`,
-      )
-    )
-      return;
-    for (const item of pendingDiff) {
-      remove(item.id, item.mediaType);
-    }
-    saveDiff([]);
-    toast.success(`Deleted ${pendingDiff.length} entries`);
-  }
+  const [review, setReview] = useState<ReviewItem[] | null>(null);
+  const [reviewType, setReviewType] = useState<MediaType | "ALL">("ALL");
+  const [noteReview, setNoteReview] = useState<NoteReview | null>(null);
 
   const modeNoun = mediaMode === "MANGA" ? "manga" : "anime";
 
@@ -148,7 +122,7 @@ function ImportPage() {
     setLog((l) => [line, ...l].slice(0, 8));
   }
 
-  function apply(
+  function createReview(
     entries: LibraryEntry[],
     incomingNotes: Note[],
     types: MediaType[],
@@ -177,9 +151,7 @@ function ImportPage() {
 
       const existingLinks = existing?.customLinks ?? [];
       const finalLinks =
-        existingLinks.length > 0
-          ? existingLinks
-          : (entry.customLinks ?? []);
+        existingLinks.length > 0 ? existingLinks : (entry.customLinks ?? []);
 
       return {
         ...entry,
@@ -188,36 +160,147 @@ function ImportPage() {
       };
     });
 
-    if (mode === "replace") {
-      replaceMany(preservedEntries, types);
-      replaceNotes(incomingNotes, types);
-    } else {
-      mergeMany(preservedEntries);
-      if (incomingNotes.length) mergeNotes(incomingNotes);
+    const noteMap = new Map(
+      incomingNotes.map((note) => [
+        `${note.mediaType ?? "ANIME"}:${note.animeId}`,
+        note,
+      ]),
+    );
+    const existingNotes = new Map(
+      allNotes.map((note) => [
+        `${note.mediaType ?? "ANIME"}:${note.animeId}`,
+        note,
+      ]),
+    );
+    const incomingKeys = new Set(preservedEntries.map(entryKey));
+    const changes: ReviewItem[] = [];
+
+    for (const incoming of preservedEntries) {
+      const key = entryKey(incoming);
+      const existing = existingMap.get(key);
+      const incomingNote = noteMap.get(key);
+      const oldNote = existingNotes.get(key);
+      const diffs: FieldDiff[] = [];
+      if (existing) {
+        const fields: Array<
+          [
+            string,
+            string | number | null | undefined,
+            string | number | null | undefined,
+          ]
+        > = [
+          ["Status", existing.status, incoming.status],
+          ["Progress", existing.progress, incoming.progress],
+          ["Rating", existing.score, incoming.score],
+          ["Start date", existing.startedAt, incoming.startedAt],
+          ["Finish date", existing.completedAt, incoming.completedAt],
+          ["Repeat count", existing.repeat, incoming.repeat],
+          [
+            "Favourite",
+            existing.favorite ? "Yes" : "No",
+            incoming.favorite ? "Yes" : "No",
+          ],
+          [
+            "Rewatching",
+            existing.isRewatching ? "Yes" : "No",
+            incoming.isRewatching ? "Yes" : "No",
+          ],
+          ["Air date", existing.media.startDate, incoming.media.startDate],
+          [
+            "Tags",
+            (existing.tags ?? []).join(", "),
+            (incoming.tags ?? []).join(", "),
+          ],
+        ];
+        for (const [label, before, after] of fields) {
+          if (before !== after)
+            diffs.push({
+              label,
+              before: showValue(before),
+              after: showValue(after),
+            });
+        }
+      }
+      if (incomingNote && oldNote?.body.trim() !== incomingNote.body.trim()) {
+        diffs.push({
+          label: "Notes",
+          before: showValue(oldNote?.body.trim()),
+          after: showValue(incomingNote.body.trim()),
+        });
+      }
+      if (!existing || diffs.length) {
+        changes.push({
+          key,
+          action: existing ? "update" : "add",
+          entry: existing ?? incoming,
+          mediaType: incoming.media.type === "MANGA" ? "MANGA" : "ANIME",
+          incoming,
+          incomingNote,
+          diffs,
+          selected: true,
+        });
+      }
     }
 
-    // Feature 6: Compute unmatched entries in local library not in imported list
-    const importedKeys = new Set(
-      entries.map(
-        (e) => `${e.media.type === "MANGA" ? "MANGA" : "ANIME"}:${e.media.id}`,
-      ),
-    );
-    const unmatched: DiffItem[] = all
-      .filter((e) => {
-        const t = e.media.type === "MANGA" ? "MANGA" : "ANIME";
-        return types.includes(t) && !importedKeys.has(`${t}:${e.media.id}`);
-      })
-      .map((e) => ({
-        id: e.media.id,
-        mediaType: (e.media.type === "MANGA" ? "MANGA" : "ANIME") as MediaType,
-        title: e.media.title,
-        cover: e.media.cover ?? null,
-        status: e.status,
-        progress: e.progress,
-        total: e.media.episodes ?? e.media.chapters ?? null,
-      }));
-    saveDiff(unmatched);
+    for (const existing of all) {
+      const key = entryKey(existing);
+      if (
+        !types.includes(existing.media.type === "MANGA" ? "MANGA" : "ANIME") ||
+        incomingKeys.has(key)
+      )
+        continue;
+      changes.push({
+        key,
+        action: "delete",
+        entry: existing,
+        mediaType: existing.media.type === "MANGA" ? "MANGA" : "ANIME",
+        diffs: [],
+        // Merge retains unmatched entries; replace retains the old default of removing them.
+        selected: mode === "replace",
+      });
+    }
+    return changes;
   }
+
+  function confirmReview() {
+    if (!review) return;
+    const selected = review.filter((item) => item.selected);
+    const upserts = selected.flatMap((item) =>
+      item.incoming ? [item.incoming] : [],
+    );
+    const incomingNotes = selected.flatMap((item) =>
+      item.incomingNote ? [item.incomingNote] : [],
+    );
+    const deletions = selected.filter((item) => item.action === "delete");
+    mergeMany(upserts);
+    if (incomingNotes.length) mergeNotes(incomingNotes);
+    for (const item of deletions) {
+      remove(item.entry.media.id, item.mediaType);
+      if (
+        allNotes.some(
+          (note) => `${note.mediaType ?? "ANIME"}:${note.animeId}` === item.key,
+        )
+      ) {
+        removeNote(item.entry.media.id, item.mediaType);
+      }
+    }
+    setReview(null);
+    say(
+      `Synced ${upserts.length} selected changes${deletions.length ? ` and deleted ${deletions.length} entries` : ""}`,
+    );
+    toast.success(`Synced ${selected.length} selected changes`);
+  }
+
+  const visibleReview = useMemo(
+    () =>
+      (review ?? [])
+        .filter((item) => reviewType === "ALL" || item.mediaType === reviewType)
+        .sort(
+          (a, b) =>
+            Number(b.action === "delete") - Number(a.action === "delete"),
+        ),
+    [review, reviewType],
+  );
 
   /** Resolve AniList metadata for parsed items of one media type. */
   async function resolve(items: ImportItem[], type: MediaType) {
@@ -246,12 +329,14 @@ function ImportPage() {
       const parsed = parseImport(await file.text());
 
       if (parsed.backup) {
-        const types: MediaType[] = ["ANIME", "MANGA"];
-        apply(parsed.backup.library, parsed.backup.notes, types);
-        say(
-          `${parsed.source} (${mode}): ${parsed.backup.library.length} titles, ${parsed.backup.notes.length} notes`,
+        setReviewType("ALL");
+        setReview(
+          createReview(parsed.backup.library, parsed.backup.notes, [
+            "ANIME",
+            "MANGA",
+          ]),
         );
-        toast.success(mode === "replace" ? "Data replaced" : "Restored");
+        say(`${parsed.source}: review ready`);
         return;
       }
 
@@ -311,13 +396,11 @@ function ImportPage() {
         }
       }
 
-      apply(entries, imported, types.length ? types : ["ANIME"]);
-      say(
-        `${mode === "replace" ? "Replaced with" : "Imported"} ${entries.length} titles${
-          imported.length ? ` and ${imported.length} notes` : ""
-        }`,
+      setReviewType("ALL");
+      setReview(
+        createReview(entries, imported, types.length ? types : ["ANIME"]),
       );
-      toast.success(`${entries.length} titles imported`);
+      say(`${parsed.source}: review ready for ${entries.length} titles`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Import failed";
       say(`Error: ${msg}`);
@@ -348,13 +431,11 @@ function ImportPage() {
 
       const entries = [...anime.entries, ...manga.entries];
       const listNotes = [...anime.notes, ...manga.notes];
-      apply(entries, listNotes, ["ANIME", "MANGA"]);
+      setReviewType("ALL");
+      setReview(createReview(entries, listNotes, ["ANIME", "MANGA"]));
       say(
-        `${mode === "replace" ? "Replaced list with" : "Synced"} ${entries.length} titles${
-          listNotes.length ? ` and ${listNotes.length} list notes` : ""
-        } from AniList (${anime.entries.length} anime, ${manga.entries.length} manga)`,
+        `AniList review ready (${anime.entries.length} anime, ${manga.entries.length} manga)`,
       );
-      toast.success(`Synced ${entries.length} titles`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sync failed";
       say(`Error: ${msg}`);
@@ -472,7 +553,7 @@ function ImportPage() {
             <Button
               className="w-full"
               onClick={syncAniList}
-              disabled={busy !== null}
+              disabled={busy !== null || review !== null}
             >
               {busy === "api" ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -611,96 +692,208 @@ function ImportPage() {
             </p>
           )}
         </section>
-
-        {pendingDiff.length > 0 ? (
-          <section className="panel p-4 sm:p-5 lg:col-span-2 overflow-hidden">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-3">
-              <div className="min-w-0">
-                <h2 className="font-display text-sm font-semibold text-foreground">
-                  Unmatched library entries ({pendingDiff.length})
-                </h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  These entries are in your local library but were not present in
-                  your last import. Keep or delete them.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 sm:h-7 text-xs active:scale-95 flex-1 sm:flex-none"
-                  onClick={keepAll}
-                >
-                  <Check className="mr-1 h-3.5 w-3.5 text-green-500" /> Keep all
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 sm:h-7 text-xs text-destructive hover:bg-destructive/10 active:scale-95 flex-1 sm:flex-none"
-                  onClick={deleteAll}
-                >
-                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete all
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-3 max-h-96 divide-y divide-border overflow-y-auto overflow-x-hidden pr-1">
-              {pendingDiff.map((item) => (
-                <div
-                  key={`${item.mediaType}-${item.id}`}
-                  className="flex items-center justify-between gap-2.5 py-2.5"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-                    {item.cover ? (
-                      <img
-                        src={item.cover}
-                        alt=""
-                        loading="lazy"
-                        className="h-12 w-9 sm:h-11 sm:w-8 flex-shrink-0 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-9 sm:h-11 sm:w-8 flex-shrink-0 rounded bg-muted" />
-                    )}
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <p
-                        className="truncate text-xs font-semibold text-foreground"
-                        title={item.title}
-                      >
-                        {item.title}
-                      </p>
-                      <p className="truncate text-[11px] text-muted-foreground mt-0.5">
-                        <span className="font-medium text-foreground/85">
-                          {item.mediaType}
-                        </span>{" "}
-                        · {item.status} · {item.progress}/{item.total ?? "?"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-1.5 ml-1">
-                    <button
-                      type="button"
-                      onClick={() => keepItem(item.id, item.mediaType)}
-                      title="Keep entry in library"
-                      className="inline-flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border bg-surface text-green-500 transition-colors hover:border-green-500/40 hover:bg-green-500/10 active:scale-90"
-                    >
-                      <Check className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteItem(item.id, item.mediaType)}
-                      title="Delete entry from library and cloud"
-                      className="inline-flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border bg-surface text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10 active:scale-90"
-                    >
-                      <X className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
       </div>
+
+      <Dialog
+        open={review !== null}
+        onOpenChange={(open) => {
+          if (!open) setReview(null);
+        }}
+      >
+        <DialogContent className="flex max-h-[calc(100dvh-1rem)] w-[calc(100%-1rem)] max-w-3xl flex-col gap-0 overflow-hidden rounded-xl border-border bg-background p-0 sm:w-full">
+          <DialogHeader className="shrink-0 border-b border-border px-4 pb-3 pt-4 sm:px-6 sm:pb-4 sm:pt-5">
+            <DialogTitle className="font-display">
+              Review sync changes
+            </DialogTitle>
+            <DialogDescription>
+              Nothing is saved until you confirm. Select only the additions,
+              updates, and deletions you want to apply.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid shrink-0 grid-cols-3 gap-1 border-b border-border px-4 py-2.5 sm:flex sm:px-6 sm:py-3">
+            {(["ALL", "ANIME", "MANGA"] as const).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setReviewType(type)}
+                className={cn(
+                  "rounded-full px-2 py-1.5 text-xs font-medium transition-all duration-200 active:scale-95 sm:px-3 sm:py-1",
+                  reviewType === type
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+                )}
+              >
+                {type === "ALL" ? "All" : type === "ANIME" ? "Anime" : "Manga"}
+              </button>
+            ))}
+          </div>
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3 sm:px-6 sm:py-4">
+            {visibleReview.length ? (
+              visibleReview.map((item) => (
+                <label
+                  key={item.key}
+                  className="animate-in fade-in-0 slide-in-from-bottom-2 grid cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-2.5 rounded-xl border border-border bg-secondary/20 p-3 duration-200 transition-all hover:bg-secondary/45 active:scale-[0.99] sm:grid-cols-[auto_auto_minmax(0,1fr)] sm:gap-3"
+                >
+                  <Checkbox
+                    checked={item.selected}
+                    onCheckedChange={(checked) =>
+                      setReview(
+                        (items) =>
+                          items?.map((candidate) =>
+                            candidate.key === item.key
+                              ? { ...candidate, selected: checked === true }
+                              : candidate,
+                          ) ?? null,
+                      )
+                    }
+                    aria-label={`Include ${item.entry.media.title} in sync`}
+                  />
+                  {item.entry.media.cover ? (
+                    <img
+                      src={item.entry.media.cover}
+                      alt=""
+                      className="col-start-2 h-11 w-8 rounded object-cover sm:col-start-auto sm:h-12 sm:w-9"
+                    />
+                  ) : (
+                    <div className="col-start-2 h-11 w-8 rounded bg-muted sm:col-start-auto sm:h-12 sm:w-9" />
+                  )}
+                  <div className="col-span-2 col-start-1 row-start-2 min-w-0 sm:col-auto sm:col-start-auto sm:row-auto">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-semibold">
+                        {item.entry.media.title}
+                      </p>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                          item.action === "delete"
+                            ? "bg-destructive/15 text-destructive"
+                            : item.action === "add"
+                              ? "bg-green-500/15 text-green-500"
+                              : "bg-primary/15 text-primary",
+                        )}
+                      >
+                        {item.action}
+                      </span>
+                      <span className="text-[10px] font-medium text-muted-foreground">
+                        {item.mediaType}
+                      </span>
+                    </div>
+                    {item.action === "delete" ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Not present in the incoming list. Select to remove it.
+                      </p>
+                    ) : item.action === "add" ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        New entry: {item.incoming?.status} · progress{" "}
+                        {item.incoming?.progress}
+                      </p>
+                    ) : (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          Updates:{" "}
+                          {item.diffs
+                            .filter((diff) => diff.label !== "Notes")
+                            .map((diff) => diff.label)
+                            .join(" · ") || "note"}
+                        </span>
+                        {item.diffs.find((diff) => diff.label === "Notes") ? (
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              const noteDiff = item.diffs.find(
+                                (diff) => diff.label === "Notes",
+                              );
+                              if (noteDiff)
+                                setNoteReview({
+                                  title: item.entry.media.title,
+                                  before: noteDiff.before,
+                                  after: noteDiff.after,
+                                });
+                            }}
+                            className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary transition-all duration-200 hover:bg-primary/20 active:scale-95"
+                          >
+                            Notes diff
+                          </button>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+                </label>
+              ))
+            ) : (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                No changes for this media type.
+              </p>
+            )}
+          </div>
+          <DialogFooter className="grid shrink-0 grid-cols-2 gap-2 border-t border-border px-4 py-3 sm:flex sm:px-6 sm:py-4">
+            <Button
+              variant="outline"
+              className="active:scale-95"
+              onClick={() => setReview(null)}
+            >
+              <X className="h-4 w-4" /> Cancel
+            </Button>
+            <Button
+              onClick={confirmReview}
+              disabled={!review?.some((item) => item.selected)}
+              className="active:scale-95"
+            >
+              <Check className="h-4 w-4" /> Confirm selected changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={noteReview !== null}
+        onOpenChange={(open) => !open && setNoteReview(null)}
+      >
+        <DialogContent className="flex max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-2xl flex-col gap-0 overflow-hidden rounded-xl border-border bg-background p-0 sm:w-full">
+          <DialogHeader className="border-b border-border px-4 py-4 sm:px-6">
+            <DialogTitle className="font-display text-base">
+              Notes diff
+            </DialogTitle>
+            <DialogDescription className="truncate">
+              {noteReview?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid min-h-0 gap-px overflow-y-auto bg-border sm:grid-cols-2">
+            <section className="bg-background p-4 sm:p-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-destructive">
+                Before
+              </p>
+              <div className="rounded-lg bg-destructive/5 p-3 text-sm">
+                <Markdown copyAnimeTitles={false}>
+                  {noteReview?.before === "—"
+                    ? "_No note_"
+                    : (noteReview?.before ?? "")}
+                </Markdown>
+              </div>
+            </section>
+            <section className="bg-background p-4 sm:p-5">
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-green-500">
+                After
+              </p>
+              <div className="rounded-lg bg-green-500/5 p-3 text-sm">
+                <Markdown copyAnimeTitles={false}>
+                  {noteReview?.after ?? ""}
+                </Markdown>
+              </div>
+            </section>
+          </div>
+          <DialogFooter className="border-t border-border px-4 py-3 sm:px-6">
+            <Button
+              className="active:scale-95"
+              onClick={() => setNoteReview(null)}
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

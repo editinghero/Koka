@@ -65,7 +65,14 @@ function hasLinkChild(children: React.ReactNode): boolean {
   return false;
 }
 
-export function Markdown({ children }: { children: string }) {
+export function Markdown({
+  children,
+  copyAnimeTitles = true,
+}: {
+  children: string;
+  /** Notes should render emphasis plainly instead of adding title-copy controls. */
+  copyAnimeTitles?: boolean;
+}) {
   return (
     <div className="md-body">
       <ReactMarkdown
@@ -90,7 +97,8 @@ export function Markdown({ children }: { children: string }) {
             return (
               <strong className="font-semibold text-foreground inline-flex items-center gap-0.5 flex-wrap">
                 <span>{children}</span>
-                {!containsLink &&
+                {copyAnimeTitles &&
+                !containsLink &&
                 !isLabel &&
                 cleanTitle.length >= 2 &&
                 cleanTitle.length <= 90 ? (

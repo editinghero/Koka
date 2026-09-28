@@ -143,7 +143,7 @@ export function NoteEditor({
       {preview ? (
         <div className="min-h-[220px] p-4">
           {body.trim() ? (
-            <Markdown>{body}</Markdown>
+            <Markdown copyAnimeTitles={false}>{body}</Markdown>
           ) : (
             <p className="text-sm text-muted-foreground">
               Nothing written yet.
