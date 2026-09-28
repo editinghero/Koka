@@ -233,6 +233,8 @@ function ImportPage() {
         });
       }
     }
+    return changes;
+  }
 
     for (const existing of all) {
       const key = entryKey(existing);
