@@ -44,6 +44,7 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
 - **Persistent Koka AI Assistant** - Multi-turn AI chat assistant with conversation history persistence globally and per anime title, featuring in-panel clear buttons and an all-in-one clear option in Settings.
 - **Personal Library & Progress Tracking** - Track anime and manga with status (Watching, Completed, Planning, On Hold, Dropped, Rewatching) and keep count of episodes watched or chapters read.
 - **Analytics & Watch Time Insights** - Active watch/read hours counter (excludes planned/0 progress items), genre distribution breakdown, score distribution, and top studio analytics.
+- **Rich Markdown Notes & Spoilers** - Full support for bold/italic emphasis, preserved multi-line spacing, task checklists, and interactive collapsible `<details><summary>` spoiler cards. See the complete **[Markdown Formatting Guide](MARKDOWN_GUIDE.md)**.
 - **PIN Lock & Security** - Native device PIN protection for personal library and notes privacy. Encrypted Gemini API key storage.
 - **AniList & MAL Import** - Automatic metadata fetching from AniList GraphQL API and full import/export support for AniList sync, MyAnimeList (MAL CSV), and local JSON backups.
 
@@ -96,6 +97,7 @@ A calm, full-stack anime and manga tracking workspace with AI news digests, cust
 
 - **Status Tabs:** Filter your library by Watching, Completed, Planning, On Hold, or Dropped.
 - **Progress Updates:** Quick + / - buttons to update episode or chapter counts.
+- **Markdown Notes:** Format your personal notes with bold, lists, and spoiler tags. Read the **[Markdown Guide](MARKDOWN_GUIDE.md)** for syntax examples.
 - **Clear AI History:** Clear chat history per anime title, in the global assistant, or use "Clear All Chat" in Settings.
 
 ---

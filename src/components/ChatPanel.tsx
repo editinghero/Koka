@@ -239,7 +239,7 @@ export function ChatPanel({
               </p>
             ) : (
               <div key={i} className="max-w-full text-[13px]">
-                <Markdown>{m.text ?? ""}</Markdown>
+                <Markdown copyAnimeTitles>{m.text ?? ""}</Markdown>
                 {m.sources?.length ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {m.sources.slice(0, 6).map((s, j) => (

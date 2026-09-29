@@ -68,6 +68,10 @@ export type Repo = {
   listLibrary(userId: string): Promise<LibraryEntry[]>;
   upsertEntries(userId: string, entries: LibraryEntry[]): Promise<void>;
   deleteEntry(userId: string, type: MediaType, mediaId: number): Promise<void>;
+  deleteEntries(
+    userId: string,
+    entries: { mediaType: MediaType; mediaId: number }[],
+  ): Promise<void>;
   replaceLibrary(
     userId: string,
     entries: LibraryEntry[],
@@ -316,7 +320,9 @@ function d1Repo(db: D1Database): Repo {
         isRewatching: Number(r["is_rewatching"] ?? 0) === 1,
         customLinks: (() => {
           try {
-            return JSON.parse(String(r["custom_links"] ?? "[]")) as CustomLink[];
+            return JSON.parse(
+              String(r["custom_links"] ?? "[]"),
+            ) as CustomLink[];
           } catch {
             return [];
           }
@@ -374,6 +380,18 @@ function d1Repo(db: D1Database): Repo {
         )
         .bind(userId, type, mediaId)
         .run();
+    },
+    async deleteEntries(userId, entries) {
+      if (!entries.length) return;
+      await ready();
+      for (const e of entries) {
+        await db
+          .prepare(
+            "DELETE FROM library_entries WHERE user_id = ? AND media_type = ? AND media_id = ?",
+          )
+          .bind(userId, e.mediaType, e.mediaId)
+          .run();
+      }
     },
     async replaceLibrary(userId, entries, types) {
       await ready();
@@ -572,6 +590,15 @@ function localRepo(): Repo {
       const s = await loadLocal();
       s.library[userId] = (s.library[userId] ?? []).filter(
         (e) => !(e.media.id === mediaId && typeOf(e) === type),
+      );
+      await persistLocal();
+    },
+    async deleteEntries(userId, entries) {
+      if (!entries.length) return;
+      const s = await loadLocal();
+      const set = new Set(entries.map((e) => `${e.mediaType}:${e.mediaId}`));
+      s.library[userId] = (s.library[userId] ?? []).filter(
+        (e) => !set.has(`${typeOf(e)}:${e.media.id}`),
       );
       await persistLocal();
     },

@@ -73,7 +73,7 @@ export function AiPanel({
 
       {result ? (
         <div className="mt-4 border-t border-border pt-4">
-          <Markdown>{result}</Markdown>
+          <Markdown copyAnimeTitles>{result}</Markdown>
           {sources.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-1.5">
               {sources.slice(0, 8).map((s, i) => (

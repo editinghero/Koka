@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Loader2,
   Upload,
@@ -7,15 +7,13 @@ import {
   RefreshCw,
   FileSpreadsheet,
   Database,
-  Check,
-  X,
-  Trash2,
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { fetchByIds, fetchByMalIds, fetchUserList } from "@/lib/anilist";
 import { parseImport, type ImportItem } from "@/lib/importers";
 import {
   exportAll,
+  recordImport,
   useLibrary,
   useMediaMode,
   useNotes,
@@ -40,6 +38,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { computeSyncDiff, keyOf, type SyncDiffResult } from "@/lib/import-diff";
+import { SyncReviewDialog } from "@/components/SyncReviewDialog";
 
 export const Route = createFileRoute("/import")({
   head: () => ({
@@ -63,84 +63,30 @@ export const Route = createFileRoute("/import")({
 
 type Mode = "merge" | "replace";
 
-interface DiffItem {
-  id: number;
-  mediaType: MediaType;
-  title: string;
-  cover?: string | null;
-  status: string;
-  progress: number;
-  total?: number | null;
-}
-
 function ImportPage() {
   const { mode: mediaMode } = useMediaMode();
-  const { mergeMany, replaceMany, library, all, remove } = useLibrary();
-  const { notes, setNotes, mergeNotes, replaceNotes } = useNotes();
+  const { mergeMany, replaceMany, library, all, removeMany } = useLibrary();
+  const { notes, all: allNotes, setNotes, mergeNotes, replaceNotes } = useNotes();
   const { settings, update } = useSettings();
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("merge");
   const [log, setLog] = useState<string[]>([]);
 
-  const [pendingDiff, setPendingDiff] = useState<DiffItem[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const raw = window.localStorage.getItem("koka:import_diff_review");
-      return raw ? (JSON.parse(raw) as DiffItem[]) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Sync Review Dialog State (for merge mode)
+  const [reviewDiff, setReviewDiff] = useState<SyncDiffResult | null>(null);
+  const [reviewSource, setReviewSource] = useState<string>("");
+  const [isApplyingReview, setIsApplyingReview] = useState(false);
 
-  function saveDiff(items: DiffItem[]) {
-    setPendingDiff(items);
+  // Clear stale legacy localStorage diff key on mount
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      if (!items.length) {
+      try {
         window.localStorage.removeItem("koka:import_diff_review");
-      } else {
-        window.localStorage.setItem(
-          "koka:import_diff_review",
-          JSON.stringify(items),
-        );
+      } catch {
+        /* ignore */
       }
     }
-  }
-
-  function keepItem(id: number, mediaType: MediaType) {
-    const next = pendingDiff.filter(
-      (i) => !(i.id === id && i.mediaType === mediaType),
-    );
-    saveDiff(next);
-    toast.success("Entry kept");
-  }
-
-  function deleteItem(id: number, mediaType: MediaType) {
-    remove(id, mediaType);
-    const next = pendingDiff.filter(
-      (i) => !(i.id === id && i.mediaType === mediaType),
-    );
-    saveDiff(next);
-    toast.success("Entry deleted from library");
-  }
-
-  function keepAll() {
-    saveDiff([]);
-    toast.success("All unmatched entries kept");
-  }
-
-  function deleteAll() {
-    if (
-      !confirm(
-        `Are you sure you want to delete all ${pendingDiff.length} unmatched entries from your library? This cannot be undone.`,
-      )
-    )
-      return;
-    for (const item of pendingDiff) {
-      remove(item.id, item.mediaType);
-    }
-    saveDiff([]);
-    toast.success(`Deleted ${pendingDiff.length} entries`);
-  }
+  }, []);
 
   const modeNoun = mediaMode === "MANGA" ? "manga" : "anime";
 
@@ -148,25 +94,26 @@ function ImportPage() {
     setLog((l) => [line, ...l].slice(0, 8));
   }
 
-  function apply(
+  /**
+   * Applies changes directly in "replace" mode:
+   * Replaces the library and notes for the given media types.
+   * No popup, no deletion UI, ever.
+   */
+  function applyReplace(
     entries: LibraryEntry[],
     incomingNotes: Note[],
     types: MediaType[],
+    source: string,
   ) {
     const existingMap = new Map<string, LibraryEntry>();
     for (const e of all) {
       const t = e.media.type === "MANGA" ? "MANGA" : "ANIME";
-      existingMap.set(`${t}:${e.media.id}`, e);
-      existingMap.set(`${t}-${e.media.id}`, e);
-      existingMap.set(`${e.media.id}`, e);
+      existingMap.set(keyOf(t, e.media.id), e);
     }
 
     const preservedEntries = entries.map((entry) => {
       const t = entry.media.type === "MANGA" ? "MANGA" : "ANIME";
-      const existing =
-        existingMap.get(`${t}:${entry.media.id}`) ??
-        existingMap.get(`${t}-${entry.media.id}`) ??
-        existingMap.get(`${entry.media.id}`);
+      const existing = existingMap.get(keyOf(t, entry.media.id));
 
       const existingTags = existing?.tags ?? [];
       const incomingTags = entry.tags ?? [];
@@ -177,9 +124,7 @@ function ImportPage() {
 
       const existingLinks = existing?.customLinks ?? [];
       const finalLinks =
-        existingLinks.length > 0
-          ? existingLinks
-          : (entry.customLinks ?? []);
+        existingLinks.length > 0 ? existingLinks : (entry.customLinks ?? []);
 
       return {
         ...entry,
@@ -188,35 +133,112 @@ function ImportPage() {
       };
     });
 
-    if (mode === "replace") {
-      replaceMany(preservedEntries, types);
-      replaceNotes(incomingNotes, types);
-    } else {
-      mergeMany(preservedEntries);
-      if (incomingNotes.length) mergeNotes(incomingNotes);
+    replaceMany(preservedEntries, types);
+    replaceNotes(incomingNotes, types);
+
+    recordImport({
+      source,
+      mode: "replace",
+      count: preservedEntries.length,
+    });
+
+    const summaryLine = `Replaced with ${preservedEntries.length} titles${
+      incomingNotes.length ? ` and ${incomingNotes.length} notes` : ""
+    }`;
+    say(`${source}: ${summaryLine}`);
+    toast.success(summaryLine);
+  }
+
+  /**
+   * Evaluates incoming import data in "merge" mode:
+   * Computes pure change set WITHOUT modifying local library or notes.
+   * Opens the Review Dialog.
+   */
+  function evaluateMerge(
+    entries: LibraryEntry[],
+    incomingNotes: Note[],
+    types: MediaType[],
+    source: string,
+  ) {
+    const diff = computeSyncDiff(all, allNotes, entries, incomingNotes, types);
+
+    if (diff.summary.totalVisible === 0) {
+      say(`${source}: All ${entries.length} entries are already up to date`);
+      toast.info("No changes found — your library is up to date");
+      return;
     }
 
-    // Feature 6: Compute unmatched entries in local library not in imported list
-    const importedKeys = new Set(
-      entries.map(
-        (e) => `${e.media.type === "MANGA" ? "MANGA" : "ANIME"}:${e.media.id}`,
-      ),
-    );
-    const unmatched: DiffItem[] = all
-      .filter((e) => {
-        const t = e.media.type === "MANGA" ? "MANGA" : "ANIME";
-        return types.includes(t) && !importedKeys.has(`${t}:${e.media.id}`);
-      })
-      .map((e) => ({
-        id: e.media.id,
-        mediaType: (e.media.type === "MANGA" ? "MANGA" : "ANIME") as MediaType,
-        title: e.media.title,
-        cover: e.media.cover ?? null,
-        status: e.status,
-        progress: e.progress,
-        total: e.media.episodes ?? e.media.chapters ?? null,
-      }));
-    saveDiff(unmatched);
+    setReviewSource(source);
+    setReviewDiff(diff);
+  }
+
+  /**
+   * Confirmation handler called when user clicks confirm inside the SyncReviewDialog.
+   */
+  async function handleConfirmReview(result: {
+    entriesToMerge: LibraryEntry[];
+    notesToMerge: Note[];
+    itemsToDelete: { id: number; mediaType: MediaType }[];
+  }) {
+    const { entriesToMerge, notesToMerge, itemsToDelete } = result;
+
+    if (
+      entriesToMerge.length === 0 &&
+      notesToMerge.length === 0 &&
+      itemsToDelete.length === 0
+    ) {
+      setReviewDiff(null);
+      say("Sync completed: no changes selected");
+      toast("No changes selected");
+      return;
+    }
+
+    setIsApplyingReview(true);
+    try {
+      if (entriesToMerge.length > 0) {
+        mergeMany(entriesToMerge);
+      }
+      if (notesToMerge.length > 0) {
+        mergeNotes(notesToMerge);
+      }
+      if (itemsToDelete.length > 0) {
+        removeMany(itemsToDelete);
+      }
+
+      recordImport({
+        source: reviewSource || "sync",
+        mode: "merge",
+        count: entriesToMerge.length,
+      });
+
+      const parts: string[] = [];
+      if (entriesToMerge.length > 0) {
+        parts.push(`${entriesToMerge.length} entries`);
+      }
+      if (notesToMerge.length > 0) {
+        parts.push(`${notesToMerge.length} notes`);
+      }
+      if (itemsToDelete.length > 0) {
+        parts.push(`deleted ${itemsToDelete.length}`);
+      }
+
+      const summaryLine = `Synced ${parts.join(", ")}`;
+      say(summaryLine);
+      toast.success(summaryLine);
+      setReviewDiff(null);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Sync failed";
+      say(`Error: ${msg}`);
+      toast.error(msg);
+    } finally {
+      setIsApplyingReview(false);
+    }
+  }
+
+  function handleCancelReview() {
+    setReviewDiff(null);
+    say("Sync cancelled");
+    toast("Sync cancelled");
   }
 
   /** Resolve AniList metadata for parsed items of one media type. */
@@ -247,11 +269,21 @@ function ImportPage() {
 
       if (parsed.backup) {
         const types: MediaType[] = ["ANIME", "MANGA"];
-        apply(parsed.backup.library, parsed.backup.notes, types);
-        say(
-          `${parsed.source} (${mode}): ${parsed.backup.library.length} titles, ${parsed.backup.notes.length} notes`,
-        );
-        toast.success(mode === "replace" ? "Data replaced" : "Restored");
+        if (mode === "replace") {
+          applyReplace(
+            parsed.backup.library,
+            parsed.backup.notes,
+            types,
+            parsed.source,
+          );
+        } else {
+          evaluateMerge(
+            parsed.backup.library,
+            parsed.backup.notes,
+            types,
+            parsed.source,
+          );
+        }
         return;
       }
 
@@ -302,7 +334,7 @@ function ImportPage() {
         if (item.notes) {
           imported.push({
             animeId: m.id,
-            mediaType: m.type ?? "ANIME",
+            mediaType: item.mediaType ?? (m.type === "MANGA" ? "MANGA" : "ANIME"),
             title: m.title,
             body: item.notes,
             tags: ["imported"],
@@ -311,13 +343,12 @@ function ImportPage() {
         }
       }
 
-      apply(entries, imported, types.length ? types : ["ANIME"]);
-      say(
-        `${mode === "replace" ? "Replaced with" : "Imported"} ${entries.length} titles${
-          imported.length ? ` and ${imported.length} notes` : ""
-        }`,
-      );
-      toast.success(`${entries.length} titles imported`);
+      const effectiveTypes = types.length ? types : (["ANIME"] as MediaType[]);
+      if (mode === "replace") {
+        applyReplace(entries, imported, effectiveTypes, parsed.source);
+      } else {
+        evaluateMerge(entries, imported, effectiveTypes, parsed.source);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Import failed";
       say(`Error: ${msg}`);
@@ -343,18 +374,18 @@ function ImportPage() {
       try {
         manga = await fetchUserList(user, "MANGA");
       } catch {
-        /* a user may have no manga list */
+        /* user might not have a manga list */
       }
 
       const entries = [...anime.entries, ...manga.entries];
       const listNotes = [...anime.notes, ...manga.notes];
-      apply(entries, listNotes, ["ANIME", "MANGA"]);
-      say(
-        `${mode === "replace" ? "Replaced list with" : "Synced"} ${entries.length} titles${
-          listNotes.length ? ` and ${listNotes.length} list notes` : ""
-        } from AniList (${anime.entries.length} anime, ${manga.entries.length} manga)`,
-      );
-      toast.success(`Synced ${entries.length} titles`);
+      const source = `AniList (${anime.entries.length} anime, ${manga.entries.length} manga)`;
+
+      if (mode === "replace") {
+        applyReplace(entries, listNotes, ["ANIME", "MANGA"], source);
+      } else {
+        evaluateMerge(entries, listNotes, ["ANIME", "MANGA"], source);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Sync failed";
       say(`Error: ${msg}`);
@@ -396,7 +427,7 @@ function ImportPage() {
           <p className="text-sm font-medium">Import behaviour</p>
           <p className="text-xs text-muted-foreground">
             {mode === "merge"
-              ? "Merge keeps titles that aren't in the file and appends imported notes."
+              ? "Merge reviews incoming additions and changes in a dialog before saving."
               : "Replace wipes the lists and notes for the media types in the file first."}
           </p>
         </div>
@@ -406,7 +437,7 @@ function ImportPage() {
               key={m}
               onClick={() => setMode(m)}
               className={cn(
-                "rounded-full px-3 py-1 text-xs capitalize transition-all duration-200 active:scale-95",
+                "rounded-full px-3 py-1 text-xs capitalize transition-all duration-200 active:scale-95 cursor-pointer",
                 mode === m
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground",
@@ -470,7 +501,7 @@ function ImportPage() {
               placeholder="e.g. kokaneko"
             />
             <Button
-              className="w-full"
+              className="w-full cursor-pointer"
               onClick={syncAniList}
               disabled={busy !== null}
             >
@@ -611,96 +642,21 @@ function ImportPage() {
             </p>
           )}
         </section>
-
-        {pendingDiff.length > 0 ? (
-          <section className="panel p-4 sm:p-5 lg:col-span-2 overflow-hidden">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-3">
-              <div className="min-w-0">
-                <h2 className="font-display text-sm font-semibold text-foreground">
-                  Unmatched library entries ({pendingDiff.length})
-                </h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  These entries are in your local library but were not present in
-                  your last import. Keep or delete them.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 sm:h-7 text-xs active:scale-95 flex-1 sm:flex-none"
-                  onClick={keepAll}
-                >
-                  <Check className="mr-1 h-3.5 w-3.5 text-green-500" /> Keep all
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 sm:h-7 text-xs text-destructive hover:bg-destructive/10 active:scale-95 flex-1 sm:flex-none"
-                  onClick={deleteAll}
-                >
-                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete all
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-3 max-h-96 divide-y divide-border overflow-y-auto overflow-x-hidden pr-1">
-              {pendingDiff.map((item) => (
-                <div
-                  key={`${item.mediaType}-${item.id}`}
-                  className="flex items-center justify-between gap-2.5 py-2.5"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
-                    {item.cover ? (
-                      <img
-                        src={item.cover}
-                        alt=""
-                        loading="lazy"
-                        className="h-12 w-9 sm:h-11 sm:w-8 flex-shrink-0 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-9 sm:h-11 sm:w-8 flex-shrink-0 rounded bg-muted" />
-                    )}
-                    <div className="min-w-0 flex-1 overflow-hidden">
-                      <p
-                        className="truncate text-xs font-semibold text-foreground"
-                        title={item.title}
-                      >
-                        {item.title}
-                      </p>
-                      <p className="truncate text-[11px] text-muted-foreground mt-0.5">
-                        <span className="font-medium text-foreground/85">
-                          {item.mediaType}
-                        </span>{" "}
-                        · {item.status} · {item.progress}/{item.total ?? "?"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-1.5 ml-1">
-                    <button
-                      type="button"
-                      onClick={() => keepItem(item.id, item.mediaType)}
-                      title="Keep entry in library"
-                      className="inline-flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border bg-surface text-green-500 transition-colors hover:border-green-500/40 hover:bg-green-500/10 active:scale-90"
-                    >
-                      <Check className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => deleteItem(item.id, item.mediaType)}
-                      title="Delete entry from library and cloud"
-                      className="inline-flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-md border border-border bg-surface text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10 active:scale-90"
-                    >
-                      <X className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
       </div>
+
+      {/* Sync Review Dialog (Merge mode only) */}
+      {reviewDiff && (
+        <SyncReviewDialog
+          open={reviewDiff !== null}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) handleCancelReview();
+          }}
+          diffResult={reviewDiff}
+          onCancel={handleCancelReview}
+          onConfirm={handleConfirmReview}
+          isApplying={isApplyingReview}
+        />
+      )}
     </>
   );
 }

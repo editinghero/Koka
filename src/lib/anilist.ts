@@ -423,7 +423,7 @@ export async function fetchUserList(
       if (e.notes?.trim() && !notes.some((n) => n.animeId === media.id)) {
         notes.push({
           animeId: media.id,
-          mediaType: media.type ?? "ANIME",
+          mediaType: type ?? (media.type === "MANGA" ? "MANGA" : "ANIME"),
           title: media.title,
           body: e.notes.trim(),
           tags: ["anilist"],

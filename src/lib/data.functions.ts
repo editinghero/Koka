@@ -1,5 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import type { FontOption, LibraryEntry, MediaType, Note, Settings } from "./types";
+import type {
+  FontOption,
+  LibraryEntry,
+  MediaType,
+  Note,
+  Settings,
+} from "./types";
 
 export type Bootstrap = {
   user: { id: string; email: string; name: string } | null;
@@ -91,6 +97,18 @@ export const removeEntry = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const removeEntries = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: { entries: { mediaId: number; mediaType: MediaType }[] }) => data,
+  )
+  .handler(async ({ data }) => {
+    const { requireUser } = await import("@/server/session.server");
+    const { getRepo } = await import("@/server/repo.server");
+    const user = await requireUser();
+    await getRepo().deleteEntries(user.id, data.entries);
+    return { ok: true };
+  });
+
 export const replaceLibrary = createServerFn({ method: "POST" })
   .inputValidator(
     (data: { entries: LibraryEntry[]; types: MediaType[] }) => data,
@@ -145,13 +163,13 @@ export const logImport = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const clearLibraryAndNotes = createServerFn({ method: "POST" })
-  .handler(async () => {
+export const clearLibraryAndNotes = createServerFn({ method: "POST" }).handler(
+  async () => {
     const { currentUser } = await import("@/server/session.server");
     const { getRepo } = await import("@/server/repo.server");
     const user = await currentUser();
     if (!user) return { ok: true };
     await getRepo().clearLibraryAndNotes(user.id);
     return { ok: true };
-  });
-
+  },
+);

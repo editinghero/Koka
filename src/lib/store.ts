@@ -14,6 +14,7 @@ import {
   getBootstrap,
   logImport as logImportFn,
   removeEntry,
+  removeEntries,
   removeNote,
   replaceLibrary as replaceLibraryFn,
   replaceNotes as replaceNotesFn,
@@ -100,8 +101,12 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     }
     const dark = settings.theme === "dark";
     const preset = dark ? settings.darkTheme : settings.lightTheme;
-    const rawFont = typeof window !== "undefined" ? (window.localStorage.getItem("koka:font") as FontOption | null) : null;
-    const font = settingsOverride?.font ?? settings.font ?? rawFont ?? "default";
+    const rawFont =
+      typeof window !== "undefined"
+        ? (window.localStorage.getItem("koka:font") as FontOption | null)
+        : null;
+    const font =
+      settingsOverride?.font ?? settings.font ?? rawFont ?? "default";
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
@@ -121,7 +126,9 @@ function hydrateFromCache() {
   hydratedFromCache = true;
   try {
     const raw = window.localStorage.getItem(CACHE_KEY);
-    const rawFont = window.localStorage.getItem("koka:font") as FontOption | null;
+    const rawFont = window.localStorage.getItem(
+      "koka:font",
+    ) as FontOption | null;
     if (!raw && !rawFont) return;
     const parsed = raw ? (JSON.parse(raw) as Partial<State>) : {};
     state = {
@@ -173,7 +180,8 @@ export function boot(force = false): Promise<void> {
         typeof window !== "undefined"
           ? (window.localStorage.getItem("koka:font") as FontOption | null)
           : null;
-      const currentFont = fontFromData || localFont || state.settings.font || "default";
+      const currentFont =
+        fontFromData || localFont || state.settings.font || "default";
       if (typeof window !== "undefined" && currentFont) {
         window.localStorage.setItem("koka:font", currentFont);
       }
@@ -361,6 +369,29 @@ export function useLibrary(forceMode?: MediaType) {
     [mode],
   );
 
+  const removeMany = useCallback(
+    (items: { id: number; mediaType?: MediaType }[]) => {
+      if (!items.length) return;
+      const set = new Set(items.map((i) => keyOf(i.mediaType ?? mode, i.id)));
+      setState({
+        library: state.library.filter(
+          (e) => !set.has(keyOf(typeOf(e), e.media.id)),
+        ),
+      });
+      if (signedIn()) {
+        void removeEntries({
+          data: {
+            entries: items.map((i) => ({
+              mediaId: i.id,
+              mediaType: i.mediaType ?? mode,
+            })),
+          },
+        }).catch(fail);
+      }
+    },
+    [mode],
+  );
+
   const mergeMany = useCallback(
     (entries: LibraryEntry[]) => {
       const map = new Map(
@@ -445,6 +476,7 @@ export function useLibrary(forceMode?: MediaType) {
     upsert,
     patch,
     remove,
+    removeMany,
     mergeMany,
     replaceMany,
   };
