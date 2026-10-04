@@ -46,7 +46,8 @@ export const Route = createFileRoute("/library")({
   component: LibraryPage,
 });
 
-type SortKey = "updated" | "title" | "score" | "progress";
+type SortKey =
+  "updated" | "title" | "score" | "progress" | "startedAt" | "completedAt";
 type ViewMode = "grid" | "list";
 
 const STORAGE_KEYS = {
@@ -379,13 +380,31 @@ function LibraryPage() {
         );
 
         return (
-          !!titleMatch || !!genreMatch || !!studioMatch || !!tagMatch || !!customListMatch
+          !!titleMatch ||
+          !!genreMatch ||
+          !!studioMatch ||
+          !!tagMatch ||
+          !!customListMatch
         );
       })
       .sort((a, b) => {
         if (sort === "title") return a.media.title.localeCompare(b.media.title);
         if (sort === "score") return (b.score ?? 0) - (a.score ?? 0);
         if (sort === "progress") return b.progress - a.progress;
+        if (sort === "startedAt") {
+          const aTime = a.startedAt
+            ? new Date(a.startedAt).getTime()
+            : Infinity;
+          const bTime = b.startedAt
+            ? new Date(b.startedAt).getTime()
+            : Infinity;
+          return aTime - bTime;
+        }
+        if (sort === "completedAt") {
+          const aTime = a.completedAt ? new Date(a.completedAt).getTime() : 0;
+          const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+          return bTime - aTime;
+        }
         return b.updatedAt - a.updatedAt;
       });
   }, [library, status, genre, customList, query, sort]);
@@ -520,6 +539,8 @@ function LibraryPage() {
               <option value="title">Title A–Z</option>
               <option value="score">Score</option>
               <option value="progress">Progress</option>
+              <option value="startedAt">Starting date</option>
+              <option value="completedAt">Finished date</option>
             </select>
           </div>
         </div>
