@@ -242,7 +242,7 @@
   --popover: oklch(0.225 0.002 90);
   --popover-foreground: oklch(0.93 0.004 90);
   --primary: oklch(0.74 0.1 190);
-  --primary-foreground: oklch(0.18 0.02 190);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.27 0.003 90);
   --secondary-foreground: oklch(0.9 0.004 90);
   --muted: oklch(0.27 0.003 90);
@@ -266,7 +266,7 @@
   --sidebar: oklch(0.2 0.001 90);
   --sidebar-foreground: oklch(0.88 0.004 90);
   --sidebar-primary: oklch(0.74 0.1 190);
-  --sidebar-primary-foreground: oklch(0.18 0.02 190);
+  --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: oklch(0.26 0.003 90);
   --sidebar-accent-foreground: oklch(0.94 0.004 90);
   --sidebar-border: oklch(1 0 0 / 9%);
@@ -623,7 +623,7 @@ button:not(:disabled):active,
   --popover: oklch(0.21 0 0);
   --foreground: oklch(0.985 0.015 80);
   --primary: oklch(0.82 0.05 78);
-  --primary-foreground: oklch(0.18 0 0);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.25 0 0);
   --secondary-foreground: oklch(0.96 0.012 80);
   --muted: oklch(0.25 0 0);
@@ -652,7 +652,7 @@ button:not(:disabled):active,
   --popover: oklch(0.334 0.043 295);
   --foreground: oklch(0.945 0.018 82);
   --primary: oklch(0.72 0.075 305);
-  --primary-foreground: oklch(0.24 0.038 295);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.375 0.046 295);
   --secondary-foreground: oklch(0.92 0.015 82);
   --muted: oklch(0.375 0.046 295);
@@ -680,7 +680,7 @@ button:not(:disabled):active,
   --popover: oklch(0.228 0.018 160);
   --foreground: oklch(0.93 0.01 150);
   --primary: oklch(0.76 0.11 160);
-  --primary-foreground: oklch(0.18 0.03 160);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.27 0.02 160);
   --secondary-foreground: oklch(0.9 0.01 150);
   --muted: oklch(0.27 0.02 160);
@@ -708,7 +708,7 @@ button:not(:disabled):active,
   --popover: oklch(0.23 0.024 300);
   --foreground: oklch(0.93 0.012 300);
   --primary: oklch(0.76 0.11 305);
-  --primary-foreground: oklch(0.18 0.03 305);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.275 0.028 300);
   --secondary-foreground: oklch(0.9 0.012 300);
   --muted: oklch(0.275 0.028 300);
@@ -737,7 +737,7 @@ button:not(:disabled):active,
   --popover: oklch(0.215 0.018 245);
   --foreground: oklch(0.93 0.008 220);
   --primary: oklch(0.76 0.13 195);
-  --primary-foreground: oklch(0.16 0.02 200);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.265 0.02 245);
   --secondary-foreground: oklch(0.9 0.008 220);
   --muted: oklch(0.265 0.02 245);
@@ -793,7 +793,7 @@ button:not(:disabled):active,
   --popover: oklch(0.235 0.022 40);
   --foreground: oklch(0.97 0.018 80);
   --primary: oklch(0.70 0.048 55);
-  --primary-foreground: oklch(0.14 0.026 50);
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.265 0.02 42);
   --secondary-foreground: oklch(0.92 0.016 75);
   --muted: oklch(0.265 0.02 42);
