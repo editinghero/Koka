@@ -274,6 +274,13 @@
 }
 
 @layer base {
+  :root.performance-mode * {
+    transition: none !important;
+    animation: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   * {
     border-color: var(--color-border);
   }

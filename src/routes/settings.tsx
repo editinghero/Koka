@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import {
+  applyPerformanceMode,
   clearCache,
   useLibrary,
   useNotes,
@@ -197,6 +198,16 @@ function SettingsPage() {
             palettes stay deep and calm.
           </p>
 
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">Performance toggle</p>
+              <p className="text-xs text-muted-foreground">
+                Disable blurs and animations to improve performance.
+              </p>
+            </div>
+            <PerformanceToggle />
+          </div>
+
           <FontPicker
             active={settings.font ?? "default"}
             onPick={(font) => update({ font })}
@@ -276,6 +287,25 @@ function SettingsPage() {
         </section>
       </div>
     </>
+  );
+}
+
+function PerformanceToggle() {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    setEnabled(window.localStorage.getItem("koka:performance") === "true");
+  }, []);
+
+  return (
+    <Switch
+      checked={enabled}
+      onCheckedChange={(v) => {
+        setEnabled(v);
+        window.localStorage.setItem("koka:performance", String(v));
+        applyPerformanceMode();
+      }}
+    />
   );
 }
 

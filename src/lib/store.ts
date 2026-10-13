@@ -86,9 +86,20 @@ function setState(patch: Partial<State>, cache = true) {
   emit();
 }
 
+export function applyPerformanceMode() {
+  if (typeof window === "undefined") return;
+  try {
+    const isPerformance = window.localStorage.getItem("koka:performance") === "true";
+    document.documentElement.classList.toggle("performance-mode", isPerformance);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function applyThemeFromSettings(settingsOverride?: Settings) {
   if (typeof window === "undefined") return;
   try {
+    applyPerformanceMode();
     let settings = settingsOverride ?? state.settings;
     if (!settingsOverride) {
       const raw = window.localStorage.getItem(CACHE_KEY);
