@@ -47,7 +47,14 @@ export const Route = createFileRoute("/library")({
 });
 
 type SortKey =
-  "updated" | "title" | "score" | "progress" | "startedAt" | "completedAt";
+  | "updated"
+  | "title"
+  | "score"
+  | "progress"
+  | "startedAt"
+  | "completedAt"
+  | "releaseDate"
+  | "anilistScore";
 type ViewMode = "grid" | "list";
 
 const STORAGE_KEYS = {
@@ -405,6 +412,18 @@ function LibraryPage() {
           const bTime = b.completedAt ? new Date(b.completedAt).getTime() : 0;
           return bTime - aTime;
         }
+        if (sort === "releaseDate") {
+          const aTime = a.media.startDate
+            ? new Date(a.media.startDate).getTime()
+            : 0;
+          const bTime = b.media.startDate
+            ? new Date(b.media.startDate).getTime()
+            : 0;
+          return bTime - aTime;
+        }
+        if (sort === "anilistScore") {
+          return (b.media.averageScore ?? 0) - (a.media.averageScore ?? 0);
+        }
         return b.updatedAt - a.updatedAt;
       });
   }, [library, status, genre, customList, query, sort]);
@@ -541,6 +560,8 @@ function LibraryPage() {
               <option value="progress">Progress</option>
               <option value="startedAt">Starting date</option>
               <option value="completedAt">Finished date</option>
+              <option value="releaseDate">Release date</option>
+              <option value="anilistScore">AniList score</option>
             </select>
           </div>
         </div>

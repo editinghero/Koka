@@ -339,7 +339,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-[11px] font-medium transition-all duration-200",
                   active
                     ? "bg-primary text-primary-foreground font-semibold"
-                    : "text-muted-foreground hover:text-foreground active:scale-95"
+                    : "text-muted-foreground hover:text-foreground active:scale-95",
                 )}
               >
                 <item.icon className="h-4 w-4 shrink-0" />
@@ -355,7 +355,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               "flex flex-1 flex-col items-center gap-0.5 rounded-full py-1 text-[11px] font-medium transition-all duration-200",
               sheetOpen
                 ? "bg-primary text-primary-foreground font-semibold"
-                : "text-muted-foreground hover:text-foreground active:scale-95"
+                : "text-muted-foreground hover:text-foreground active:scale-95",
             )}
           >
             <span className="relative flex h-4 w-4 items-center justify-center shrink-0">
@@ -425,8 +425,8 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-      <div>
+    <div className="mb-6 flex items-start justify-between gap-3">
+      <div className="min-w-0 flex-1">
         <h1 className="font-display text-2xl font-semibold md:text-3xl">
           {title}
         </h1>

@@ -128,7 +128,7 @@ function SeasonsPage() {
         }
         action={
           !isManga && isSeasonalActive ? (
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 shrink-0">
               <Button
                 size="sm"
                 variant="outline"
