@@ -137,6 +137,13 @@ export const DARK_THEMES: ThemePreset[] = [
     mode: "dark",
     swatch: ["#141414", "#1c1c1c", "#6fd6dc"],
   },
+  {
+    id: "velvet",
+    label: "Velvet",
+    hint: "Charcoal with peach-to-violet gradient",
+    mode: "dark",
+    swatch: ["#212121", "#262626", "#DBAEC2"],
+  },
 ];
 
 export const ALL_THEMES = [...LIGHT_THEMES, ...DARK_THEMES];

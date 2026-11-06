@@ -728,6 +728,73 @@ button:not(:disabled):active,
   --chart-5: oklch(0.72 0.1 170);
 }
 
+/* Velvet — charcoal canvas, peach→violet gradient signature (from the Astral Velvet spec) */
+.dark[data-theme="velvet"] {
+  --radius: 0.625rem;
+  --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
+  --background: oklch(0.248 0 0);
+  --foreground: oklch(0.964 0 0);
+  --surface: oklch(0.269 0 0);
+  --surface-2: oklch(0.321 0 0);
+  --card: oklch(0.269 0 0);
+  --card-foreground: oklch(0.964 0 0);
+  --popover: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.964 0 0);
+  --primary: oklch(0.853 0.113 69);
+  --primary-foreground: oklch(0.194 0.031 305);
+  --secondary: oklch(0.341 0 0);
+  --secondary-foreground: oklch(0.964 0 0);
+  --muted: oklch(0.341 0 0);
+  --muted-foreground: oklch(0.715 0 0);
+  --accent: oklch(0.341 0.027 303);
+  --accent-foreground: oklch(0.964 0 0);
+  --destructive: oklch(0.629 0.136 12);
+  --destructive-foreground: oklch(0.194 0.031 305);
+  --success: oklch(0.7 0.11 155);
+  --success-foreground: oklch(0.18 0.02 155);
+  --warning: oklch(0.78 0.12 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --border: oklch(0.348 0 0);
+  --input: oklch(0.379 0 0);
+  --ring: oklch(0.853 0.113 69);
+  --chart-1: oklch(0.827 0.074 42);
+  --chart-2: oklch(0.745 0.148 302);
+  --chart-3: oklch(0.853 0.113 69);
+  --chart-4: oklch(0.797 0.058 350);
+  --chart-5: oklch(0.629 0.136 12);
+  --sidebar: oklch(0.269 0 0);
+  --sidebar-foreground: oklch(0.964 0 0);
+  --sidebar-primary: oklch(0.853 0.113 69);
+  --sidebar-primary-foreground: oklch(0.194 0.031 305);
+  --sidebar-accent: oklch(0.341 0 0);
+  --sidebar-accent-foreground: oklch(0.853 0.113 69);
+  --sidebar-border: oklch(0.348 0 0);
+  --sidebar-ring: oklch(0.853 0.113 69);
+}
+
+/* Signature gradient: solid primary buttons/badges + desktop top hairline */
+.dark[data-theme="velvet"] .bg-primary {
+  background-image: linear-gradient(90deg, #f1b7a1 0%, #dbaec2 50%, #be94fa 100%);
+}
+.dark[data-theme="velvet"] .bg-primary:hover {
+  filter: brightness(1.07);
+}
+@media (min-width: 768px) {
+  .dark[data-theme="velvet"] header.sticky {
+    background-image: linear-gradient(90deg, #f1b7a1, #dbaec2, #be94fa);
+    background-size: 100% 2px;
+    background-repeat: no-repeat;
+    background-position: top;
+  }
+}
+
+/* Serif page/section titles (Cormorant Garamond); body stays Lato */
+.dark[data-theme="velvet"] :is(h1, h2) {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 /* Tsuki — premium charcoal slate with silver-teal */
 .dark[data-theme="tsuki"] {
   --background: oklch(0.17 0.015 245);
