@@ -732,6 +732,7 @@ button:not(:disabled):active,
 .dark[data-theme="velvet"] {
   --radius: 0.625rem;
   --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Lato", ui-sans-serif, system-ui, sans-serif;
   --background: oklch(0.248 0 0);
   --foreground: oklch(0.964 0 0);
   --surface: oklch(0.269 0 0);
@@ -793,6 +794,228 @@ button:not(:disabled):active,
   font-family: "Cormorant Garamond", Georgia, serif;
   font-weight: 600;
   letter-spacing: 0;
+}
+
+/* Noir — from the Astral layout kit; surfaces/muted/borders nudged for contrast */
+.dark[data-theme="noir"] {
+  --radius: 1rem;
+  --btn-radius: 999px;
+  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --background: oklch(0.157 0 0);
+  --foreground: oklch(0.945 0.023 65);
+  --surface: oklch(0.194 0 0);
+  --surface-2: oklch(0.246 0 0);
+  --card: oklch(0.194 0 0);
+  --card-foreground: oklch(0.945 0.023 65);
+  --popover: oklch(0.194 0 0);
+  --popover-foreground: oklch(0.945 0.023 65);
+  --primary: oklch(0.685 0.211 10);
+  --primary-foreground: oklch(0.157 0 0);
+  --secondary: oklch(0.283 0 0);
+  --secondary-foreground: oklch(0.945 0.023 65);
+  --muted: oklch(0.283 0 0);
+  --muted-foreground: oklch(0.660 0.017 61);
+  --accent: oklch(0.329 0.034 1);
+  --accent-foreground: oklch(0.945 0.023 65);
+  --destructive: oklch(0.626 0.193 23);
+  --destructive-foreground: oklch(0.157 0 0);
+  --success: oklch(0.834 0.122 159);
+  --success-foreground: oklch(0.157 0 0);
+  --warning: oklch(0.78 0.12 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --border: oklch(0.296 0 0);
+  --input: oklch(0.332 0.009 355);
+  --ring: oklch(0.685 0.211 10);
+  --chart-1: oklch(0.685 0.211 10);
+  --chart-2: oklch(0.835 0.141 85);
+  --chart-3: oklch(0.669 0.177 277);
+  --chart-4: oklch(0.834 0.122 159);
+  --chart-5: oklch(0.928 0.022 81);
+  --sidebar: oklch(0.194 0 0);
+  --sidebar-foreground: oklch(0.945 0.023 65);
+  --sidebar-primary: oklch(0.685 0.211 10);
+  --sidebar-primary-foreground: oklch(0.157 0 0);
+  --sidebar-accent: oklch(0.283 0 0);
+  --sidebar-accent-foreground: oklch(0.835 0.141 85);
+  --sidebar-border: oklch(0.296 0 0);
+  --sidebar-ring: oklch(0.685 0.211 10);
+}
+.dark[data-theme="noir"] :is(h1, h2) {
+  font-weight: 800;
+}
+
+/* Wisteria — from the Astral layout kit; surfaces/muted/borders nudged for contrast */
+.dark[data-theme="wisteria"] {
+  --radius: 1rem;
+  --btn-radius: 999px;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --background: oklch(0.193 0.046 283);
+  --foreground: oklch(0.957 0.012 301);
+  --surface: oklch(0.232 0.055 283);
+  --surface-2: oklch(0.276 0.062 283);
+  --card: oklch(0.232 0.055 283);
+  --card-foreground: oklch(0.957 0.012 301);
+  --popover: oklch(0.232 0.055 283);
+  --popover-foreground: oklch(0.957 0.012 301);
+  --primary: oklch(0.891 0.053 85);
+  --primary-foreground: oklch(0.202 0.054 284);
+  --secondary: oklch(0.312 0.069 284);
+  --secondary-foreground: oklch(0.957 0.012 301);
+  --muted: oklch(0.312 0.069 284);
+  --muted-foreground: oklch(0.736 0.063 291);
+  --accent: oklch(0.388 0.051 290);
+  --accent-foreground: oklch(0.957 0.012 301);
+  --destructive: oklch(0.699 0.111 9);
+  --destructive-foreground: oklch(0.202 0.054 284);
+  --success: oklch(0.834 0.122 159);
+  --success-foreground: oklch(0.193 0.046 283);
+  --warning: oklch(0.78 0.12 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --border: oklch(0.323 0.068 284);
+  --input: oklch(0.357 0.072 285);
+  --ring: oklch(0.891 0.053 85);
+  --chart-1: oklch(0.891 0.053 85);
+  --chart-2: oklch(0.693 0.118 290);
+  --chart-3: oklch(0.834 0.122 159);
+  --chart-4: oklch(0.699 0.111 9);
+  --chart-5: oklch(0.736 0.063 291);
+  --sidebar: oklch(0.232 0.055 283);
+  --sidebar-foreground: oklch(0.957 0.012 301);
+  --sidebar-primary: oklch(0.891 0.053 85);
+  --sidebar-primary-foreground: oklch(0.202 0.054 284);
+  --sidebar-accent: oklch(0.312 0.069 284);
+  --sidebar-accent-foreground: oklch(0.891 0.053 85);
+  --sidebar-border: oklch(0.323 0.068 284);
+  --sidebar-ring: oklch(0.891 0.053 85);
+}
+@media (min-width: 768px) {
+  .dark[data-theme="wisteria"] header.sticky {
+    background-image: linear-gradient(90deg, #7C6FC0, #7C6FC0);
+    background-size: 100% 3px;
+    background-repeat: no-repeat;
+    background-position: top;
+  }
+}
+.dark[data-theme="wisteria"] :is(h1, h2) {
+  font-weight: 600;
+}
+
+/* Abyss Coral — from the Astral layout kit; surfaces/muted/borders nudged for contrast */
+.dark[data-theme="abyss"] {
+  --radius: 0.875rem;
+  --btn-radius: 14px;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --background: oklch(0.206 0.024 220);
+  --foreground: oklch(0.959 0.011 176);
+  --surface: oklch(0.250 0.029 218);
+  --surface-2: oklch(0.289 0.033 219);
+  --card: oklch(0.250 0.029 218);
+  --card-foreground: oklch(0.959 0.011 176);
+  --popover: oklch(0.250 0.029 218);
+  --popover-foreground: oklch(0.959 0.011 176);
+  --primary: oklch(0.756 0.149 36);
+  --primary-foreground: oklch(0.180 0.022 35);
+  --secondary: oklch(0.319 0.036 219);
+  --secondary-foreground: oklch(0.959 0.011 176);
+  --muted: oklch(0.319 0.036 219);
+  --muted-foreground: oklch(0.692 0.036 203);
+  --accent: oklch(0.367 0.014 218);
+  --accent-foreground: oklch(0.959 0.011 176);
+  --destructive: oklch(0.651 0.179 19);
+  --destructive-foreground: oklch(0.180 0.022 35);
+  --success: oklch(0.834 0.122 159);
+  --success-foreground: oklch(0.206 0.024 220);
+  --warning: oklch(0.78 0.12 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --border: oklch(0.334 0.038 220);
+  --input: oklch(0.392 0.042 219);
+  --ring: oklch(0.756 0.149 36);
+  --chart-1: oklch(0.756 0.149 36);
+  --chart-2: oklch(0.786 0.114 173);
+  --chart-3: oklch(0.876 0.076 53);
+  --chart-4: oklch(0.663 0.162 18);
+  --chart-5: oklch(0.676 0.036 203);
+  --sidebar: oklch(0.250 0.029 218);
+  --sidebar-foreground: oklch(0.959 0.011 176);
+  --sidebar-primary: oklch(0.756 0.149 36);
+  --sidebar-primary-foreground: oklch(0.180 0.022 35);
+  --sidebar-accent: oklch(0.319 0.036 219);
+  --sidebar-accent-foreground: oklch(0.876 0.076 53);
+  --sidebar-border: oklch(0.334 0.038 220);
+  --sidebar-ring: oklch(0.756 0.149 36);
+}
+@media (min-width: 768px) {
+  .dark[data-theme="abyss"] header.sticky {
+    background-image: linear-gradient(90deg, #FF8A6B, #FF8A6B);
+    background-size: 100% 3px;
+    background-repeat: no-repeat;
+    background-position: top;
+  }
+}
+.dark[data-theme="abyss"] :is(h1, h2) {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Vice City — from the Astral layout kit; surfaces/muted/borders nudged for contrast */
+.dark[data-theme="vice"] {
+  --radius: 1.125rem;
+  --btn-radius: 999px;
+  --font-sans: "GTAArtDeco", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "GTAArtDeco", "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --background: oklch(0.240 0.045 282);
+  --foreground: oklch(0.975 0.013 295);
+  --surface: oklch(0.298 0.059 282);
+  --surface-2: oklch(0.336 0.064 282);
+  --card: oklch(0.298 0.059 282);
+  --card-foreground: oklch(0.975 0.013 295);
+  --popover: oklch(0.298 0.059 282);
+  --popover-foreground: oklch(0.975 0.013 295);
+  --primary: oklch(0.842 0.093 2);
+  --primary-foreground: oklch(0.240 0.045 282);
+  --secondary: oklch(0.364 0.068 282);
+  --secondary-foreground: oklch(0.975 0.013 295);
+  --muted: oklch(0.364 0.068 282);
+  --muted-foreground: oklch(0.779 0.054 294);
+  --accent: oklch(0.426 0.061 295);
+  --accent-foreground: oklch(0.975 0.013 295);
+  --destructive: oklch(0.687 0.195 13);
+  --destructive-foreground: oklch(0.240 0.045 282);
+  --success: oklch(0.834 0.122 159);
+  --success-foreground: oklch(0.240 0.045 282);
+  --warning: oklch(0.78 0.12 75);
+  --warning-foreground: oklch(0.2 0.03 75);
+  --border: oklch(0.377 0.071 282);
+  --input: oklch(0.447 0.081 283);
+  --ring: oklch(0.842 0.093 2);
+  --chart-1: oklch(0.842 0.093 2);
+  --chart-2: oklch(0.794 0.105 279);
+  --chart-3: oklch(0.975 0.060 101);
+  --chart-4: oklch(0.839 0.071 294);
+  --chart-5: oklch(0.840 0.089 47);
+  --sidebar: oklch(0.298 0.059 282);
+  --sidebar-foreground: oklch(0.975 0.013 295);
+  --sidebar-primary: oklch(0.842 0.093 2);
+  --sidebar-primary-foreground: oklch(0.240 0.045 282);
+  --sidebar-accent: oklch(0.364 0.068 282);
+  --sidebar-accent-foreground: oklch(0.975 0.060 101);
+  --sidebar-border: oklch(0.377 0.071 282);
+  --sidebar-ring: oklch(0.842 0.093 2);
+}
+@media (min-width: 768px) {
+  .dark[data-theme="vice"] header.sticky {
+    background-image: linear-gradient(90deg, #fcb999, #f09a97 35%, #d886a6 70%, #988bd0);
+    background-size: 100% 3px;
+    background-repeat: no-repeat;
+    background-position: top;
+  }
+}
+.dark[data-theme="vice"] :is(h1, h2) {
+  font-weight: 700;
 }
 
 /* Tsuki — premium charcoal slate with silver-teal */

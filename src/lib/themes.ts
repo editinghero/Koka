@@ -144,6 +144,34 @@ export const DARK_THEMES: ThemePreset[] = [
     mode: "dark",
     swatch: ["#212121", "#262626", "#DBAEC2"],
   },
+  {
+    id: "noir",
+    label: "Noir",
+    hint: "Ticket-stub black & hot pink",
+    mode: "dark",
+    swatch: ["#0e0c0d", "#161415", "#ff507b"],
+  },
+  {
+    id: "wisteria",
+    label: "Wisteria",
+    hint: "Midnight indigo & golden cream",
+    mode: "dark",
+    swatch: ["#121128", "#1a1936", "#ebd9b4"],
+  },
+  {
+    id: "abyss",
+    label: "Abyss Coral",
+    hint: "Deep teal & coral",
+    mode: "dark",
+    swatch: ["#0a1a1f", "#10252b", "#ff8a6b"],
+  },
+  {
+    id: "vice",
+    label: "Vice City",
+    hint: "Indigo night & bubblegum pink",
+    mode: "dark",
+    swatch: ["#1c1c34", "#29294a", "#ffb2c6"],
+  },
 ];
 
 export const ALL_THEMES = [...LIGHT_THEMES, ...DARK_THEMES];
