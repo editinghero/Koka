@@ -133,13 +133,13 @@ export async function anilist<T>(
 }
 
 export type DiscoverParams = {
-  type?: MediaType;
-  season?: string | null;
-  seasonYear?: number | null;
-  sort?: string;
-  genre?: string | null;
-  isAdult?: boolean;
-  page?: number;
+  type?: MediaType | undefined;
+  season?: string | null | undefined;
+  seasonYear?: number | null | undefined;
+  sort?: string | undefined;
+  genre?: string | null | undefined;
+  isAdult?: boolean | undefined;
+  page?: number | undefined;
 };
 
 export async function fetchDiscover(
@@ -170,11 +170,11 @@ export async function fetchDiscover(
     page,
   };
   if (season && seasonYear) {
-    variables.season = season;
-    variables.seasonYear = seasonYear;
+    variables["season"] = season;
+    variables["seasonYear"] = seasonYear;
   }
   if (genreParam) {
-    variables.genre = genreParam;
+    variables["genre"] = genreParam;
   }
 
   const query = `query ($type: MediaType, $sort: [MediaSort], $genre: String, $season: MediaSeason, $seasonYear: Int, $isAdult: Boolean, $page: Int) {

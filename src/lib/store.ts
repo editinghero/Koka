@@ -10,6 +10,7 @@ import {
   type WatchStatus,
 } from "./types";
 import { loadFontAssets } from "./fonts";
+import { applyThemeColor } from "./themes";
 import {
   getBootstrap,
   logImport as logImportFn,
@@ -110,6 +111,7 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     const root = document.documentElement;
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
+    applyThemeColor(preset, dark);
     root.dataset["font"] = font;
     if (typeof window !== "undefined") {
       window.localStorage.setItem("koka:font", font);

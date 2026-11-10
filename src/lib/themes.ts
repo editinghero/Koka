@@ -175,3 +175,24 @@ export const DARK_THEMES: ThemePreset[] = [
 ];
 
 export const ALL_THEMES = [...LIGHT_THEMES, ...DARK_THEMES];
+
+/** Page background of a theme — used for the browser / PWA bar colour. */
+export function themeColor(id: string, dark: boolean): string {
+  const key = id === "coral" ? "koka" : id;
+  const found = ALL_THEMES.find((t) => t.id === key);
+  return found ? found.swatch[0] : dark ? "#191213" : "#faf9f6";
+}
+
+/** Point <meta name="theme-color"> at the active theme so the browser / PWA bar matches. */
+export function applyThemeColor(id: string, dark: boolean): void {
+  if (typeof document === "undefined") return;
+  let meta = document.querySelector<HTMLMetaElement>(
+    'meta[name="theme-color"]',
+  );
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "theme-color";
+    document.head.appendChild(meta);
+  }
+  meta.content = themeColor(id, dark);
+}

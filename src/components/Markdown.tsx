@@ -134,11 +134,11 @@ function parseDetailsSegments(text: string): ContentSegment[] {
       });
     }
 
-    const fullInner = match[1];
+    const fullInner = match[1] ?? "";
     const summaryMatch = fullInner.match(
       /<summary\b[^>]*>([\s\S]*?)<\/summary>/i,
     );
-    const summary = summaryMatch ? summaryMatch[1].trim() : "Details";
+    const summary = summaryMatch?.[1]?.trim() ?? "Details";
     const body = summaryMatch
       ? fullInner.replace(summaryMatch[0], "").trim()
       : fullInner.trim();

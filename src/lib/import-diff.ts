@@ -39,7 +39,7 @@ export interface NoteDiff {
   newLineCount: number;
   oldCharCount: number;
   newCharCount: number;
-  hunks?: DiffHunk[];
+  hunks?: DiffHunk[] | undefined;
 }
 
 export interface SyncReviewItem {
@@ -50,11 +50,11 @@ export interface SyncReviewItem {
   cover?: string | null;
   changeType: SyncChangeType;
   entry: LibraryEntry;
-  existingEntry?: LibraryEntry;
+  existingEntry?: LibraryEntry | undefined;
   fieldChanges: FieldDiff[];
-  incomingNote?: Note;
-  existingNote?: Note;
-  noteDiff?: NoteDiff;
+  incomingNote?: Note | undefined;
+  existingNote?: Note | undefined;
+  noteDiff?: NoteDiff | undefined;
   isShortenedNote: boolean;
   defaultIncluded: boolean;
 }
@@ -245,12 +245,18 @@ export function computeLineDiffHunks(
     new Array(m + 1).fill(0),
   );
 
+  // Indices below are always inside the (n + 1) x (m + 1) table.
+  const cell = (a: number, b: number): number =>
+    (dp[a] as number[])[b] as number;
+
   for (let i = 0; i < n; i++) {
+    const prevRow = dp[i] as number[];
+    const row = dp[i + 1] as number[];
     for (let j = 0; j < m; j++) {
       if (middleOld[i] === middleNew[j]) {
-        dp[i + 1][j + 1] = dp[i][j] + 1;
+        row[j + 1] = (prevRow[j] as number) + 1;
       } else {
-        dp[i + 1][j + 1] = Math.max(dp[i + 1][j], dp[i][j + 1]);
+        row[j + 1] = Math.max(row[j] as number, prevRow[j + 1] as number);
       }
     }
   }
@@ -262,14 +268,14 @@ export function computeLineDiffHunks(
   let j = m;
   while (i > 0 || j > 0) {
     if (i > 0 && j > 0 && middleOld[i - 1] === middleNew[j - 1]) {
-      middleOps.push({ type: "equal", text: middleOld[i - 1] });
+      middleOps.push({ type: "equal", text: middleOld[i - 1] as string });
       i--;
       j--;
-    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-      middleOps.push({ type: "add", text: middleNew[j - 1] });
+    } else if (j > 0 && (i === 0 || cell(i, j - 1) >= cell(i - 1, j))) {
+      middleOps.push({ type: "add", text: middleNew[j - 1] as string });
       j--;
     } else {
-      middleOps.push({ type: "remove", text: middleOld[i - 1] });
+      middleOps.push({ type: "remove", text: middleOld[i - 1] as string });
       i--;
     }
   }
@@ -283,7 +289,7 @@ export function computeLineDiffHunks(
   for (let k = 0; k < prefix; k++) {
     allOps.push({
       type: "equal",
-      text: oldLines[k],
+      text: oldLines[k] as string,
       oldLineNumber: oldLine++,
       newLineNumber: newLine++,
     });
@@ -315,7 +321,7 @@ export function computeLineDiffHunks(
   for (let k = oldLines.length - suffix; k < oldLines.length; k++) {
     allOps.push({
       type: "equal",
-      text: oldLines[k],
+      text: oldLines[k] as string,
       oldLineNumber: oldLine++,
       newLineNumber: newLine++,
     });
@@ -358,14 +364,14 @@ export function computeLineDiffHunks(
     const isContextOrChange = changeIndices.has(idx);
 
     if (isContextOrChange) {
-      currentLines.push(allOps[idx]);
+      currentLines.push(allOps[idx] as LineDiffItem);
     } else {
       // We entered an unchanged run
       if (currentLines.length > 0) {
         hunks.push({
           id: `hunk-${hunkIndex++}`,
-          oldStart: currentLines[0].oldLineNumber ?? 1,
-          newStart: currentLines[0].newLineNumber ?? 1,
+          oldStart: currentLines[0]?.oldLineNumber ?? 1,
+          newStart: currentLines[0]?.newLineNumber ?? 1,
           lines: currentLines,
         });
         currentLines = [];
@@ -374,7 +380,7 @@ export function computeLineDiffHunks(
       // Gather all consecutive collapsed lines
       const collapsedLines: LineDiffItem[] = [];
       while (idx < allOps.length && !changeIndices.has(idx)) {
-        collapsedLines.push(allOps[idx]);
+        collapsedLines.push(allOps[idx] as LineDiffItem);
         idx++;
       }
       idx--; // step back since for loop increments
@@ -382,8 +388,8 @@ export function computeLineDiffHunks(
       if (collapsedLines.length > 0) {
         hunks.push({
           id: `collapsed-${hunkIndex++}`,
-          oldStart: collapsedLines[0].oldLineNumber ?? 1,
-          newStart: collapsedLines[0].newLineNumber ?? 1,
+          oldStart: collapsedLines[0]?.oldLineNumber ?? 1,
+          newStart: collapsedLines[0]?.newLineNumber ?? 1,
           lines: collapsedLines,
           collapsed: true,
           collapsedCount: collapsedLines.length,
@@ -395,8 +401,8 @@ export function computeLineDiffHunks(
   if (currentLines.length > 0) {
     hunks.push({
       id: `hunk-${hunkIndex++}`,
-      oldStart: currentLines[0].oldLineNumber ?? 1,
-      newStart: currentLines[0].newLineNumber ?? 1,
+      oldStart: currentLines[0]?.oldLineNumber ?? 1,
+      newStart: currentLines[0]?.newLineNumber ?? 1,
       lines: currentLines,
     });
   }

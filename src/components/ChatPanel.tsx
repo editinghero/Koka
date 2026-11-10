@@ -74,7 +74,8 @@ export function ChatPanel({
     const initial = animeId
       ? getAnimeChatHistory(animeId)
       : getGlobalChatHistory();
-    setMessages(initial as Msg[]);
+    // Older saved chats only have `text`; ChatPanel falls back to it when `parts` is missing.
+    setMessages(initial as unknown as Msg[]);
     setHydrated(true);
   }, [animeId]);
 
@@ -145,11 +146,11 @@ export function ChatPanel({
         {
           system,
           search,
-          getAnimeNote: allowNoteFetching ? getAnimeNote : undefined,
+          ...(allowNoteFetching ? { getAnimeNote } : {}),
         },
       );
 
-      const newTurns = (res.newTurns ?? []).map((t) => ({
+      const newTurns: Msg[] = (res.newTurns ?? []).map((t) => ({
         ...t,
         text:
           t.parts
@@ -159,8 +160,9 @@ export function ChatPanel({
       }));
 
       // Find the final model response to append sources
-      if (newTurns.length > 0 && res.sources?.length) {
-        newTurns[newTurns.length - 1].sources = res.sources;
+      const lastTurn = newTurns[newTurns.length - 1];
+      if (lastTurn && res.sources?.length) {
+        lastTurn.sources = res.sources;
       }
 
       setMessages([...next, ...newTurns]);
@@ -302,6 +304,7 @@ export function ChatPanel({
           size="icon"
           className="h-9 w-9"
           disabled={loading}
+          aria-label="Send message"
         >
           <Send className="h-4 w-4" />
         </Button>

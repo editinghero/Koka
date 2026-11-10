@@ -14,6 +14,7 @@ import { AppShell } from "@/components/AppShell";
 import { AuthScreen } from "@/components/AuthScreen";
 import { PinLock } from "@/components/PinLock";
 import { SplashScreen } from "@/components/SplashScreen";
+import { ALL_THEMES } from "@/lib/themes";
 import {
   applyThemeFromSettings,
   boot,
@@ -98,6 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             "A calm, all-in-one anime workspace: AniList & MAL import, seasonal charts, AI news and markdown notes.",
         },
         { name: "author", content: "Koka" },
+        { name: "theme-color", content: "#191213" },
         { property: "og:title", content: "Koka — Anime Dashboard" },
         {
           property: "og:description",
@@ -140,6 +142,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   },
 );
 
+/** Theme id → page background, so the boot script can set the browser bar colour before React loads. */
+const THEME_COLORS_JSON = JSON.stringify(
+  Object.fromEntries(ALL_THEMES.map((t) => [t.id, t.swatch[0]])),
+);
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
@@ -147,7 +154,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var c=localStorage.getItem("koka:cache");var f=localStorage.getItem("koka:font");if(!f&&c){var p0=JSON.parse(c);if(p0&&p0.settings&&p0.settings.font)f=p0.settings.font;}if(f)document.documentElement.setAttribute("data-font",f);if(c){var p=JSON.parse(c);if(p&&p.settings){var dark=p.settings.theme==="dark";var t=dark?(p.settings.darkTheme||"umi"):(p.settings.lightTheme||"paper");document.documentElement.classList.toggle("dark",dark);document.documentElement.setAttribute("data-theme",t);}}}catch(e){}`,
+            __html: `var THEME_COLORS=${THEME_COLORS_JSON};try{var c=localStorage.getItem("koka:cache");var f=localStorage.getItem("koka:font");if(!f&&c){var p0=JSON.parse(c);if(p0&&p0.settings&&p0.settings.font)f=p0.settings.font;}if(f)document.documentElement.setAttribute("data-font",f);if(c){var p=JSON.parse(c);if(p&&p.settings){var dark=p.settings.theme==="dark";var t=dark?(p.settings.darkTheme||"umi"):(p.settings.lightTheme||"paper");document.documentElement.classList.toggle("dark",dark);document.documentElement.setAttribute("data-theme",t);var m=document.querySelector('meta[name="theme-color"]');var k=t==="coral"?"koka":t;if(m&&THEME_COLORS[k])m.setAttribute("content",THEME_COLORS[k]);}}}catch(e){}`,
           }}
         />
       </head>
