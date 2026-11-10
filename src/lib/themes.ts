@@ -172,7 +172,38 @@ export const DARK_THEMES: ThemePreset[] = [
     mode: "dark",
     swatch: ["#1c1c34", "#29294a", "#ffb2c6"],
   },
+  {
+    id: "matcha",
+    label: "Cyber Matcha",
+    hint: "Obsidian carbon & neon matcha",
+    mode: "dark",
+    swatch: ["#0b0e0c", "#131916", "#3ce68a"],
+  },
+  {
+    id: "espresso",
+    label: "Smoked Espresso",
+    hint: "Dark roast & copper amber",
+    mode: "dark",
+    swatch: ["#13100e", "#1c1714", "#e58553"],
+  },
 ];
+
+LIGHT_THEMES.push(
+  {
+    id: "pastel",
+    label: "Pastel Snack Box",
+    hint: "Foxnut cream, seafoam & berry",
+    mode: "light",
+    swatch: ["#faf7f0", "#f2ede2", "#267862"],
+  },
+  {
+    id: "kyoto",
+    label: "Kyoto Paper",
+    hint: "Warm washi paper & persimmon",
+    mode: "light",
+    swatch: ["#f6f5f2", "#efece6", "#b83b24"],
+  },
+);
 
 export const ALL_THEMES = [...LIGHT_THEMES, ...DARK_THEMES];
 
