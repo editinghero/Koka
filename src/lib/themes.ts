@@ -173,7 +173,7 @@ export const DARK_THEMES: ThemePreset[] = [
     swatch: ["#1c1c34", "#29294a", "#ffb2c6"],
   },
   {
-    id: "matcha",
+    id: "cybermatcha",
     label: "Cyber Matcha",
     hint: "Obsidian carbon & neon matcha",
     mode: "dark",

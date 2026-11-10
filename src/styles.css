@@ -329,11 +329,7 @@
   border-bottom: 1px solid var(--color-border);
 }
 
-/* ---------------------------------------------------------------
- * Feature 0 — Instant tap/press feedback everywhere
- * ------------------------------------------------------------- */
 
-/* Cards active state across all pages: library grid, home dashboard, discover/seasons, search results */
 .card-pressable,
 .anime-card-press,
 [data-card-press],
@@ -504,12 +500,6 @@ button:not(:disabled):active,
 .md-body hr {
   border-top: 1px solid var(--color-border);
 }
-
-/* ---------------------------------------------------------------
- * Theme presets. Light presets apply on :root[data-theme=...],
- * dark presets on .dark[data-theme=...]. "paper" and "kuro" are the
- * defaults already defined above.
- * ------------------------------------------------------------- */
 
 :root[data-theme="sakura"] {
   --background: oklch(0.949 0.022 81);
@@ -1153,7 +1143,7 @@ button:not(:disabled):active,
 }
 
 /* Cyber Matcha — from the Astral layout kit; surfaces/muted/borders nudged for contrast */
-.dark[data-theme="matcha"] {
+.dark[data-theme="cybermatcha"] {
   --radius: 0.75rem;
   --btn-radius: 10px;
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -1198,14 +1188,14 @@ button:not(:disabled):active,
   --sidebar-ring: oklch(0.819 0.188 154);
 }
 @media (min-width: 768px) {
-  .dark[data-theme="matcha"] header.sticky {
+  .dark[data-theme="cybermatcha"] header.sticky {
     background-image: linear-gradient(90deg, #3ce68a, #d4ff59 60%, #38bdf8);
     background-size: 100% 3px;
     background-repeat: no-repeat;
     background-position: top;
   }
 }
-.dark[data-theme="matcha"] :is(h1, h2) {
+.dark[data-theme="cybermatcha"] :is(h1, h2) {
   font-family: "Syne", ui-sans-serif, system-ui, sans-serif;
   font-weight: 800;
 }
