@@ -21,6 +21,7 @@ import { useMediaMode, useSettings } from "@/lib/store";
 import { GlobalSearch, SearchTrigger } from "@/components/GlobalSearch";
 import { applyThemeColor } from "@/lib/themes";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
+import { useAiringNotifier } from "@/lib/use-airing-notifier";
 import { SplashScreen } from "@/components/SplashScreen";
 import type { MediaType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -163,6 +164,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const dark = settings.theme === "dark";
   const preset = dark ? settings.darkTheme : settings.lightTheme;
+
+  useAiringNotifier();
 
   useEffect(() => {
     const root = document.documentElement;

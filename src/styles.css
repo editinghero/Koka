@@ -39,6 +39,18 @@
   --font-sans: "Outfit", sans-serif;
 }
 
+:root[data-font="spacegrotesk"],
+[data-font="spacegrotesk"] {
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-sans: "Space Grotesk", "Inter", sans-serif;
+}
+
+:root[data-font="nunito"],
+[data-font="nunito"] {
+  --font-display: "Nunito", "Inter", sans-serif;
+  --font-sans: "Nunito", "Inter", sans-serif;
+}
+
 @theme inline {
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);

@@ -27,7 +27,7 @@ import { clearLibraryAndNotes } from "@/lib/data.functions";
 import { clearPin, hasPin, lockNow, setPin } from "@/lib/pin";
 import { GEMINI_MODELS, normalizeTags, type FontOption } from "@/lib/types";
 import { DARK_THEMES, LIGHT_THEMES, type ThemePreset } from "@/lib/themes";
-import { FONT_OPTIONS } from "@/lib/fonts";
+import { FONT_OPTIONS, loadFontAssets } from "@/lib/fonts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -286,12 +286,17 @@ function FontPicker({
   active: FontOption;
   onPick: (font: FontOption) => void;
 }) {
+  // Load every option so each button previews its own typeface.
+  useEffect(() => {
+    FONT_OPTIONS.forEach((f) => loadFontAssets(f.id));
+  }, []);
+
   return (
     <div className="mt-4">
       <p className="mb-2 text-xs font-medium text-muted-foreground">
         Font family
       </p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {FONT_OPTIONS.map((f) => (
           <button
             key={f.id}

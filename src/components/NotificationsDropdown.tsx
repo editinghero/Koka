@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
@@ -13,6 +13,10 @@ import {
   X,
 } from "lucide-react";
 import { fetchNextAiringEpisodes } from "@/lib/anilist";
+import {
+  notificationPermission,
+  showAppNotification,
+} from "@/lib/airing-notify";
 import { useLibrary } from "@/lib/store";
 import type { LibraryEntry } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -100,7 +104,6 @@ export function NotificationsDropdown() {
     "ALL" | "URGENT" | "CURRENT" | "PLANNING"
   >("ALL");
 
-  const notifiedKeysRef = useRef<Set<string>>(new Set());
 
   // Read notification keys e.g. ["123:5", "456:12"]
   const [readKeys, setReadKeys] = useState<Set<string>>(() => {
@@ -270,27 +273,6 @@ export function NotificationsDropdown() {
     return airingItems.some((x) => x.isWithin3Hours && !readKeys.has(x.key));
   }, [airingItems, readKeys]);
 
-  // Trigger browser notification for urgent items (< 3h)
-  useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-    if (Notification.permission === "granted") {
-      airingItems.forEach((item) => {
-        if (
-          item.isWithin3Hours &&
-          !readKeys.has(item.key) &&
-          !notifiedKeysRef.current.has(item.key)
-        ) {
-          notifiedKeysRef.current.add(item.key);
-          const options: NotificationOptions = {
-            body: `${item.entry.media.title} Episode ${item.episode} airs soon (${item.countdownStr})!`,
-            ...(item.entry.media.cover ? { icon: item.entry.media.cover } : {}),
-          };
-          new Notification("Koka Airing Alert", options);
-        }
-      });
-    }
-  }, [airingItems, readKeys]);
-
   const filteredItems = useMemo(() => {
     return airingItems.filter((item) => {
       if (filterTab === "URGENT") return item.isWithin3Hours;
@@ -315,22 +297,38 @@ export function NotificationsDropdown() {
     setReadKeys(next);
   }
 
-  async function requestNotificationPermission() {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      const perm = await Notification.requestPermission();
-      if (perm === "granted") {
-        toast.success("Desktop notifications enabled!");
-        if (airingItems.length) {
-          const item = airingItems[0];
-          const options: NotificationOptions = {
-            body: `You will get desktop alerts when your anime episodes air! Next up: ${item?.entry.media.title ?? "Anime"}`,
-            ...(item?.entry.media.cover ? { icon: item.entry.media.cover } : {}),
-          };
-          new Notification("Koka Airing Alerts Active", options);
-        }
-      } else {
-        toast.error("Browser notification permission denied.");
-      }
+  const [permission, setPermission] = useState<
+    NotificationPermission | "unsupported"
+  >("default");
+
+  useEffect(() => {
+    setPermission(notificationPermission());
+  }, [isOpen]);
+
+  async function sendTestNotification() {
+    const item = airingItems[0];
+    const ok = await showAppNotification("Koka airing alerts are on", {
+      body: item
+        ? `You'll be told the moment episodes air. Next up: ${item.entry.media.title}, episode ${item.episode}.`
+        : "You'll be told the moment your episodes air.",
+      icon: item?.entry.media.cover ?? undefined,
+      tag: "koka-test",
+      url: "/",
+    });
+    if (ok) toast.success("Notification sent");
+    else toast.error("This device refused to show a notification.");
+  }
+
+  async function enableNotifications() {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    const perm = await Notification.requestPermission();
+    setPermission(perm);
+    if (perm === "granted") {
+      await sendTestNotification();
+    } else {
+      toast.error(
+        "Notifications are blocked. Allow them for this site in your browser settings.",
+      );
     }
   }
 
@@ -540,15 +538,39 @@ export function NotificationsDropdown() {
               )}
             </div>
 
-            {/* Desktop Notification Request */}
-            <div className="mt-3 border-t border-border pt-2.5 text-center">
-              <button
-                type="button"
-                onClick={requestNotificationPermission}
-                className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-              >
-                <Volume2 className="h-3 w-3" /> Enable Browser Desktop Alerts
-              </button>
+            {/* Browser notification status */}
+            <div className="mt-3 space-y-1 border-t border-border pt-2.5 text-center">
+              {permission === "unsupported" ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Notifications aren&apos;t supported here. On iPhone, add Koka
+                  to your Home Screen first.
+                </p>
+              ) : permission === "denied" ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Alerts are blocked. Allow notifications for this site in your
+                  browser settings.
+                </p>
+              ) : permission === "granted" ? (
+                <button
+                  type="button"
+                  onClick={() => void sendTestNotification()}
+                  className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Volume2 className="h-3 w-3" /> Airing alerts on · Send a test
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void enableNotifications()}
+                  className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Volume2 className="h-3 w-3" /> Enable airing alerts
+                </button>
+              )}
+              <p className="text-[10px] text-muted-foreground/70">
+                Sent when an episode airs, while Koka is open or running in the
+                background.
+              </p>
             </div>
             </div>
           </>,

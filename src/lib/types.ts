@@ -187,7 +187,13 @@ export type Note = {
   updatedAt: number;
 };
 
-export type FontOption = "default" | "satoshi" | "baloo2" | "outfit";
+export type FontOption =
+  | "default"
+  | "satoshi"
+  | "baloo2"
+  | "outfit"
+  | "spacegrotesk"
+  | "nunito";
 
 export type Settings = {
   geminiKey: string;

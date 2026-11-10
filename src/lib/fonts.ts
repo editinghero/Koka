@@ -32,6 +32,18 @@ export const FONT_OPTIONS: FontPreset[] = [
     description: "Outfit",
     fontStack: '"Outfit", sans-serif',
   },
+  {
+    id: "spacegrotesk",
+    label: "Space Grotesk",
+    description: "Techy geometric",
+    fontStack: '"Space Grotesk", "Inter", sans-serif',
+  },
+  {
+    id: "nunito",
+    label: "Nunito",
+    description: "Soft & rounded",
+    fontStack: '"Nunito", "Inter", sans-serif',
+  },
 ];
 
 export function loadFontAssets(font: FontOption) {
@@ -70,6 +82,24 @@ export function loadFontAssets(font: FontOption) {
       link.rel = "stylesheet";
       link.href =
         "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap";
+      document.head.appendChild(link);
+    }
+  } else if (font === "spacegrotesk") {
+    if (!document.getElementById("font-link-spacegrotesk")) {
+      const link = document.createElement("link");
+      link.id = "font-link-spacegrotesk";
+      link.rel = "stylesheet";
+      link.href =
+        "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap";
+      document.head.appendChild(link);
+    }
+  } else if (font === "nunito") {
+    if (!document.getElementById("font-link-nunito")) {
+      const link = document.createElement("link");
+      link.id = "font-link-nunito";
+      link.rel = "stylesheet";
+      link.href =
+        "https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap";
       document.head.appendChild(link);
     }
   }
