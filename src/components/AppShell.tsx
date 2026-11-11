@@ -20,6 +20,7 @@ import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { useMediaMode, useSettings } from "@/lib/store";
 import { GlobalSearch, SearchTrigger } from "@/components/GlobalSearch";
 import { applyThemeColor } from "@/lib/themes";
+import { applyActiveCustomTheme } from "@/lib/custom-theme";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import { useAiringNotifier } from "@/lib/use-airing-notifier";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -172,6 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
     applyThemeColor(preset, dark);
+    applyActiveCustomTheme(dark);
   }, [dark, preset]);
 
   useEffect(() => {

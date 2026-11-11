@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Share2 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { AiPanel } from "@/components/AiPanel";
 import { ChatPanel } from "@/components/ChatPanel";
+import { StatsShareDialog } from "@/components/StatsShareDialog";
+import { Button } from "@/components/ui/button";
 import { useLibrary, useMediaMode } from "@/lib/store";
 import { MODE_COPY, STATUS_ORDER, statusLabel } from "@/lib/types";
 
@@ -55,6 +58,7 @@ function InsightsPage() {
   const { mode } = useMediaMode();
   const copy = MODE_COPY[mode];
   const { library } = useLibrary();
+  const [shareOpen, setShareOpen] = useState(false);
 
   const genres = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -128,7 +132,17 @@ function InsightsPage() {
       <PageHeader
         title="Insights"
         subtitle={`${hoursSpent} ${copy.timeLabel.toLowerCase()} across ${activeLibrary.length} active ${copy.nounPlural} titles.`}
+        action={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShareOpen(true)}
+          >
+            <Share2 className="h-4 w-4" /> Share
+          </Button>
+        }
       />
+      <StatsShareDialog open={shareOpen} onOpenChange={setShareOpen} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="panel space-y-2.5 p-4">

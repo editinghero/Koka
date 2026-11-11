@@ -11,6 +11,7 @@ import {
 } from "./types";
 import { loadFontAssets } from "./fonts";
 import { applyThemeColor } from "./themes";
+import { applyActiveCustomTheme } from "./custom-theme";
 import {
   getBootstrap,
   logImport as logImportFn,
@@ -112,6 +113,8 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
     root.classList.toggle("dark", dark);
     root.dataset["theme"] = preset;
     applyThemeColor(preset, dark);
+    // A custom theme (kept in localStorage only) overrides the preset.
+    applyActiveCustomTheme(dark);
     root.dataset["font"] = font;
     if (typeof window !== "undefined") {
       window.localStorage.setItem("koka:font", font);
@@ -120,6 +123,13 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
   } catch {
     /* ignore */
   }
+}
+
+// Re-apply the built-in preset when a custom theme is switched off or deleted.
+if (typeof window !== "undefined") {
+  window.addEventListener("koka:theme-reapply", () =>
+    applyThemeFromSettings(state.settings),
+  );
 }
 
 let hydratedFromCache = false;

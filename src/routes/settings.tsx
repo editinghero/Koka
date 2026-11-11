@@ -27,6 +27,8 @@ import { clearLibraryAndNotes } from "@/lib/data.functions";
 import { clearPin, hasPin, lockNow, setPin } from "@/lib/pin";
 import { GEMINI_MODELS, normalizeTags, type FontOption } from "@/lib/types";
 import { DARK_THEMES, LIGHT_THEMES, type ThemePreset } from "@/lib/themes";
+import { CustomThemeSection } from "@/components/CustomThemeSection";
+import { setActiveCustomTheme } from "@/lib/custom-theme";
 import { FONT_OPTIONS, loadFontAssets } from "@/lib/fonts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -226,14 +228,21 @@ function SettingsPage() {
               title="Light palettes — seasonal"
               themes={LIGHT_THEMES}
               active={settings.lightTheme}
-              onPick={(id) => update({ lightTheme: id, theme: "light" })}
+              onPick={(id) => {
+                setActiveCustomTheme("light", null);
+                update({ lightTheme: id, theme: "light" });
+              }}
             />
             <ThemeGrid
               title="Dark palettes"
               themes={DARK_THEMES}
               active={settings.darkTheme}
-              onPick={(id) => update({ darkTheme: id, theme: "dark" })}
+              onPick={(id) => {
+                setActiveCustomTheme("dark", null);
+                update({ darkTheme: id, theme: "dark" });
+              }}
             />
+            <CustomThemeSection />
           </div>
         </section>
 
