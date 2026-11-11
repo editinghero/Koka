@@ -11,7 +11,6 @@ import {
 } from "./types";
 import { loadFontAssets } from "./fonts";
 import { applyThemeColor } from "./themes";
-import { applyFontForce } from "./theme-prefs";
 import { applyActiveCustomTheme } from "./custom-theme";
 import {
   getBootstrap,
@@ -121,7 +120,6 @@ export function applyThemeFromSettings(settingsOverride?: Settings) {
       window.localStorage.setItem("koka:font", font);
     }
     loadFontAssets(font);
-    applyFontForce();
   } catch {
     /* ignore */
   }

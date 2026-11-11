@@ -36,7 +36,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ThemeShuffleControls } from "@/components/ThemeShuffleControls";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -204,7 +203,6 @@ function SettingsPage() {
             active={settings.font ?? "default"}
             onPick={(font) => update({ font })}
           />
-          <ThemeShuffleControls />
 
           <div className="mt-6 border-t border-border pt-4">
             <p className="mb-2 text-xs font-medium text-muted-foreground">Theme mode</p>

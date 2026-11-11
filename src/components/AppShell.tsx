@@ -26,7 +26,6 @@ import { useAiringNotifier } from "@/lib/use-airing-notifier";
 import { SplashScreen } from "@/components/SplashScreen";
 import type { MediaType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useLaunchShuffle } from "@/lib/use-launch-shuffle";
 
 const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -168,7 +167,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const preset = dark ? settings.darkTheme : settings.lightTheme;
 
   useAiringNotifier();
-  useLaunchShuffle();
 
   useEffect(() => {
     const root = document.documentElement;

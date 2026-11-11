@@ -151,12 +151,6 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              'try{if(localStorage.getItem("koka:font-force")==="1")document.documentElement.setAttribute("data-font-force","true")}catch(e){}',
-          }}
-        />
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{

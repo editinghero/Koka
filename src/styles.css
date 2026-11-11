@@ -1583,34 +1583,3 @@ button:not(:disabled):active,
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);
 }
-
-/* Force font — the font picked in Settings wins over theme-specific fonts.
-   Kept last so it beats every theme block (higher specificity for the
-   variables, equal specificity + later position for the h1/h2 overrides). */
-:root[data-font-force="true"][data-font="default"] {
-  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-}
-:root[data-font-force="true"][data-font="satoshi"] {
-  --font-display: "Satoshi", "Inter", -apple-system, sans-serif;
-  --font-sans: "Satoshi", "Inter", -apple-system, sans-serif;
-}
-:root[data-font-force="true"][data-font="baloo2"] {
-  --font-display: "Baloo 2", cursive, sans-serif;
-  --font-sans: "Baloo 2", cursive, sans-serif;
-}
-:root[data-font-force="true"][data-font="outfit"] {
-  --font-display: "Outfit", sans-serif;
-  --font-sans: "Outfit", sans-serif;
-}
-:root[data-font-force="true"][data-font="spacegrotesk"] {
-  --font-display: "Space Grotesk", "Inter", sans-serif;
-  --font-sans: "Space Grotesk", "Inter", sans-serif;
-}
-:root[data-font-force="true"][data-font="nunito"] {
-  --font-display: "Nunito", "Inter", sans-serif;
-  --font-sans: "Nunito", "Inter", sans-serif;
-}
-:root[data-font-force="true"] :is(h1, h2) {
-  font-family: var(--font-display);
-}
