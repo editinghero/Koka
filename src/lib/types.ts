@@ -193,7 +193,9 @@ export type FontOption =
   | "baloo2"
   | "outfit"
   | "spacegrotesk"
-  | "nunito";
+  | "nunito"
+  | "agravepro"
+  | "playfair";
 
 export type Settings = {
   geminiKey: string;

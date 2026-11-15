@@ -8,7 +8,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NEWS_SOURCES } from "@/lib/news/sources";
+import {
+  ADULT_SOURCE_IDS,
+  NEWS_SOURCES,
+  getSourceById,
+} from "@/lib/news/sources";
 import { useLiveNews } from "@/lib/news/useLiveNews";
 import type { NewsArticle } from "@/lib/news/types";
 import { Button } from "@/components/ui/button";
@@ -40,6 +44,7 @@ function formatRelativeTime(dateStr: string): string {
 function NewsCard({ article }: { article: NewsArticle }) {
   const [imageError, setImageError] = useState(false);
   const timeAgo = formatRelativeTime(article.publishedAt);
+  const isAdult = getSourceById(article.sourceId)?.adult === true;
   const hasImage = Boolean(article.imageUrl) && !imageError;
 
   return (
@@ -60,8 +65,18 @@ function NewsCard({ article }: { article: NewsArticle }) {
         ) : null}
 
         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
-          <span className="font-semibold text-foreground/90">
+          <span
+            className={cn(
+              "font-semibold",
+              isAdult ? "text-destructive" : "text-foreground/90",
+            )}
+          >
             {article.sourceName}
+            {isAdult ? (
+              <span className="ml-1 rounded border border-destructive/50 px-1 text-[9px] font-bold">
+                18+
+              </span>
+            ) : null}
           </span>
           {timeAgo ? (
             <>
@@ -212,7 +227,13 @@ export function LiveNewsFeed() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => selectAllSources(NEWS_SOURCES.map((s) => s.id))}
+                onClick={() =>
+                  selectAllSources([
+                    // 18+ sources stay opt-in: keep only the ones already chosen.
+                    ...NEWS_SOURCES.filter((s) => !s.adult).map((s) => s.id),
+                    ...selectedSources.filter((id) => ADULT_SOURCE_IDS.includes(id)),
+                  ])
+                }
                 className="text-[11px] text-muted-foreground hover:text-primary transition-colors"
               >
                 Select all
@@ -233,9 +254,15 @@ export function LiveNewsFeed() {
           </div>
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {NEWS_SOURCES.map((source) => {
+            {[...NEWS_SOURCES]
+              .sort(
+                (a, b) =>
+                  Number(!!a.adult) - Number(!!b.adult) || a.priority - b.priority,
+              )
+              .map((source) => {
               const isSelected = selectedSources.includes(source.id);
               const isFailed = failedSources.includes(source.id);
+              const isAdult = source.adult === true;
 
               return (
                 <button
@@ -246,11 +273,18 @@ export function LiveNewsFeed() {
                   className={cn(
                     "shrink-0 rounded-full border px-3 py-1 text-xs transition-colors whitespace-nowrap flex items-center gap-1.5",
                     isSelected
-                      ? "border-primary bg-primary text-primary-foreground font-medium shadow-xs"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50",
+                      ? isAdult
+                        ? "border-destructive bg-destructive text-destructive-foreground font-medium shadow-xs"
+                        : "border-primary bg-primary text-primary-foreground font-medium shadow-xs"
+                      : isAdult
+                        ? "border-destructive/40 text-destructive/90 hover:border-destructive hover:bg-destructive/10"
+                        : "border-border text-muted-foreground hover:text-foreground hover:border-primary/50",
                   )}
                 >
                   <span>{source.name}</span>
+                  {isAdult ? (
+                    <span className="text-[9px] font-bold opacity-90">18+</span>
+                  ) : null}
                   {isFailed ? (
                     <span
                       title="Source temporarily unavailable"

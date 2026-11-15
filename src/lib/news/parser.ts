@@ -38,6 +38,16 @@ export function stripHtml(html: string): string {
   return decodeEntities(noTags).replace(/\s+/g, " ").trim();
 }
 
+/** Remove the WordPress "The post X appeared first on Y" footer (EN/ES/DE/PT/FR). */
+export function stripFeedFooter(text: string): string {
+  return text
+    .replace(
+      /\s*(?:The post|La entrada|Der Beitrag|O post|Le post|L'article)\b[\s\S]*?(?:appeared first on|se publicó primero en|erschien zuerst auf|apareceu primeiro em|est apparu en premier sur|è apparso per la prima volta su)[\s\S]*$/i,
+      "",
+    )
+    .trim();
+}
+
 /** Extract text inside a single XML tag or CDATA */
 export function getTagContent(xml: string, tagName: string): string {
   const regex = new RegExp(`<${tagName}(?:\\s+[^>]*)?>([\\s\\S]*?)<\\/${tagName}>`, "i");
@@ -180,7 +190,9 @@ export function parseRssFeed(xml: string, sourceId: string, sourceName: string):
       getTagContent(itemXml, "description") ||
       getTagContent(itemXml, "summary") ||
       getTagContent(itemXml, "content:encoded");
-    const description = rawDesc ? stripHtml(rawDesc).slice(0, 300) : undefined;
+    const description = rawDesc
+      ? stripFeedFooter(stripHtml(rawDesc)).slice(0, 300)
+      : undefined;
 
     // Image URL
     const imageUrl = extractImageUrl(itemXml);

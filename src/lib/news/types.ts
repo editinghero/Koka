@@ -17,6 +17,8 @@ export type NewsSource = {
   description: string;
   defaultEnabled: boolean;
   priority: number;
+  /** 18+ source: opt-in only, shown last and highlighted in red. */
+  adult?: boolean | undefined;
 };
 
 export type NewsFetchResponse = {

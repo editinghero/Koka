@@ -307,7 +307,7 @@ function FontPicker({
       <p className="mb-2 text-xs font-medium text-muted-foreground">
         Font family
       </p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {FONT_OPTIONS.map((f) => (
           <button
             key={f.id}

@@ -44,7 +44,38 @@ export const FONT_OPTIONS: FontPreset[] = [
     description: "Soft & rounded",
     fontStack: '"Nunito", "Inter", sans-serif',
   },
+  {
+    id: "agravepro",
+    label: "Agrave Pro",
+    description: "Hand-drawn & condensed",
+    fontStack: '"Agrave Pro", "Inter", sans-serif',
+  },
+  {
+    id: "playfair",
+    label: "Playfair Display",
+    description: "Elegant serif",
+    fontStack: '"Playfair Display", Georgia, serif',
+  },
 ];
+
+/**
+ * Add a stylesheet <link> once. If it fails to load (for example a weight that
+ * the family does not offer), retry with `fallbackHref` so the font still loads.
+ */
+function injectFontLink(id: string, href: string, fallbackHref?: string) {
+  if (document.getElementById(id)) return;
+  const link = document.createElement("link");
+  link.id = id;
+  link.rel = "stylesheet";
+  link.href = href;
+  if (fallbackHref) {
+    link.onerror = () => {
+      link.onerror = null;
+      link.href = fallbackHref;
+    };
+  }
+  document.head.appendChild(link);
+}
 
 export function loadFontAssets(font: FontOption) {
   if (typeof document === "undefined") return;
@@ -102,5 +133,16 @@ export function loadFontAssets(font: FontOption) {
         "https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap";
       document.head.appendChild(link);
     }
+  } else if (font === "agravepro") {
+    injectFontLink(
+      "font-link-agravepro",
+      "https://fonts.googleapis.com/css2?family=Agrave+Pro:wght@300;400;700&display=swap",
+      "https://fonts.googleapis.com/css2?family=Agrave+Pro&display=swap",
+    );
+  } else if (font === "playfair") {
+    injectFontLink(
+      "font-link-playfair",
+      "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap",
+    );
   }
 }

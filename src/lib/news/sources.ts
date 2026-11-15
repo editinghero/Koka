@@ -73,7 +73,21 @@ export const NEWS_SOURCES: NewsSource[] = [
     defaultEnabled: false,
     priority: 9,
   },
+  // ── Adult (18+) sources. Never selected by default; shown last, in red. ──
+  {
+    id: "eroero-news",
+    name: "EroEro News",
+    url: "https://eroeronews.com/feed/",
+    description: "Hentai, doujin and adult-anime news (Spanish, 18+)",
+    defaultEnabled: false,
+    priority: 10,
+    adult: true,
+  },
 ];
+
+export const ADULT_SOURCE_IDS = NEWS_SOURCES.filter((s) => s.adult).map(
+  (s) => s.id,
+);
 
 export const DEFAULT_SOURCE_IDS = NEWS_SOURCES.filter(
   (s) => s.defaultEnabled,

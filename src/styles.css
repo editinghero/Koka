@@ -51,6 +51,18 @@
   --font-sans: "Nunito", "Inter", sans-serif;
 }
 
+:root[data-font="agravepro"],
+[data-font="agravepro"] {
+  --font-display: "Agrave Pro", "Inter", sans-serif;
+  --font-sans: "Agrave Pro", "Inter", sans-serif;
+}
+
+:root[data-font="playfair"],
+[data-font="playfair"] {
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "Playfair Display", Georgia, serif;
+}
+
 @theme inline {
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);
@@ -1610,6 +1622,14 @@ button:not(:disabled):active,
 :root[data-font-force="true"][data-font="nunito"] {
   --font-display: "Nunito", "Inter", sans-serif;
   --font-sans: "Nunito", "Inter", sans-serif;
+}
+:root[data-font-force="true"][data-font="agravepro"] {
+  --font-display: "Agrave Pro", "Inter", sans-serif;
+  --font-sans: "Agrave Pro", "Inter", sans-serif;
+}
+:root[data-font-force="true"][data-font="playfair"] {
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "Playfair Display", Georgia, serif;
 }
 :root[data-font-force="true"] :is(h1, h2) {
   font-family: var(--font-display);
