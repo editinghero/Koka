@@ -17,7 +17,7 @@ import {
   clearAnimeChatHistory,
   clearGlobalChatHistory,
 } from "@/lib/chat-storage";
-import { useNotes } from "@/lib/store";
+import { useNotes, useSettings } from "@/lib/store";
 import { Markdown } from "./Markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,8 +63,11 @@ export function ChatPanel({
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [spoilerFree, setSpoilerFree] = useState(defaultSpoilerFree);
-  const [search, setSearch] = useState(false);
+  const { settings } = useSettings();
+  const [spoilerFree, setSpoilerFree] = useState(
+    defaultSpoilerFree && settings.spoilerFree
+  );
+  const [search, setSearch] = useState(true);
   const [includeNotes, setIncludeNotes] = useState(Boolean(notesContext));
   const scroller = useRef<HTMLDivElement>(null);
   const { notes } = useNotes();

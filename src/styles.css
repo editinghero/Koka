@@ -744,8 +744,8 @@ button:not(:disabled):active,
 
 /* Velvet — charcoal canvas, peach→violet gradient signature (from the Astral Velvet spec) */
 .dark[data-theme="velvet"] {
-  --radius: 0.625rem;
-  --font-sans: "Lato", ui-sans-serif, system-ui, sans-serif;
+  --radius: 1rem;
+  --btn-radius: 999px;
   --font-display: "Lato", ui-sans-serif, system-ui, sans-serif;
   --background: oklch(0.248 0 0);
   --foreground: oklch(0.964 0 0);
@@ -1032,7 +1032,7 @@ button:not(:disabled):active,
   font-weight: 700;
 }
 
-/* Pastel Snack Box — from the Astral layout kit (photo-derived); primary/muted/borders nudged for WCAG AA contrast */
+/* Pastel Snack Box — from the Astral layout kit (photo-derived); boxes made more whitish cream */
 :root[data-theme="pastel"],
 .light[data-theme="pastel"] {
   --radius: 1rem;
@@ -1041,19 +1041,19 @@ button:not(:disabled):active,
   --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --background: oklch(0.977 0.010 87);
   --foreground: oklch(0.260 0.013 171);
-  --surface: oklch(0.947 0.016 86);
-  --surface-2: oklch(0.911 0.020 85);
-  --card: oklch(0.947 0.016 86);
+  --surface: oklch(0.967 0.010 86);
+  --surface-2: oklch(0.938 0.014 85);
+  --card: oklch(0.967 0.010 86);
   --card-foreground: oklch(0.260 0.013 171);
-  --popover: oklch(0.947 0.016 86);
+  --popover: oklch(0.967 0.010 86);
   --popover-foreground: oklch(0.260 0.013 171);
   --primary: oklch(0.517 0.086 172);
   --primary-foreground: oklch(0.977 0.010 87);
-  --secondary: oklch(0.881 0.025 86);
+  --secondary: oklch(0.955 0.012 86);
   --secondary-foreground: oklch(0.260 0.013 171);
-  --muted: oklch(0.881 0.025 86);
+  --muted: oklch(0.955 0.012 86);
   --muted-foreground: oklch(0.444 0.019 166);
-  --accent: oklch(0.900 0.018 170);
+  --accent: oklch(0.945 0.014 170);
   --accent-foreground: oklch(0.260 0.013 171);
   --destructive: oklch(0.533 0.173 5);
   --destructive-foreground: oklch(0.977 0.010 87);
@@ -1069,11 +1069,11 @@ button:not(:disabled):active,
   --chart-3: oklch(0.614 0.155 273);
   --chart-4: oklch(0.650 0.134 62);
   --chart-5: oklch(0.761 0.135 89);
-  --sidebar: oklch(0.947 0.016 86);
+  --sidebar: oklch(0.967 0.010 86);
   --sidebar-foreground: oklch(0.260 0.013 171);
   --sidebar-primary: oklch(0.517 0.086 172);
   --sidebar-primary-foreground: oklch(0.977 0.010 87);
-  --sidebar-accent: oklch(0.881 0.025 86);
+  --sidebar-accent: oklch(0.955 0.012 86);
   --sidebar-accent-foreground: oklch(0.517 0.086 172);
   --sidebar-border: oklch(0.828 0.032 88);
   --sidebar-ring: oklch(0.517 0.086 172);
@@ -1092,50 +1092,50 @@ button:not(:disabled):active,
   font-weight: 800;
 }
 
-/* Kyoto Paper & Persimmon — from the Astral layout kit; primary/muted/borders nudged for WCAG AA contrast */
+/* Kyoto Paper & Persimmon — brightness matched with Pastel Snack Box; warm blended washi tones */
 :root[data-theme="kyoto"],
 .light[data-theme="kyoto"] {
   --radius: 0.75rem;
   --btn-radius: 10px;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Newsreader", Georgia, serif;
-  --background: oklch(0.970 0.004 91);
+  --background: oklch(0.970 0.006 89);
   --foreground: oklch(0.208 0.004 107);
-  --surface: oklch(0.944 0.009 85);
-  --surface-2: oklch(0.908 0.012 80);
-  --card: oklch(0.944 0.009 85);
+  --surface: oklch(0.960 0.008 87);
+  --surface-2: oklch(0.932 0.012 85);
+  --card: oklch(0.960 0.008 87);
   --card-foreground: oklch(0.208 0.004 107);
-  --popover: oklch(0.944 0.009 85);
+  --popover: oklch(0.960 0.008 87);
   --popover-foreground: oklch(0.208 0.004 107);
   --primary: oklch(0.531 0.165 33);
-  --primary-foreground: oklch(0.970 0.004 91);
-  --secondary: oklch(0.878 0.015 81);
+  --primary-foreground: oklch(0.960 0.008 87);
+  --secondary: oklch(0.925 0.015 84);
   --secondary-foreground: oklch(0.208 0.004 107);
-  --muted: oklch(0.878 0.015 81);
+  --muted: oklch(0.925 0.015 84);
   --muted-foreground: oklch(0.426 0.011 78);
-  --accent: oklch(0.885 0.019 52);
+  --accent: oklch(0.915 0.018 52);
   --accent-foreground: oklch(0.208 0.004 107);
   --destructive: oklch(0.504 0.176 22);
-  --destructive-foreground: oklch(0.970 0.004 91);
+  --destructive-foreground: oklch(0.960 0.008 87);
   --success: oklch(0.496 0.069 157);
-  --success-foreground: oklch(0.970 0.004 91);
+  --success-foreground: oklch(0.960 0.008 87);
   --warning: oklch(0.554 0.122 59);
-  --warning-foreground: oklch(0.970 0.004 91);
-  --border: oklch(0.823 0.018 81);
-  --input: oklch(0.760 0.022 82);
+  --warning-foreground: oklch(0.960 0.008 87);
+  --border: oklch(0.870 0.020 83);
+  --input: oklch(0.845 0.024 83);
   --ring: oklch(0.531 0.165 33);
   --chart-1: oklch(0.531 0.165 33);
   --chart-2: oklch(0.496 0.069 157);
   --chart-3: oklch(0.444 0.108 261);
   --chart-4: oklch(0.636 0.121 71);
   --chart-5: oklch(0.426 0.011 78);
-  --sidebar: oklch(0.944 0.009 85);
+  --sidebar: oklch(0.950 0.010 86);
   --sidebar-foreground: oklch(0.208 0.004 107);
   --sidebar-primary: oklch(0.531 0.165 33);
-  --sidebar-primary-foreground: oklch(0.970 0.004 91);
-  --sidebar-accent: oklch(0.878 0.015 81);
+  --sidebar-primary-foreground: oklch(0.960 0.008 87);
+  --sidebar-accent: oklch(0.920 0.016 84);
   --sidebar-accent-foreground: oklch(0.496 0.069 157);
-  --sidebar-border: oklch(0.823 0.018 81);
+  --sidebar-border: oklch(0.865 0.020 83);
   --sidebar-ring: oklch(0.531 0.165 33);
 }
 @media (min-width: 768px) {

@@ -11,6 +11,7 @@ import {
   Play,
   Plus,
   RefreshCw,
+  Sparkles,
   Star,
   Trash2,
   Trophy,
@@ -18,9 +19,17 @@ import {
 import { Cover, countdown } from "@/components/AnimeCard";
 import { AiPanel } from "@/components/AiPanel";
 import { ChatPanel } from "@/components/ChatPanel";
+import { CommunityPlatformIcon } from "@/components/CommunityPopup";
 import { NoteEditor } from "@/components/NoteEditor";
 import { fetchByIds } from "@/lib/anilist";
-import { useLibrary, useMediaMode, useNotes } from "@/lib/store";
+import { getCommunitiesForMedia } from "@/lib/community-utils";
+import {
+  useCommunities,
+  useCommunityPopup,
+  useLibrary,
+  useMediaMode,
+  useNotes,
+} from "@/lib/store";
 import {
   MODE_COPY,
   STATUS_ORDER,
@@ -92,6 +101,9 @@ function AnimeDetail() {
   const copy = MODE_COPY[mode];
   const { library, upsert, patch, remove } = useLibrary();
   const { notes } = useNotes();
+  const { communities, markCommunityOpened, deleteCommunity } =
+    useCommunities();
+  const { openPopup } = useCommunityPopup();
   const note = notes.find((n) => n.animeId === animeId);
   const entry = library.find((e) => e.media.id === animeId);
   const [isEditing, setIsEditing] = useState(false);
@@ -271,12 +283,13 @@ function AnimeDetail() {
               src={media.banner}
               alt=""
               loading="lazy"
+              referrerPolicy="no-referrer"
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-r from-surface to-surface-2" />
+            <div className="h-full w-full bg-surface" />
           )}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-black/40" />
+          <div className="pointer-events-none absolute inset-0 bg-background/60" />
 
           {/* Top-right Edit/Done toggle button */}
           <div className="absolute right-3 top-3 z-10">
@@ -438,6 +451,28 @@ function AnimeDetail() {
                       AniList <ExternalLink className="h-3 w-3" />
                     </a>
                   ) : null}
+
+                  {/* Quick Community Chips in Header */}
+                  {getCommunitiesForMedia(communities, media.id, media.title).map(
+                    (comm) => (
+                      <a
+                        key={comm.id}
+                        href={comm.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => markCommunityOpened(comm.id)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 font-mono text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                        title={comm.handle}
+                      >
+                        <CommunityPlatformIcon
+                          platform={comm.platform}
+                          className="h-3.5 w-3.5"
+                        />
+                        <span>{comm.handle}</span>
+                        <ExternalLink className="h-2.5 w-2.5 text-muted-foreground" />
+                      </a>
+                    ),
+                  )}
                 </div>
 
                 {/* Read-only details list */}
@@ -945,6 +980,117 @@ function AnimeDetail() {
           ) : null}
         </div>
       )}
+
+      {/* Community Panel on Anime Detail Page */}
+      {(() => {
+        const mediaCommunities = getCommunitiesForMedia(
+          communities,
+          media.id,
+          media.title,
+        );
+        return (
+          <div className="panel mt-6 p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="font-display text-base font-semibold text-foreground">
+                Community
+              </h2>
+
+              <button
+                type="button"
+                onClick={() =>
+                  openPopup({
+                    view: mediaCommunities.length > 0 ? "opener" : "add-ai",
+                    media: {
+                      id: media.id,
+                      title: media.title,
+                      type: mode,
+                      cover: media.cover,
+                    },
+                  })
+                }
+                aria-label="Open Community"
+                title="Add or manage communities"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-colors hover:border-primary hover:text-primary active:scale-95"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+
+            {mediaCommunities.length > 0 ? (
+              <div className="mt-3.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {mediaCommunities.map((comm) => (
+                  <div
+                    key={comm.id}
+                    data-card-press
+                    className="group card-pressable flex items-center justify-between gap-3 rounded-xl border border-border bg-surface/60 px-3.5 py-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/50 active:scale-[0.97] active:opacity-85"
+                  >
+                    <a
+                      href={comm.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => markCommunityOpened(comm.id)}
+                      className="flex min-w-0 flex-1 items-center gap-3 transition-transform duration-150 active:scale-[0.98]"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-foreground transition-transform duration-150 group-hover:scale-105">
+                        <CommunityPlatformIcon
+                          platform={comm.platform}
+                          className="h-4 w-4"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="truncate font-mono text-xs font-semibold text-foreground transition-colors group-hover:text-primary">
+                            {comm.handle}
+                          </span>
+                          <ExternalLink className="h-3 w-3 shrink-0 text-muted-foreground opacity-60 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
+                        </div>
+                        <p className="truncate text-[11px] text-muted-foreground">
+                          {comm.platform === "reddit"
+                            ? "Reddit"
+                            : comm.platform === "x"
+                              ? "X.com"
+                              : "Link"}
+                        </p>
+                      </div>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => deleteCommunity(comm.id)}
+                      aria-label={`Remove ${comm.handle}`}
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-3 flex items-center justify-between rounded-xl border border-dashed border-border bg-background/40 px-3.5 py-2.5 text-xs text-muted-foreground">
+                <span>No community added yet</span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openPopup({
+                      view: "add-ai",
+                      media: {
+                        id: media.id,
+                        title: media.title,
+                        type: mode,
+                        cover: media.cover,
+                      },
+                    })
+                  }
+                  className="inline-flex items-center gap-1 font-medium text-primary transition-all duration-150 hover:underline active:scale-95"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>Add with AI</span>
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="mt-6">
         <ChatPanel

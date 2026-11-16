@@ -1,11 +1,6 @@
 -- Koka — Cloudflare D1 schema
 -- Apply with:
---   npx wrangler d1 execute koka --remote --file docs/d1-schema.sql
---
--- This matches exactly what the app creates at runtime
--- (src/server/repo.server.ts). Everything the app stores — accounts,
--- settings (with the Gemini key encrypted), the anime/manga library with
--- decimal scores, dates and rewatches, notes, and the import log — lives here.
+-- npx wrangler d1 execute koka --remote --file db/d1-schema.sql
 
 CREATE TABLE IF NOT EXISTS users (
   id            TEXT PRIMARY KEY,
@@ -68,6 +63,25 @@ CREATE TABLE IF NOT EXISTS notes (
 
 CREATE INDEX IF NOT EXISTS idx_notes_updated
   ON notes (user_id, media_type, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS communities (
+  user_id      TEXT    NOT NULL,
+  id           TEXT    NOT NULL,
+  platform     TEXT    NOT NULL,     -- reddit | x
+  name         TEXT    NOT NULL,
+  handle       TEXT    NOT NULL,
+  url          TEXT    NOT NULL,
+  category     TEXT    NOT NULL,
+  description  TEXT,
+  media_id     INTEGER,
+  media_type   TEXT,
+  media_title  TEXT,
+  media_cover  TEXT,
+  is_default   INTEGER NOT NULL DEFAULT 0,
+  pinned       INTEGER NOT NULL DEFAULT 0,
+  created_at   INTEGER NOT NULL,
+  PRIMARY KEY (user_id, id)
+);
 
 CREATE TABLE IF NOT EXISTS import_log (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,

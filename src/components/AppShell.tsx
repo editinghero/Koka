@@ -12,12 +12,18 @@ import {
   Import,
   Search as SearchIcon,
   MoreHorizontal,
+  MessagesSquare,
   PanelLeftClose,
   PanelLeftOpen,
   X,
 } from "lucide-react";
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
-import { useMediaMode, useSettings } from "@/lib/store";
+import {
+  useCommunityPopup,
+  useMediaMode,
+  useSettings,
+} from "@/lib/store";
+import { CommunityPopup } from "@/components/CommunityPopup";
 import { GlobalSearch, SearchTrigger } from "@/components/GlobalSearch";
 import { applyThemeColor } from "@/lib/themes";
 import { applyActiveCustomTheme } from "@/lib/custom-theme";
@@ -158,6 +164,7 @@ function NavGrid({
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { settings } = useSettings();
+  const { openPopup } = useCommunityPopup();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [searchOpen, setSearchOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -292,8 +299,19 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="w-56">
                 <SearchTrigger onClick={() => setSearchOpen(true)} />
               </div>
+              <button
+                type="button"
+                onClick={() => openPopup({ view: "opener", media: null })}
+                aria-label="Community"
+                title="Community"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground active:scale-95"
+              >
+                <MessagesSquare className="h-4 w-4" />
+              </button>
               <NotificationsDropdown />
-              <ThemeToggle />
+              <div className="hidden lg:block">
+                <ThemeToggle />
+              </div>
             </div>
           </div>
         </header>
@@ -304,6 +322,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             <ModeSwitch />
             <div className="flex items-center gap-2">
               <button
+                type="button"
+                onClick={() => openPopup({ view: "opener", media: null })}
+                aria-label="Community"
+                title="Community"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
+              >
+                <MessagesSquare className="h-4 w-4" />
+              </button>
+              <button
                 onClick={() => setSearchOpen(true)}
                 aria-label="Search"
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
@@ -311,13 +338,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <SearchIcon className="h-4 w-4" />
               </button>
               <NotificationsDropdown />
-              <Link
-                to="/settings"
-                aria-label="Settings"
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:text-foreground active:scale-95"
-              >
-                <SettingsIcon className="h-4 w-4" />
-              </Link>
               <ThemeToggle />
             </div>
           </div>
@@ -419,6 +439,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : null}
 
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+      <CommunityPopup />
       <SplashScreen />
     </div>
   );

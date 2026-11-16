@@ -1,6 +1,9 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
-import { Star, Tv, UserRound } from "lucide-react";
+import { Globe, Star, Tv, UserRound } from "lucide-react";
+import { RedditIcon, XLogoIcon } from "@/components/CommunityPopup";
+import { getCommunitiesForMedia } from "@/lib/community-utils";
+import { useCommunities, useCommunityPopup } from "@/lib/store";
 import type { AnimeMedia, LibraryEntry } from "@/lib/types";
 import { mediaTypeOf, totalUnits } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -15,6 +18,59 @@ export function countdown(airingAt: number) {
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
 }
+
+export const AnimeCommunityCornerButton = memo(
+  function AnimeCommunityCornerButton({
+    media,
+    className,
+  }: {
+    media: AnimeMedia;
+    className?: string;
+  }) {
+    const { communities } = useCommunities();
+    const { openPopup } = useCommunityPopup();
+    const mediaCommunities = useMemo(
+      () => getCommunitiesForMedia(communities, media.id, media.title),
+      [communities, media.id, media.title],
+    );
+
+    if (mediaCommunities.length === 0) return null;
+
+    const hasReddit = mediaCommunities.some((c) => c.platform === "reddit");
+    const hasX = mediaCommunities.some((c) => c.platform === "x");
+    const hasCustom = mediaCommunities.some((c) => c.platform === "custom");
+
+    return (
+      <button
+        type="button"
+        data-pill-press
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openPopup({
+            view: "opener",
+            media: {
+              id: media.id,
+              title: media.title,
+              type: mediaTypeOf(media),
+              cover: media.cover,
+            },
+          });
+        }}
+        aria-label={`Open ${media.title} community`}
+        title={`${media.title} community`}
+        className={cn(
+          "pill-pressable inline-flex items-center gap-1 rounded-full border border-border/80 bg-background/85 px-2 py-1 text-foreground shadow-sm backdrop-blur-md transition-all duration-150 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-background active:scale-95",
+          className,
+        )}
+      >
+        {hasReddit ? <RedditIcon className="h-3 w-3 text-current" /> : null}
+        {hasX ? <XLogoIcon className="h-2.5 w-2.5 text-current" /> : null}
+        {hasCustom ? <Globe className="h-3 w-3 text-current" /> : null}
+      </button>
+    );
+  },
+);
 
 // ⚡ Bolt: Memoized Cover component to prevent unnecessary re-renders in large grids/lists
 export const Cover = memo(function Cover({
@@ -69,18 +125,23 @@ export const AnimeCard = memo(function AnimeCard({
       data-card-press
       className="group panel card-pressable overflow-hidden transition-all duration-150 active:scale-[0.97] active:opacity-80"
     >
-      <Link
-        to="/anime/$id"
-        params={{ id: String(media.id) }}
-        className="block overflow-hidden transition-opacity duration-150 active:opacity-80"
-        aria-label={media.title}
-      >
-        <Cover
+      <div className="relative">
+        <Link
+          to="/anime/$id"
+          params={{ id: String(media.id) }}
+          className="block overflow-hidden transition-opacity duration-150 active:opacity-80"
+          aria-label={media.title}
+        >
+          <Cover
+            media={media}
+            className="aspect-[3/4] rounded-none transition-transform duration-500 group-hover:scale-[1.04]"
+          />
+        </Link>
+        <AnimeCommunityCornerButton
           media={media}
-          className="aspect-[3/4] rounded-none transition-transform duration-500 group-hover:scale-[1.04]"
+          className="absolute top-2 right-2 z-10"
         />
-      </Link>
-
+      </div>
       <div className="space-y-1.5 p-2.5">
         <Link
           to="/anime/$id"

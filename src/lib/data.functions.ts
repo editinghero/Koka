@@ -6,6 +6,7 @@ import type {
   Note,
   Settings,
 } from "./types";
+import type { CommunityItem } from "./community-utils";
 
 export type Bootstrap = {
   user: { id: string; email: string; name: string } | null;
@@ -148,6 +149,26 @@ export const replaceNotes = createServerFn({ method: "POST" })
     const { getRepo } = await import("@/server/repo.server");
     const user = await requireUser();
     await getRepo().replaceNotes(user.id, data.notes, data.types);
+    return { ok: true };
+  });
+
+export const saveCommunities = createServerFn({ method: "POST" })
+  .inputValidator((data: { communities: CommunityItem[] }) => data)
+  .handler(async ({ data }) => {
+    const { requireUser } = await import("@/server/session.server");
+    const { getRepo } = await import("@/server/repo.server");
+    const user = await requireUser();
+    await getRepo().upsertCommunities(user.id, data.communities);
+    return { ok: true };
+  });
+
+export const removeCommunity = createServerFn({ method: "POST" })
+  .inputValidator((data: { id: string }) => data)
+  .handler(async ({ data }) => {
+    const { requireUser } = await import("@/server/session.server");
+    const { getRepo } = await import("@/server/repo.server");
+    const user = await requireUser();
+    await getRepo().deleteCommunity(user.id, data.id);
     return { ok: true };
   });
 

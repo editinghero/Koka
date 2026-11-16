@@ -11,7 +11,12 @@ import {
   Play,
   ExternalLink,
 } from "lucide-react";
-import { AnimeCard, Cover, countdown } from "@/components/AnimeCard";
+import {
+  AnimeCard,
+  AnimeCommunityCornerButton,
+  Cover,
+  countdown,
+} from "@/components/AnimeCard";
 import { PageHeader } from "@/components/AppShell";
 import { useLibrary, useMediaMode } from "@/lib/store";
 import {
@@ -109,10 +114,14 @@ function LibraryListRow({
   return (
     <div
       data-card-press
-      className="panel card-pressable flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 transition-all duration-150 active:scale-[0.99] active:opacity-90 hover:border-primary/40 min-w-0 overflow-hidden"
+      className="relative panel card-pressable flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 transition-all duration-150 active:scale-[0.99] active:opacity-90 hover:border-primary/40 min-w-0 overflow-hidden"
     >
+      <AnimeCommunityCornerButton
+        media={media}
+        className="absolute top-2 right-2 z-10"
+      />
       {/* Cover & Title */}
-      <div className="flex items-center gap-3 min-w-0 flex-1 w-full md:w-auto">
+      <div className="flex items-center gap-3 min-w-0 flex-1 w-full md:w-auto pr-12 md:pr-0">
         <Link
           to="/anime/$id"
           params={{ id: String(media.id) }}
@@ -200,7 +209,7 @@ function LibraryListRow({
       </div>
 
       {/* Progress Bar & Controls */}
-      <div className="flex items-center justify-between md:justify-end gap-2.5 sm:gap-4 w-full md:w-auto shrink-0 border-t border-border md:border-0 pt-2.5 md:pt-0">
+      <div className="flex items-center justify-between md:justify-end gap-2.5 sm:gap-4 w-full md:w-auto shrink-0 border-t border-border md:border-0 pt-2.5 md:pt-0 md:pr-12">
         <div className="flex flex-col gap-1 min-w-[5.5rem] w-28 sm:w-36">
           <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground">
             <span>

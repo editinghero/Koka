@@ -2,9 +2,14 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarClock,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
   Flame,
   ListChecks,
+  Pin,
   Play,
+  Plus,
   RefreshCw,
   Star,
 } from "lucide-react";
@@ -12,9 +17,23 @@ import { AnimeCard } from "@/components/AnimeCard";
 import { PageHeader } from "@/components/AppShell";
 import { AiPanel } from "@/components/AiPanel";
 import { ChatPanel } from "@/components/ChatPanel";
+import { CommunityPlatformIcon } from "@/components/CommunityPopup";
 import { formatAiringTime } from "@/components/NotificationsDropdown";
 import { fetchNextAiringEpisodes } from "@/lib/anilist";
-import { useLibrary, useMediaMode, useNotes } from "@/lib/store";
+import {
+  filterAndGroupCommunities,
+  shortCategoryLabel,
+  sortCommunitiesByLastOpen,
+  type CommunityCategory,
+  type CommunityItem,
+} from "@/lib/community-utils";
+import {
+  useCommunities,
+  useCommunityPopup,
+  useLibrary,
+  useMediaMode,
+  useNotes,
+} from "@/lib/store";
 import { MODE_COPY, statusLabel, totalUnits } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,12 +78,17 @@ function Stat({
   );
 }
 
+const DEFAULT_VISIBLE_COMMUNITY_LINKS = 9;
+
 function Dashboard() {
   const { mode } = useMediaMode();
   const copy = MODE_COPY[mode];
   const { library, patch } = useLibrary();
   const { notes } = useNotes();
+  const { communities, markCommunityOpened } = useCommunities();
+  const { openPopup } = useCommunityPopup();
   const [refreshing, setRefreshing] = useState(false);
+  const [communitiesExpanded, setCommunitiesExpanded] = useState(false);
 
   // Sync schedules with AniList GraphQL on dashboard load
   const syncSchedules = useCallback(async () => {
@@ -149,6 +173,43 @@ function Dashboard() {
         `${e.media.title} (${statusLabel(e.status, mode)}, ${e.progress}/${totalUnits(e.media) ?? "?"} ${copy.unitShort}${e.score ? `, rated ${e.score}/10` : ""})`,
     )
     .join("; ");
+
+  // Sort communities with pinned on top, then by lastOpenedAt descending; cap to 9 by default
+  const sortedCommunities = useMemo(() => {
+    const byOpen = sortCommunitiesByLastOpen(communities);
+    return [
+      ...byOpen.filter((c) => Boolean(c.pinned)),
+      ...byOpen.filter((c) => !c.pinned),
+    ];
+  }, [communities]);
+
+  const visibleCommunities = useMemo(
+    () =>
+      communitiesExpanded
+        ? sortedCommunities
+        : sortedCommunities.slice(0, DEFAULT_VISIBLE_COMMUNITY_LINKS),
+    [sortedCommunities, communitiesExpanded],
+  );
+
+  const { pinnedItems, generalByCategory, animeGroups } = useMemo(() => {
+    const {
+      pinnedItems: pItems,
+      generalItems,
+      animeGroups: aGroups,
+    } = filterAndGroupCommunities(visibleCommunities);
+
+    const catMap = new Map<CommunityCategory, CommunityItem[]>();
+    for (const item of generalItems) {
+      const list = catMap.get(item.category) ?? [];
+      list.push(item);
+      catMap.set(item.category, list);
+    }
+    return {
+      pinnedItems: pItems,
+      generalByCategory: [...catMap.entries()],
+      animeGroups: aGroups,
+    };
+  }, [visibleCommunities]);
 
   return (
     <>
@@ -376,6 +437,193 @@ function Dashboard() {
           }
         />
       </div>
+
+      {/* Community Section — Moved to bottom after Weekly Digest, sorted by last open, categorized & grouped by anime with divider, default 9 links + Show more */}
+      <section className="panel mt-8 p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-display text-base font-semibold text-foreground">
+            Community
+          </h2>
+          <button
+            type="button"
+            onClick={() => openPopup({ view: "opener", media: null })}
+            aria-label="Open Community"
+            title="Open Community"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-surface text-foreground transition-all duration-150 hover:border-primary hover:text-primary active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          {/* Pinned Section — Shown on top ONLY when pinnedItems.length > 0 */}
+          {pinnedItems.length > 0 ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5">
+                <Pin className="h-3 w-3 text-primary" />
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground">
+                  Pinned
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {pinnedItems.map((c) => (
+                  <a
+                    key={c.id}
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-pill-press
+                    onClick={() => markCommunityOpened(c.id)}
+                    className="pill-pressable inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-surface px-2.5 py-1.5 font-mono text-xs font-medium text-foreground transition-all duration-150 hover:-translate-y-0.5 hover:border-primary hover:text-primary active:scale-95 active:opacity-85"
+                  >
+                    <CommunityPlatformIcon
+                      platform={c.platform}
+                      className="h-3.5 w-3.5 shrink-0"
+                    />
+                    <span>{c.handle}</span>
+                    <ExternalLink className="h-2.5 w-2.5 text-muted-foreground" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {pinnedItems.length > 0 &&
+          (generalByCategory.length > 0 || animeGroups.length > 0) ? (
+            <div className="border-t border-border/60" />
+          ) : null}
+
+          {/* Categorized General, News & Other Links (Sorted by Last Open) */}
+          {generalByCategory.length > 0 ? (
+            <div className="space-y-3">
+              {generalByCategory.map(([cat, items]) => (
+                <div key={cat} className="space-y-1.5">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {shortCategoryLabel(cat)}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {items.map((c) => (
+                      <a
+                        key={c.id}
+                        href={c.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-pill-press
+                        onClick={() => markCommunityOpened(c.id)}
+                        className="pill-pressable inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 font-mono text-xs font-medium text-foreground transition-all duration-150 hover:-translate-y-0.5 hover:border-primary hover:text-primary active:scale-95 active:opacity-85"
+                      >
+                        <CommunityPlatformIcon
+                          platform={c.platform}
+                          className="h-3.5 w-3.5 shrink-0"
+                        />
+                        <span>{c.handle}</span>
+                        <ExternalLink className="h-2.5 w-2.5 text-muted-foreground" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {/* Divider between Categories and Anime Series */}
+          {generalByCategory.length > 0 && animeGroups.length > 0 ? (
+            <div className="border-t border-border" />
+          ) : null}
+
+          {/* Grouped & Sorted by Anime (Sorted by Last Open) */}
+          {animeGroups.length > 0 ? (
+            <div className="space-y-2.5">
+              <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                Anime & Manga
+              </p>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {animeGroups.map((group) => (
+                  <div
+                    key={group.key}
+                    data-card-press
+                    className="card-pressable flex flex-col justify-between gap-2 rounded-xl border border-border/70 bg-background/40 p-3 transition-all duration-150 hover:border-primary/40 active:scale-[0.98] active:opacity-90"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        {group.mediaCover ? (
+                          <img
+                            src={group.mediaCover}
+                            alt=""
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                            className="h-5 w-4 shrink-0 rounded object-cover"
+                          />
+                        ) : null}
+                        {group.mediaId ? (
+                          <Link
+                            to="/anime/$id"
+                            params={{ id: String(group.mediaId) }}
+                            className="truncate text-xs font-semibold text-foreground transition-all duration-150 hover:text-primary active:scale-95 active:opacity-80"
+                          >
+                            {group.title}
+                          </Link>
+                        ) : (
+                          <span className="truncate text-xs font-semibold text-foreground">
+                            {group.title}
+                          </span>
+                        )}
+                      </div>
+                      <span className="shrink-0 text-[10px] text-muted-foreground">
+                        {shortCategoryLabel(group.category)}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.items.map((c) => (
+                        <a
+                          key={c.id}
+                          href={c.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          data-pill-press
+                          onClick={() => markCommunityOpened(c.id)}
+                          className="pill-pressable inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 font-mono text-xs font-medium text-foreground transition-all duration-150 hover:-translate-y-0.5 hover:border-primary hover:text-primary active:scale-95 active:opacity-85"
+                        >
+                          <CommunityPlatformIcon
+                            platform={c.platform}
+                            className="h-3 w-3 shrink-0"
+                          />
+                          <span>{c.handle}</span>
+                          <ExternalLink className="h-2.5 w-2.5 text-muted-foreground" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        {/* Show more / Show less button when total communities > 9 */}
+        {sortedCommunities.length > DEFAULT_VISIBLE_COMMUNITY_LINKS ? (
+          <div className="mt-4 flex justify-center border-t border-border/60 pt-3">
+            <button
+              type="button"
+              onClick={() => setCommunitiesExpanded((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium text-muted-foreground transition-all duration-150 hover:bg-secondary hover:text-foreground active:scale-95"
+            >
+              <span>
+                {communitiesExpanded
+                  ? "Show less"
+                  : `Show more (${sortedCommunities.length - DEFAULT_VISIBLE_COMMUNITY_LINKS} more)`}
+              </span>
+              {communitiesExpanded ? (
+                <ChevronUp className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5" />
+              )}
+            </button>
+          </div>
+        ) : null}
+      </section>
 
       {notes.length > 0 ? (
         <section className="mt-8">

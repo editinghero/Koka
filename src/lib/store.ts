@@ -686,3 +686,197 @@ export function exportAll() {
     notes: state.notes,
   };
 }
+
+/* ---------------- communities ---------------- */
+
+import type { CommunityItem } from "./community-utils";
+
+type CommunityState = {
+  communities: CommunityItem[];
+};
+
+let communityState: CommunityState = {
+  communities: [],
+};
+
+const communityListeners = new Set<() => void>();
+const subscribeCommunities = (l: () => void) => {
+  communityListeners.add(l);
+  return () => communityListeners.delete(l);
+};
+const emitCommunities = () => communityListeners.forEach((l) => l());
+
+function setCommunityState(patch: Partial<CommunityState>) {
+  communityState = { ...communityState, ...patch };
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(
+        "koka:communities",
+        JSON.stringify(communityState.communities),
+      );
+    } catch {
+      /* quota — ignore */
+    }
+  }
+  emitCommunities();
+}
+
+// Hydrate communities from localStorage
+if (typeof window !== "undefined") {
+  try {
+    const raw = window.localStorage.getItem("koka:communities");
+    if (raw) {
+      communityState.communities = JSON.parse(raw);
+    }
+  } catch {
+    /* corrupt cache — ignore */
+  }
+}
+
+export function useCommunities() {
+  const communities = useSyncExternalStore(
+    subscribeCommunities,
+    () => communityState.communities,
+    () => communityState.communities,
+  );
+
+  const upsertCommunities = useCallback((items: CommunityItem[]) => {
+    const map = new Map(
+      communityState.communities.map((c) => [c.id, c]),
+    );
+    for (const item of items) {
+      map.set(item.id, item);
+    }
+    setCommunityState({ communities: [...map.values()] });
+  }, []);
+
+  const deleteCommunity = useCallback((id: string) => {
+    setCommunityState({
+      communities: communityState.communities.filter((c) => c.id !== id),
+    });
+  }, []);
+
+  const togglePinCommunity = useCallback((id: string) => {
+    setCommunityState({
+      communities: communityState.communities.map((c) =>
+        c.id === id ? { ...c, pinned: !c.pinned } : c,
+      ),
+    });
+  }, []);
+
+  const markCommunityOpened = useCallback((id: string) => {
+    setCommunityState({
+      communities: communityState.communities.map((c) =>
+        c.id === id ? { ...c, lastOpenedAt: Date.now() } : c,
+      ),
+    });
+  }, []);
+
+  return {
+    communities,
+    upsertCommunities,
+    deleteCommunity,
+    togglePinCommunity,
+    markCommunityOpened,
+  };
+}
+
+/* ---------------- community popup ---------------- */
+
+type CommunityPopupState = {
+  open: boolean;
+  view: "opener" | "add-custom" | "add-ai";
+  media: {
+    id?: number | null;
+    title: string;
+    type: MediaType;
+    cover?: string | null;
+  } | null;
+  search: string;
+};
+
+let communityPopupState: CommunityPopupState = {
+  open: false,
+  view: "opener",
+  media: null,
+  search: "",
+};
+
+const communityPopupListeners = new Set<() => void>();
+const subscribeCommunityPopup = (l: () => void) => {
+  communityPopupListeners.add(l);
+  return () => communityPopupListeners.delete(l);
+};
+const emitCommunityPopup = () => communityPopupListeners.forEach((l) => l());
+
+function setCommunityPopupState(patch: Partial<CommunityPopupState>) {
+  communityPopupState = { ...communityPopupState, ...patch };
+  emitCommunityPopup();
+}
+
+export function useCommunityPopup() {
+  const snapshot = useSyncExternalStore(
+    subscribeCommunityPopup,
+    () => communityPopupState,
+    () => communityPopupState,
+  );
+
+  const openPopup = useCallback(
+    (config: {
+      view: "opener" | "add-custom" | "add-ai";
+      media?: {
+        id?: number | null;
+        title: string;
+        type: MediaType;
+        cover?: string | null;
+      } | null;
+      search?: string;
+    }) => {
+      setCommunityPopupState({
+        open: true,
+        view: config.view,
+        media: config.media ?? null,
+        search: config.search ?? "",
+      });
+    },
+    [],
+  );
+
+  const closePopup = useCallback(() => {
+    setCommunityPopupState({
+      open: false,
+      view: "opener",
+      media: null,
+      search: "",
+    });
+  }, []);
+
+  const setPopupView = useCallback(
+    (view: "opener" | "add-custom" | "add-ai") => {
+      setCommunityPopupState({ view });
+    },
+    [],
+  );
+
+  const setPopupMedia = useCallback(
+    (
+      media: {
+        id?: number | null;
+        title: string;
+        type: MediaType;
+        cover?: string | null;
+      } | null,
+    ) => {
+      setCommunityPopupState({ media });
+    },
+    [],
+  );
+
+  return {
+    ...snapshot,
+    openPopup,
+    closePopup,
+    setPopupView,
+    setPopupMedia,
+  };
+}

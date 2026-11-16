@@ -194,14 +194,14 @@ LIGHT_THEMES.push(
     label: "Pastel Snack Box",
     hint: "Foxnut cream, seafoam & berry",
     mode: "light",
-    swatch: ["#faf7f0", "#f2ede2", "#267862"],
+    swatch: ["#fbf8f2", "#fefcf8", "#267862"],
   },
   {
     id: "kyoto",
     label: "Kyoto Paper",
     hint: "Warm washi paper & persimmon",
     mode: "light",
-    swatch: ["#f6f5f2", "#efece6", "#b83b24"],
+    swatch: ["#f8f7f4", "#fdfcfa", "#b83b24"],
   },
 );
 

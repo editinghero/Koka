@@ -32,7 +32,7 @@ export async function askGemini(
   if (opts.system) {
     body["systemInstruction"] = { parts: [{ text: opts.system }] };
   }
-  if (opts.search) body["tools"] = [{ google_search: {} }];
+  if (opts.search !== false) body["tools"] = [{ google_search: {} }];
 
   const res = await fetch(
     `${BASE}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
@@ -104,7 +104,7 @@ export async function chatGemini(
   const newTurns: ChatTurn[] = [];
 
   const tools: any[] = [];
-  if (opts.search) tools.push({ google_search: {} });
+  if (opts.search !== false) tools.push({ google_search: {} });
   if (opts.getAnimeNote) {
     tools.push({
       functionDeclarations: [
