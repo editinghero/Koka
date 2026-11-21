@@ -130,7 +130,7 @@ export function StatsShareDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-md overflow-y-auto">
+      <DialogContent className="w-[94vw] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl mx-auto shadow-2xl">
         <DialogHeader>
           <DialogTitle>Share your stats</DialogTitle>
           <DialogDescription>
@@ -171,8 +171,8 @@ export function StatsShareDialog({
         ) : null}
 
         <div
-          className="relative mx-auto w-full overflow-hidden rounded-xl border border-border bg-secondary"
-          style={{ aspectRatio: `${w} / ${h}`, maxHeight: "52vh" }}
+          className="relative mx-auto w-full max-w-[320px] sm:max-w-[360px] overflow-hidden rounded-xl border border-border/70 bg-secondary/50 shadow-md backdrop-blur-sm"
+          style={{ aspectRatio: `${w} / ${h}`, maxHeight: "46vh" }}
         >
           {url ? (
             <img

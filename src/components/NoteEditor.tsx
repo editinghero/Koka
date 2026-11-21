@@ -132,7 +132,13 @@ export function NoteEditor({
     setLastEdited(existing?.updatedAt ?? null);
     setPreview(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animeId, mediaType, existing?.updatedAt]);
+  }, [animeId, mediaType]);
+
+  useEffect(() => {
+    if (existing?.updatedAt && existing.updatedAt !== lastEdited) {
+      setLastEdited(existing.updatedAt);
+    }
+  }, [existing?.updatedAt, lastEdited]);
 
   useEffect(() => {
     const t = setTimeout(() => {

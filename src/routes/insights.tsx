@@ -177,11 +177,21 @@ function InsightsPage() {
     ) / 60,
   );
 
-  const profileContext = library
+  const favAnimeList =
+    userProfile?.favorites?.anime?.map((a) => a.title).slice(0, 10).join(", ") || "";
+
+  const ratedTitlesContext = library
     .filter((e) => e.score)
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
     .slice(0, 40)
     .map((e) => `${e.media.title} ${e.score}/10 [${e.media.genres?.join("/")}]`)
+    .join("; ");
+
+  const profileContext = [
+    favAnimeList ? `Favorite Anime: ${favAnimeList}` : "",
+    ratedTitlesContext,
+  ]
+    .filter(Boolean)
     .join("; ");
 
   const backlog = library

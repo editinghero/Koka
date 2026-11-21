@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Check, SlidersHorizontal } from "lucide-react";
 import { AnimeCard, GridSkeleton } from "@/components/AnimeCard";
 import { PageHeader } from "@/components/AppShell";
 import { AiPanel } from "@/components/AiPanel";
+import { PickForMePanel } from "@/components/PickForMePanel";
 import {
   currentSeason,
   fetchDiscover,
   nextSeason,
   prevSeason,
 } from "@/lib/anilist";
-import { useLibrary, useMediaMode } from "@/lib/store";
+import { useLibrary, useMediaMode, useUserProfile } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -82,6 +83,42 @@ function SeasonsPage() {
   const [genre, setGenre] = useState<string>("ALL");
   const [sort, setSort] = useState<DiscoverSort>("POPULARITY_DESC");
   const { library, upsert } = useLibrary();
+  const { profile: userProfile } = useUserProfile();
+
+  const tasteContext = useMemo(() => {
+    const favoriteTitles: string[] = [];
+    if (userProfile?.favorites?.anime?.length) {
+      favoriteTitles.push(...userProfile.favorites.anime.map((a) => a.title));
+    }
+    const highRated = library
+      .filter((e) => (e.score ?? 0) >= 8 || e.favorite)
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, 15)
+      .map((e) => `${e.media.title}${e.score ? ` (${e.score}/10)` : ""}`);
+
+    const genreCounts: Record<string, number> = {};
+    library.forEach((e) =>
+      e.media.genres?.forEach((g) => {
+        genreCounts[g] = (genreCounts[g] ?? 0) + 1;
+      }),
+    );
+    if (userProfile?.animeStats?.genres?.length) {
+      userProfile.animeStats.genres.slice(0, 5).forEach((g) => {
+        genreCounts[g.genre] = (genreCounts[g.genre] ?? 0) + g.count;
+      });
+    }
+    const topGenres = Object.entries(genreCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([g]) => g);
+
+    return {
+      name: userProfile?.name ?? "User",
+      favorites: Array.from(new Set([...favoriteTitles, ...highRated])).slice(0, 15),
+      topGenres,
+      completedCount: library.filter((e) => e.status === "COMPLETED").length,
+    };
+  }, [userProfile, library]);
 
   const isManga = mode === "MANGA";
   const isSeasonalActive = !isManga && browseMode === "seasonal";
@@ -127,31 +164,45 @@ function SeasonsPage() {
                 }.`
         }
         action={
-          !isManga && isSeasonalActive ? (
-            <div className="flex gap-1.5 shrink-0">
+          !isManga ? (
+            isSeasonalActive ? (
+              <div className="flex gap-1.5 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const p = prevSeason(season, year);
+                    setSeason(p.season as string);
+                    setYear(p.year);
+                  }}
+                >
+                  Previous
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const n = nextSeason(season, year);
+                    setSeason(n.season as string);
+                    setYear(n.year);
+                  }}
+                >
+                  Next
+                </Button>
+              </div>
+            ) : (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => {
-                  const p = prevSeason(season, year);
-                  setSeason(p.season as string);
-                  setYear(p.year);
+                  setBrowseMode("seasonal");
+                  if (genre === "Adult (18+)") setGenre("ALL");
                 }}
+                className="gap-1.5 shrink-0"
               >
-                Previous
+                Season Charts
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  const n = nextSeason(season, year);
-                  setSeason(n.season as string);
-                  setYear(n.year);
-                }}
-              >
-                Next
-              </Button>
-            </div>
+            )
           ) : undefined
         }
       />
@@ -327,7 +378,18 @@ function SeasonsPage() {
       ) : null}
 
       {data && data.length > 0 ? (
-        <div className="mt-8">
+        <div className="mt-8 space-y-4">
+          {!isManga ? (
+            <PickForMePanel
+              tasteContext={tasteContext}
+              currentSeasonData={
+                isSeasonalActive && season === now.season && year === now.year
+                  ? data
+                  : undefined
+              }
+            />
+          ) : null}
+
           <AiPanel
             title={
               isManga
@@ -336,7 +398,7 @@ function SeasonsPage() {
                   ? `${season.toLowerCase()} ${year} season briefing`
                   : `${genre === "ALL" ? "Discover" : genre} briefing`
             }
-            description="Spoiler-free overview of standout titles worth checking out."
+            description="Spoiler-free overview of standout titles worth checking out, matched to your taste."
             label="Brief me"
             prompt={() =>
               `Write a calm, spoiler-free markdown briefing for this curated list of ${
@@ -345,7 +407,10 @@ function SeasonsPage() {
                 DISCOVER_SORTS.find(
                   (s) => s.value === sort,
                 )?.label.toLowerCase() ?? "popularity"
-              }). Highlight standout premises, tone, art style, and what kind of audience each is for. No character spoilers or twists.\n\nTitles: ${data
+              }).
+User's Preferred Genres: ${tasteContext.topGenres.join(", ") || "Diverse genres"}.
+User's Top Favorites: ${tasteContext.favorites.slice(0, 5).join(", ") || "None specified"}.
+Highlight standout premises, tone, art style, and what kind of audience each is for, noting titles that align with the user's taste. No character spoilers or twists.\n\nTitles: ${data
                 .slice(0, 25)
                 .map((m) => m.title)
                 .join(", ")}`

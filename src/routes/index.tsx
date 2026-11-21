@@ -33,6 +33,7 @@ import {
   useLibrary,
   useMediaMode,
   useNotes,
+  useUserProfile,
 } from "@/lib/store";
 import { MODE_COPY, statusLabel, totalUnits } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,7 @@ function Dashboard() {
   const copy = MODE_COPY[mode];
   const { library, patch } = useLibrary();
   const { notes } = useNotes();
+  const { profile: userProfile } = useUserProfile();
   const { communities, markCommunityOpened } = useCommunities();
   const { openPopup } = useCommunityPopup();
   const [refreshing, setRefreshing] = useState(false);
@@ -416,12 +418,14 @@ function Dashboard() {
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         <AiPanel
           title="What should I watch tonight?"
-          description="A short, spoiler-free pick from your own backlog."
+          description="A short, spoiler-free pick from your own backlog tailored to your taste."
           label="Suggest"
           storageHint="Uses your Gemini key from Settings."
-          prompt={() =>
-            `From this anime list, recommend 3 titles to watch next and why (mood, pacing, length). Avoid spoilers and character details. Keep each pick to 2 sentences.\n\nList: ${listSummary || "empty list"}`
-          }
+          prompt={() => {
+            const userFavs = userProfile?.favorites?.anime?.map((a) => a.title).slice(0, 5).join(", ");
+            const favContext = userFavs ? `User Favorites: ${userFavs}. ` : "";
+            return `From this anime list, recommend 3 titles to watch next and why (mood, pacing, length). ${favContext}Avoid spoilers and character details. Keep each pick to 2 sentences.\n\nList: ${listSummary || "empty list"}`;
+          }}
         />
         <AiPanel
           title="Weekly digest"

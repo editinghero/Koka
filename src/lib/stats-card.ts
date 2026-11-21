@@ -64,19 +64,53 @@ export function buildStatsCardData(
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
-  const top = [...scored]
+  const topScored = [...scored]
     .sort(
       (a, b) =>
         (b.score ?? 0) - (a.score ?? 0) ||
         Number(!!b.favorite) - Number(!!a.favorite) ||
         b.updatedAt - a.updatedAt,
+    );
+
+  // If scored titles are fewer than 5, pull from favorites, completed or active library entries with covers
+  const candidates: LibraryEntry[] = [...topScored];
+  const seenIds = new Set(candidates.map((e) => e.media.id));
+
+  // Add favorites next
+  library
+    .filter((e) => e.favorite && !seenIds.has(e.media.id) && e.media.cover)
+    .forEach((e) => {
+      seenIds.add(e.media.id);
+      candidates.push(e);
+    });
+
+  // Add completed / in-progress next
+  library
+    .filter(
+      (e) =>
+        !seenIds.has(e.media.id) &&
+        e.media.cover &&
+        (e.status === "COMPLETED" || (e.progress ?? 0) > 0),
     )
-    .slice(0, 5)
-    .map((e) => ({
-      title: e.media.title,
-      cover: e.media.cover ?? null,
-      score: e.score ?? 0,
-    }));
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .forEach((e) => {
+      seenIds.add(e.media.id);
+      candidates.push(e);
+    });
+
+  // Add any other entry with cover
+  library
+    .filter((e) => !seenIds.has(e.media.id) && e.media.cover)
+    .forEach((e) => {
+      seenIds.add(e.media.id);
+      candidates.push(e);
+    });
+
+  const top = candidates.slice(0, 5).map((e) => ({
+    title: e.media.title,
+    cover: e.media.cover ?? null,
+    score: e.score ?? (meanScore ? Math.round(meanScore * 10) / 10 : 8),
+  }));
 
   return {
     mode,
@@ -125,11 +159,47 @@ export type CardEnv = {
 };
 
 export function browserEnv(): CardEnv {
-  const cs = getComputedStyle(document.documentElement);
-  const get = (name: string, fallback: string) =>
-    cs.getPropertyValue(name).trim() || fallback;
-  const fontSans = get("--font-sans", "system-ui, sans-serif");
-  const fontDisplay = get("--font-display", fontSans);
+  // Use a temporary probe element so standard CSS property resolution converts any color
+  // format (oklch, hex, rgb, color-mix) into sRGB "rgb(r, g, b)"
+  let probe: HTMLElement | null = null;
+  if (typeof document !== "undefined" && document.body) {
+    probe = document.createElement("div");
+    probe.style.display = "none";
+    document.body.appendChild(probe);
+  }
+
+  const cs = typeof document !== "undefined" ? getComputedStyle(document.documentElement) : null;
+  const getRaw = (name: string, fallback: string) =>
+    (cs ? cs.getPropertyValue(name).trim() : "") || fallback;
+
+  const resolveColor = (name: string, fallback: string): string => {
+    if (probe) {
+      try {
+        probe.style.color = `var(${name})`;
+        const computed = getComputedStyle(probe).color;
+        if (computed && computed !== "rgba(0, 0, 0, 0)") return computed;
+      } catch {}
+    }
+    return getRaw(name, fallback);
+  };
+
+  const fontSans = getRaw("--font-sans", "system-ui, sans-serif");
+  const fontDisplay = getRaw("--font-display", fontSans);
+
+  const themeColors = {
+    background: resolveColor("--background", "#141414"),
+    foreground: resolveColor("--foreground", "#f2f2f2"),
+    mutedForeground: resolveColor("--muted-foreground", "#a3a3a3"),
+    primary: resolveColor("--primary", "#6fd6dc"),
+    primaryForeground: resolveColor("--primary-foreground", "#141414"),
+    fontSans,
+    fontDisplay,
+  };
+
+  if (probe) {
+    probe.remove();
+  }
+
   return {
     createCanvas: (w, h) => {
       const c = document.createElement("canvas");
@@ -139,31 +209,34 @@ export function browserEnv(): CardEnv {
     },
     loadImage: (url) =>
       new Promise((resolve) => {
+        const cleanUrl = url.replace(/^http:\/\//i, "https://");
         const img = new Image();
-        // Anonymous CORS keeps the canvas exportable; a blocked image just
-        // errors out and is replaced by a placeholder.
         img.crossOrigin = "anonymous";
         img.referrerPolicy = "no-referrer";
-        const timer = setTimeout(() => resolve(null), 9000);
+        const timer = setTimeout(() => resolve(null), 8000);
         img.onload = () => {
           clearTimeout(timer);
           resolve(img);
         };
         img.onerror = () => {
           clearTimeout(timer);
-          resolve(null);
+          // Retry with standard image loading if referrer policy blocked it
+          const img2 = new Image();
+          img2.crossOrigin = "anonymous";
+          const timer2 = setTimeout(() => resolve(null), 4000);
+          img2.onload = () => {
+            clearTimeout(timer2);
+            resolve(img2);
+          };
+          img2.onerror = () => {
+            clearTimeout(timer2);
+            resolve(null);
+          };
+          img2.src = cleanUrl;
         };
-        img.src = url;
+        img.src = cleanUrl;
       }),
-    theme: {
-      background: get("--background", "#141414"),
-      foreground: get("--foreground", "#f2f2f2"),
-      mutedForeground: get("--muted-foreground", "#a3a3a3"),
-      primary: get("--primary", "#6fd6dc"),
-      primaryForeground: get("--primary-foreground", "#141414"),
-      fontSans,
-      fontDisplay,
-    },
+    theme: themeColors,
     prepareFonts: async () => {
       try {
         await Promise.all([
@@ -202,8 +275,17 @@ function contrast(a: RGB, b: RGB): number {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-/** Any CSS colour (hex, oklch, …) → sRGB triple, via a 1×1 canvas. */
+/** Any CSS colour (hex, rgb, oklch, …) → sRGB triple. */
 function parseColor(css: string, env: CardEnv, fallback: RGB): RGB {
+  if (!css) return fallback;
+  const rgbMatch = css.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (rgbMatch) {
+    return [Number(rgbMatch[1]), Number(rgbMatch[2]), Number(rgbMatch[3])];
+  }
+  const hexMatch = css.match(/^#([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})/i);
+  if (hexMatch) {
+    return [parseInt(hexMatch[1]!, 16), parseInt(hexMatch[2]!, 16), parseInt(hexMatch[3]!, 16)];
+  }
   try {
     const ctx = env.createCanvas(1, 1).getContext("2d");
     if (!ctx) return fallback;

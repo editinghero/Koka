@@ -80,18 +80,18 @@ function preprocessMarkdown(text: string): string {
 
   // Prevent Setext headings: entering `-`, `---`, or `=` after a line must NEVER turn that line into a heading.
   // Headings are only created using `#` (ATX headings).
-  out = out.replace(/([^\n])\n([ \t]*(?:-+|=+)[ \t]*)$/gm, "$1\n\n$2");
-
-  // Ensure divider lines (---) have blank lines before and after
+  // Normalize divider lines (--- or more) to clean \n\n---\n\n without duplicate newlines
   out = out.replace(/^[ \t]*---+[ \t]+([^\s\-].*)$/gm, "---\n\n$1");
-  out = out.replace(/(?:^|\n)[ \t]*---+[ \t]*(?:\n|$)/g, (match, offset, str) => {
-    const isStart = offset === 0;
-    const isEnd = offset + match.length >= str.length;
-    return (isStart ? "" : "\n\n") + "---" + (isEnd ? "" : "\n\n");
-  });
+  out = out.replace(/(?:[ \t]*\n)+[ \t]*---+[ \t]*(?:\n[ \t]*)+/g, "\n\n---\n\n");
+  out = out.replace(/^---+[ \t]*(?:\n[ \t]*)*/, "---\n\n");
+  out = out.replace(/([^\n])\n([ \t]*={2,}[ \t]*)$/gm, "$1\n\n$2");
+  out = out.replace(/([^\n])\n([ \t]*-{1,2}[ \t]*)$/gm, "$1\n\n$2");
 
   // Preserve multiple consecutive blank lines (prevent collapsing into a single paragraph)
+  // But do not add &nbsp; immediately adjacent to dividers
   out = out.replace(/\n{3,}/g, (m) => "\n\n" + "&nbsp;\n\n".repeat(m.length - 2));
+  out = out.replace(/(?:&nbsp;\n\n)+---\n\n/g, "---\n\n");
+  out = out.replace(/---\n\n(?:&nbsp;\n\n)+/g, "---\n\n");
 
   // Normalize common HTML tags from AniList / MAL exports to Markdown equivalents
   out = out.replace(/<\/?(b|strong)>/gi, "**");
@@ -229,6 +229,7 @@ export function Markdown({ children, copyAnimeTitles = false }: MarkdownProps) {
   const segments = parseDetailsSegments(children || "");
 
   const components = {
+    hr: () => <hr className="my-3.5 border-t border-border" />,
     table: ({
       children: tableChildren,
       ...props
