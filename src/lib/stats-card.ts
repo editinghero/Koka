@@ -211,35 +211,52 @@ export function browserEnv(): CardEnv {
       c.height = h;
       return c;
     },
-    loadImage: (url) =>
-      new Promise((resolve) => {
-        const cleanUrl = url.replace(/^http:\/\//i, "https://");
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.referrerPolicy = "no-referrer";
-        const timer = setTimeout(() => resolve(null), 8000);
-        img.onload = () => {
-          clearTimeout(timer);
-          resolve(img);
-        };
-        img.onerror = () => {
-          clearTimeout(timer);
-          // Retry with standard image loading if referrer policy blocked it
-          const img2 = new Image();
-          img2.crossOrigin = "anonymous";
-          const timer2 = setTimeout(() => resolve(null), 4000);
-          img2.onload = () => {
-            clearTimeout(timer2);
-            resolve(img2);
+    loadImage: async (url) => {
+      if (!url) return null;
+      const cleanUrl = url.replace(/^http:\/\//i, "https://");
+
+      const tryLoad = (src: string, timeoutMs: number): Promise<Img | null> =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
+          let done = false;
+          const timer = setTimeout(() => {
+            if (!done) {
+              done = true;
+              resolve(null);
+            }
+          }, timeoutMs);
+          img.onload = () => {
+            if (!done) {
+              done = true;
+              clearTimeout(timer);
+              resolve(img);
+            }
           };
-          img2.onerror = () => {
-            clearTimeout(timer2);
-            resolve(null);
+          img.onerror = () => {
+            if (!done) {
+              done = true;
+              clearTimeout(timer);
+              resolve(null);
+            }
           };
-          img2.src = cleanUrl;
-        };
-        img.src = cleanUrl;
-      }),
+          img.src = src;
+        });
+
+      // Tier 1: Try with cache-busting CORS query so the browser makes a fresh CORS request
+      // and doesn't collide with non-CORS cached <img> responses
+      const corsUrl = cleanUrl + (cleanUrl.includes("?") ? "&" : "?") + "cors=1";
+      const direct = await tryLoad(corsUrl, 4500);
+      if (direct) return direct;
+
+      // Tier 2: Try via high-speed Cloudflare-backed CORS image proxy (supports all CDNs including MAL)
+      const proxyUrl = `https://images.weserv.nl/?url=${encodeURIComponent(cleanUrl)}`;
+      const viaProxy = await tryLoad(proxyUrl, 4500);
+      if (viaProxy) return viaProxy;
+
+      // Tier 3: Try raw cleanUrl
+      return await tryLoad(cleanUrl, 3000);
+    },
     theme: themeColors,
     prepareFonts: async () => {
       try {
