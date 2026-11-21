@@ -183,7 +183,7 @@ export type Note = {
   mediaType?: MediaType;
   title: string;
   body: string;
-  tags: string[];
+  tags?: string[];
   updatedAt: number;
 };
 
@@ -233,3 +233,65 @@ export const GEMINI_MODELS = [
   "gemini-flash-latest",
   "gemini-flash-lite-latest",
 ];
+
+export type FavoriteMedia = {
+  id: number;
+  title: string;
+  cover?: string | null;
+  format?: string | null;
+  year?: number | null;
+};
+
+export type FavoriteCharacter = {
+  id: number;
+  name: string;
+  image?: string | null;
+};
+
+export type FavoriteStaff = {
+  id: number;
+  name: string;
+  image?: string | null;
+  occupations?: string[];
+};
+
+export type UserStatItem = {
+  label: string;
+  count: number;
+  meanScore?: number | null;
+  minutesWatched?: number | null;
+  image?: string | null;
+};
+
+export type UserStats = {
+  count: number;
+  meanScore: number;
+  minutesWatched?: number;
+  episodesWatched?: number;
+  chaptersRead?: number;
+  volumesRead?: number;
+  statuses?: UserStatItem[];
+  formats?: UserStatItem[];
+  scores?: UserStatItem[];
+  genres?: UserStatItem[];
+  studios?: UserStatItem[];
+  voiceActors?: UserStatItem[];
+};
+
+export type UserProfile = {
+  id: number;
+  name: string;
+  about?: string | null;
+  avatar?: string | null;
+  banner?: string | null;
+  siteUrl?: string | null;
+  favorites?: {
+    anime?: FavoriteMedia[];
+    manga?: FavoriteMedia[];
+    characters?: FavoriteCharacter[];
+    voiceActors?: FavoriteStaff[];
+  };
+  animeStats?: UserStats | null;
+  mangaStats?: UserStats | null;
+  updatedAt: number;
+};

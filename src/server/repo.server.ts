@@ -12,6 +12,7 @@ import {
   type LibraryEntry,
   type MediaType,
   type Note,
+  type UserProfile,
 } from "@/lib/types";
 import { getD1, type D1Database } from "./runtime.server";
 
@@ -93,6 +94,9 @@ export type Repo = {
     entry: { source: string; mode: string; count: number },
   ): Promise<void>;
   listImportLog(userId: string): Promise<ImportLogRow[]>;
+
+  getUserProfile(userId: string): Promise<UserProfile | null>;
+  saveUserProfile(userId: string, profile: UserProfile): Promise<void>;
 };
 
 const typeOf = (e: LibraryEntry): MediaType =>
@@ -160,6 +164,11 @@ const SCHEMA = [
      mode TEXT NOT NULL,
      count INTEGER NOT NULL,
      created_at INTEGER NOT NULL
+   )`,
+  `CREATE TABLE IF NOT EXISTS user_profiles (
+     user_id TEXT PRIMARY KEY,
+     profile_data TEXT NOT NULL,
+     updated_at INTEGER NOT NULL
    )`,
 ];
 
@@ -494,6 +503,33 @@ function d1Repo(db: D1Database): Repo {
         .all<ImportLogRow>();
       return results;
     },
+
+    async getUserProfile(userId) {
+      await ready();
+      const row = await db
+        .prepare("SELECT profile_data FROM user_profiles WHERE user_id = ?")
+        .bind(userId)
+        .first<{ profile_data: string }>();
+      if (!row?.profile_data) return null;
+      try {
+        return JSON.parse(row.profile_data) as UserProfile;
+      } catch {
+        return null;
+      }
+    },
+    async saveUserProfile(userId, profile) {
+      await ready();
+      await db
+        .prepare(
+          `INSERT INTO user_profiles (user_id, profile_data, updated_at)
+           VALUES (?, ?, ?)
+           ON CONFLICT(user_id) DO UPDATE SET
+             profile_data = excluded.profile_data,
+             updated_at = excluded.updated_at`,
+        )
+        .bind(userId, JSON.stringify(profile), profile.updatedAt || Date.now())
+        .run();
+    },
   };
 }
 
@@ -505,6 +541,7 @@ type LocalShape = {
   library: Record<string, LibraryEntry[]>;
   notes: Record<string, Note[]>;
   log: Record<string, ImportLogRow[]>;
+  profiles: Record<string, UserProfile | null>;
 };
 
 const LOCAL_FILE = ".data/koka-dev-db.json";
@@ -512,7 +549,14 @@ let localState: LocalShape | null = null;
 
 async function loadLocal(): Promise<LocalShape> {
   if (localState) return localState;
-  localState = { users: [], settings: {}, library: {}, notes: {}, log: {} };
+  localState = {
+    users: [],
+    settings: {},
+    library: {},
+    notes: {},
+    log: {},
+    profiles: {},
+  };
   try {
     const fs = await import("node:fs/promises");
     const raw = await fs.readFile(LOCAL_FILE, "utf8");
@@ -658,6 +702,17 @@ function localRepo(): Repo {
     async listImportLog(userId) {
       const s = await loadLocal();
       return s.log[userId] ?? [];
+    },
+
+    async getUserProfile(userId) {
+      const s = await loadLocal();
+      return s.profiles?.[userId] ?? null;
+    },
+    async saveUserProfile(userId, profile) {
+      const s = await loadLocal();
+      if (!s.profiles) s.profiles = {};
+      s.profiles[userId] = profile;
+      await persistLocal();
     },
   };
 }

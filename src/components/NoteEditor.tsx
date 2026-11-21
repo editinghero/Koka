@@ -25,7 +25,8 @@ import {
 import { Markdown } from "./Markdown";
 import { Button } from "@/components/ui/button";
 import { useNotes } from "@/lib/store";
-import { normalizeTags, type MediaType } from "@/lib/types";
+import type { MediaType } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface ToolItem {
@@ -40,7 +41,7 @@ const TOOL_GROUPS: { name: string; tools: ToolItem[] }[] = [
     name: "Text style",
     tools: [
       { icon: Bold, label: "Bold (**text**)", wrap: ["**", "**"], defaultText: "bold text" },
-      { icon: Italic, label: "Italic (_text_)", wrap: ["_", "_"], defaultText: "italic text" },
+      { icon: Italic, label: "Italic (*text*)", wrap: ["*", "*"], defaultText: "italic text" },
       { icon: Sparkles, label: "Bold & Italic (***text***)", wrap: ["***", "***"], defaultText: "bold italic" },
       { icon: Strikethrough, label: "Strikethrough (~~text~~)", wrap: ["~~", "~~"], defaultText: "strike text" },
       { icon: Code, label: "Inline code (`code`)", wrap: ["`", "`"], defaultText: "code" },
@@ -90,19 +91,36 @@ const TOOL_GROUPS: { name: string; tools: ToolItem[] }[] = [
   },
 ];
 
+function formatLastEdited(ts: number): string {
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export function NoteEditor({
   animeId,
   title,
   mediaType = "ANIME",
+  fullPage = false,
+  className,
 }: {
   animeId: number;
   title: string;
   mediaType?: MediaType;
+  fullPage?: boolean;
+  className?: string;
 }) {
   const { notes, saveNote, removeNote } = useNotes(mediaType);
   const existing = notes.find((n) => n.animeId === animeId);
   const [body, setBody] = useState(existing?.body ?? "");
-  const [tags, setTags] = useState((existing?.tags ?? []).join(", "));
+  const [lastEdited, setLastEdited] = useState<number | null>(
+    existing?.updatedAt ?? null,
+  );
   /** Notes open in reading mode; switch to Edit to write. */
   const [preview, setPreview] = useState(true);
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -111,26 +129,28 @@ export function NoteEditor({
   useEffect(() => {
     setBody(existing?.body ?? "");
     saved.current = existing?.body ?? "";
-    setTags((existing?.tags ?? []).join(", "));
+    setLastEdited(existing?.updatedAt ?? null);
     setPreview(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [animeId, mediaType]);
+  }, [animeId, mediaType, existing?.updatedAt]);
 
   useEffect(() => {
     const t = setTimeout(() => {
       if (body === saved.current) return;
       saved.current = body;
+      const now = Date.now();
+      setLastEdited(now);
       saveNote({
         animeId,
         mediaType,
         title,
         body,
-        tags: normalizeTags(tags.split(",")),
-        updatedAt: Date.now(),
+        tags: [],
+        updatedAt: now,
       });
     }, 700);
     return () => clearTimeout(t);
-  }, [body, tags, animeId, title, mediaType, saveNote]);
+  }, [body, animeId, title, mediaType, saveNote]);
 
   function apply(before: string, after: string, defaultText = "") {
     if (preview) {
@@ -142,7 +162,8 @@ export function NoteEditor({
         const insertText = defaultText || "";
         const cleanBefore =
           s > 0 && !body.endsWith("\n") && before.startsWith("\n")
-            ? "\n" + before.trimStart()
+            ? (before.startsWith("\n\n") ? "\n\n" : "\n") +
+              before.replace(/^\n+/, "")
             : before;
         const next = body + cleanBefore + insertText + after;
         setBody(next);
@@ -165,6 +186,14 @@ export function NoteEditor({
     let effectiveBefore = before;
     if (s === 0 && effectiveBefore.startsWith("\n")) {
       effectiveBefore = effectiveBefore.replace(/^\n+/, "");
+    } else if (
+      s > 0 &&
+      !body.slice(0, s).endsWith("\n") &&
+      effectiveBefore.startsWith("\n")
+    ) {
+      effectiveBefore =
+        (effectiveBefore.startsWith("\n\n") ? "\n\n" : "\n") +
+        effectiveBefore.replace(/^\n+/, "");
     }
 
     const next =
@@ -186,7 +215,7 @@ export function NoteEditor({
   }
 
   return (
-    <section className="panel overflow-hidden">
+    <section className={cn("panel overflow-hidden flex flex-col", fullPage && "min-h-[calc(100vh-180px)]", className)}>
       <div className="flex flex-wrap items-center gap-1 border-b border-border p-1.5 bg-secondary/20">
         {TOOL_GROUPS.map((group, gIdx) => (
           <div key={group.name} className="flex items-center gap-0.5">
@@ -208,7 +237,7 @@ export function NoteEditor({
           </div>
         ))}
         <div className="ml-auto flex items-center gap-1">
-          {existing && (existing.body.trim() || existing.tags.length) ? (
+          {existing && (existing.body.trim() || existing.tags?.length) ? (
             <Button
               size="sm"
               variant="ghost"
@@ -218,8 +247,8 @@ export function NoteEditor({
                 if (confirm(`Delete note for "${title}"?`)) {
                   removeNote(animeId, mediaType);
                   setBody("");
-                  setTags("");
                   saved.current = "";
+                  setLastEdited(null);
                   toast.success("Note deleted");
                 }
               }}
@@ -247,7 +276,7 @@ export function NoteEditor({
       </div>
 
       {preview ? (
-        <div className="min-h-[220px] p-4">
+        <div className={cn("min-h-[220px] p-4", fullPage && "flex-1 min-h-[calc(100vh-270px)] overflow-y-auto")}>
           {body.trim() ? (
             <Markdown>{body}</Markdown>
           ) : (
@@ -264,19 +293,22 @@ export function NoteEditor({
           placeholder={
             "## Thoughts\n\n- episode 4 was the turning point\n- [ ] rewatch the OP"
           }
-          className="min-h-[220px] w-full resize-y bg-transparent p-4 font-mono text-[13px] leading-relaxed outline-none"
+          className={cn("min-h-[220px] w-full resize-y bg-transparent p-4 font-mono text-[13px] leading-relaxed outline-none", fullPage && "flex-1 min-h-[calc(100vh-270px)] resize-none")}
         />
       )}
 
-      <div className="flex items-center gap-2 border-t border-border px-3 py-2">
-        <span className="text-[11px] text-muted-foreground">Tags</span>
-        <input
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-          placeholder="comfort, rewatch, 2026"
-          className="flex-1 bg-transparent text-xs outline-none"
-        />
-        <span className="text-[11px] text-muted-foreground">Autosaved</span>
+      <div className="flex items-center justify-between border-t border-border px-3 py-2 text-[11px] text-muted-foreground">
+        <span>
+          {lastEdited ? (
+            <>Last edited {formatLastEdited(lastEdited)}</>
+          ) : (
+            <>New note</>
+          )}
+        </span>
+        <span className="flex items-center gap-1.5 text-[10px]">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          Autosaved
+        </span>
       </div>
     </section>
   );

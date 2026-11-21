@@ -5,6 +5,7 @@ import type {
   MediaType,
   Note,
   Settings,
+  UserProfile,
 } from "./types";
 import type { CommunityItem } from "./community-utils";
 
@@ -14,6 +15,7 @@ export type Bootstrap = {
   mode: MediaType;
   library: LibraryEntry[];
   notes: Note[];
+  userProfile?: UserProfile | null;
 };
 
 /** Everything the client needs after sign-in, in one round trip. */
@@ -28,15 +30,17 @@ export const getBootstrap = createServerFn({ method: "GET" }).handler(
         mode: "ANIME",
         library: [],
         notes: [],
+        userProfile: null,
       };
     }
     const { getRepo } = await import("@/server/repo.server");
     const { decryptValue } = await import("@/server/crypto.server");
     const repo = getRepo();
-    const [row, library, notes] = await Promise.all([
+    const [row, library, notes, userProfile] = await Promise.all([
       repo.getSettings(user.id),
       repo.listLibrary(user.id),
       repo.listNotes(user.id),
+      repo.getUserProfile(user.id),
     ]);
     return {
       user,
@@ -53,6 +57,7 @@ export const getBootstrap = createServerFn({ method: "GET" }).handler(
       mode: row.media_mode === "MANGA" ? "MANGA" : "ANIME",
       library,
       notes,
+      userProfile,
     };
   },
 );
@@ -194,3 +199,13 @@ export const clearLibraryAndNotes = createServerFn({ method: "POST" }).handler(
     return { ok: true };
   },
 );
+
+export const saveUserProfileFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { profile: UserProfile }) => data)
+  .handler(async ({ data }) => {
+    const { requireUser } = await import("@/server/session.server");
+    const { getRepo } = await import("@/server/repo.server");
+    const user = await requireUser();
+    await getRepo().saveUserProfile(user.id, data.profile);
+    return { ok: true };
+  });

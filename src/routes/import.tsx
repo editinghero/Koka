@@ -18,6 +18,7 @@ import {
   useMediaMode,
   useNotes,
   useSettings,
+  useUserProfile,
 } from "@/lib/store";
 import {
   downloadFile,
@@ -68,6 +69,7 @@ function ImportPage() {
   const { mergeMany, replaceMany, library, all, removeMany } = useLibrary();
   const { notes, all: allNotes, setNotes, mergeNotes, replaceNotes } = useNotes();
   const { settings, update } = useSettings();
+  const { setProfile } = useUserProfile();
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("merge");
   const [log, setLog] = useState<string[]>([]);
@@ -268,6 +270,9 @@ function ImportPage() {
       const parsed = parseImport(await file.text());
 
       if (parsed.backup) {
+        if (parsed.backup.userProfile) {
+          setProfile(parsed.backup.userProfile);
+        }
         const types: MediaType[] = ["ANIME", "MANGA"];
         if (mode === "replace") {
           applyReplace(
@@ -337,8 +342,8 @@ function ImportPage() {
             mediaType: item.mediaType ?? (m.type === "MANGA" ? "MANGA" : "ANIME"),
             title: m.title,
             body: item.notes,
-            tags: ["imported"],
-            updatedAt: now,
+            tags: [],
+            updatedAt: item.updatedAt ?? now,
           });
         }
       }

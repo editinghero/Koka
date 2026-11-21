@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Search, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ChevronRight, Pin, Search, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { Markdown } from "@/components/Markdown";
+import { NoteEditor } from "@/components/NoteEditor";
 import { useMediaMode, useNotes } from "@/lib/store";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/notes")({
@@ -28,28 +30,52 @@ export const Route = createFileRoute("/notes")({
 
 function NotesPage() {
   const { mode } = useMediaMode();
-  const { notes, removeNote } = useNotes();
+  const { notes, all: allNotes, removeNote } = useNotes();
   const [query, setQuery] = useState("");
-  const [tag, setTag] = useState("ALL");
+  const [openCustom, setOpenCustom] = useState(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("custom") === "1";
+    }
+    return false;
+  });
 
-  const tags = useMemo(() => {
-    const set = new Set<string>();
-    notes.forEach((n) =>
-      n.tags.forEach((t) => set.add(t.trim().toLowerCase())),
-    );
-    return [...set].sort();
-  }, [notes]);
+  useEffect(() => {
+    const handlePopState = () => {
+      setOpenCustom(
+        new URLSearchParams(window.location.search).get("custom") === "1",
+      );
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const showCustomNote = (show: boolean) => {
+    setOpenCustom(show);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (show) {
+        url.searchParams.set("custom", "1");
+      } else {
+        url.searchParams.delete("custom");
+      }
+      window.history.pushState(
+        {},
+        "",
+        url.pathname + (url.search ? url.search : ""),
+      );
+    }
+  };
+
+  // The custom note is a single standalone note not linked to any specific anime/manga
+  const customNote = useMemo(
+    () => allNotes.find((n) => n.animeId === 0),
+    [allNotes],
+  );
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase().trim();
     return [...notes]
-      .filter(
-        (n) =>
-          tag === "ALL" ||
-          n.tags.some(
-            (t) => t.trim().toLowerCase() === tag.trim().toLowerCase(),
-          ),
-      )
+      .filter((n) => n.animeId !== 0)
       .filter(
         (n) =>
           !q ||
@@ -57,16 +83,91 @@ function NotesPage() {
           n.body.toLowerCase().includes(q),
       )
       .sort((a, b) => b.updatedAt - a.updatedAt);
-  }, [notes, query, tag]);
+  }, [notes, query]);
+
+  if (openCustom) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => showCustomNote(false)}
+            className="gap-1.5 text-xs"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to Notes
+          </Button>
+          <span className="text-xs font-medium text-muted-foreground">
+            Custom Notes (Standalone)
+          </span>
+        </div>
+
+        <NoteEditor
+          animeId={0}
+          title="Custom Notes"
+          mediaType="ANIME"
+          fullPage
+        />
+      </div>
+    );
+  }
 
   return (
     <>
       <PageHeader
         title="Notes"
-        subtitle={`${notes.length} ${mode === "MANGA" ? "manga" : "anime"} notes · full markdown, searchable`}
+        subtitle={`${filtered.length} ${mode === "MANGA" ? "manga" : "anime"} notes · full markdown, searchable`}
       />
 
-      <div className="mb-5 space-y-3">
+      {/* Pinned Single-Line Standalone Custom Note */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => showCustomNote(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            showCustomNote(true);
+          }
+        }}
+        className="panel group mb-4 flex cursor-pointer items-center justify-between gap-3 p-3 transition-all duration-150 hover:border-primary/40 active:scale-[0.99] select-none"
+      >
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <Pin className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-display truncate text-sm font-semibold text-foreground group-hover:text-primary">
+                Custom Notes
+              </span>
+              <span className="rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                Pinned
+              </span>
+            </div>
+            <p className="truncate text-xs text-muted-foreground">
+              {customNote?.body?.trim()
+                ? customNote.body
+                    .split("\n")[0]
+                    .replace(/^[#*>\-\s]+/, "")
+                    .slice(0, 80)
+                : "Standalone notes, thoughts, and plans not linked to any specific title..."}
+            </p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-[11px] text-muted-foreground">
+          {customNote?.updatedAt ? (
+            <span>
+              Last edited {new Date(customNote.updatedAt).toLocaleDateString()}
+            </span>
+          ) : (
+            <span>Empty</span>
+          )}
+          <ChevronRight className="h-4 w-4 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+        </div>
+      </div>
+
+      <div className="mb-5">
         <div className="relative">
           <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -76,23 +177,6 @@ function NotesPage() {
             className="pl-9"
           />
         </div>
-        {tags.length ? (
-          <div className="flex flex-wrap gap-1.5">
-            {["ALL", ...tags].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTag(t)}
-                className={`rounded-full border px-3 py-1 text-xs transition-all duration-150 active:scale-95 pill-pressable ${
-                  tag === t
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t === "ALL" ? "All tags" : t}
-              </button>
-            ))}
-          </div>
-        ) : null}
       </div>
 
       {filtered.length ? (
@@ -113,7 +197,14 @@ function NotesPage() {
                     {n.title}
                   </Link>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    Updated {new Date(n.updatedAt).toLocaleDateString()}
+                    Last edited{" "}
+                    {new Date(n.updatedAt).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
                 <button
@@ -135,24 +226,14 @@ function NotesPage() {
               <div className="mt-3 max-h-56 overflow-hidden">
                 <Markdown>{n.body || "_Empty note_"}</Markdown>
               </div>
-              {n.tags.length ? (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {n.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
             </article>
           ))}
         </div>
       ) : (
         <p className="panel p-8 text-center text-sm text-muted-foreground">
-          No notes yet — open any title and start writing.
+          {query
+            ? "No notes matching your search."
+            : "No notes yet — open any title and start writing."}
         </p>
       )}
     </>

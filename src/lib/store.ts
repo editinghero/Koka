@@ -7,6 +7,7 @@ import {
   type MediaType,
   type Note,
   type Settings,
+  type UserProfile,
   type WatchStatus,
 } from "./types";
 import { loadFontAssets } from "./fonts";
@@ -24,6 +25,7 @@ import {
   saveEntries,
   saveNotes as saveNotesFn,
   saveSettings as saveSettingsFn,
+  saveUserProfileFn,
 } from "./data.functions";
 
 /* ------------------------------------------------------------------ *
@@ -42,6 +44,7 @@ type State = {
   mode: MediaType;
   library: LibraryEntry[];
   notes: Note[];
+  userProfile: UserProfile | null;
 };
 
 const CACHE_KEY = "koka:cache";
@@ -56,6 +59,7 @@ let state: State = {
   mode: "ANIME",
   library: EMPTY_LIBRARY,
   notes: EMPTY_NOTES,
+  userProfile: null,
 };
 
 const listeners = new Set<() => void>();
@@ -76,6 +80,7 @@ function writeCache() {
         mode: state.mode,
         library: state.library,
         notes: state.notes,
+        userProfile: state.userProfile,
       }),
     );
   } catch {
@@ -156,6 +161,7 @@ function hydrateFromCache() {
       mode: parsed.mode === "MANGA" ? "MANGA" : "ANIME",
       library: parsed.library ?? EMPTY_LIBRARY,
       notes: parsed.notes ?? EMPTY_NOTES,
+      userProfile: parsed.userProfile ?? null,
     };
     applyThemeFromSettings(state.settings);
   } catch {
@@ -172,6 +178,7 @@ export function clearCache() {
     mode: "ANIME",
     library: EMPTY_LIBRARY,
     notes: EMPTY_NOTES,
+    userProfile: null,
   };
   emit();
 }
@@ -211,6 +218,7 @@ export function boot(force = false): Promise<void> {
         mode: data.mode,
         library: data.library,
         notes: data.notes,
+        userProfile: data.userProfile ?? state.userProfile ?? null,
       });
       applyThemeFromSettings(updatedSettings);
     })
@@ -676,6 +684,20 @@ export function statusCounts(library: LibraryEntry[]) {
   return counts as Record<WatchStatus, number>;
 }
 
+export function useUserProfile() {
+  const s = useSnapshot();
+  const profile = s.userProfile;
+
+  const setProfile = useCallback((next: UserProfile | null) => {
+    setState({ userProfile: next });
+    if (signedIn() && next) {
+      void saveUserProfileFn({ data: { profile: next } }).catch(fail);
+    }
+  }, []);
+
+  return { profile, setProfile };
+}
+
 export function exportAll() {
   return {
     kind: "koka-backup",
@@ -684,6 +706,7 @@ export function exportAll() {
     settings: { ...state.settings, geminiKey: "" },
     library: state.library,
     notes: state.notes,
+    userProfile: state.userProfile,
   };
 }
 

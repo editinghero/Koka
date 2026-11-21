@@ -5,6 +5,7 @@ import type {
   MediaType,
   Note,
   StatusDistributionItem,
+  UserProfile,
   WatchStatus,
 } from "./types";
 
@@ -426,7 +427,7 @@ export async function fetchUserList(
           mediaType: type ?? (media.type === "MANGA" ? "MANGA" : "ANIME"),
           title: media.title,
           body: e.notes.trim(),
-          tags: ["anilist"],
+          tags: [],
           updatedAt: e.updatedAt ? e.updatedAt * 1000 : now,
         });
       }
@@ -434,6 +435,282 @@ export async function fetchUserList(
   }
 
   return { entries: Array.from(entriesMap.values()), notes };
+}
+
+export async function fetchUserProfile(
+  username: string,
+): Promise<UserProfile | null> {
+  const data = await anilist<{
+    User: {
+      id: number;
+      name: string;
+      about?: string | null;
+      avatar?: { large?: string | null; medium?: string | null } | null;
+      bannerImage?: string | null;
+      siteUrl?: string | null;
+      favourites?: {
+        anime?: {
+          nodes?: Array<{
+            id: number;
+            title?: { userPreferred?: string; english?: string; romaji?: string } | null;
+            coverImage?: { medium?: string | null; large?: string | null } | null;
+            format?: string | null;
+            seasonYear?: number | null;
+          }>;
+        };
+        manga?: {
+          nodes?: Array<{
+            id: number;
+            title?: { userPreferred?: string; english?: string; romaji?: string } | null;
+            coverImage?: { medium?: string | null; large?: string | null } | null;
+            format?: string | null;
+            startDate?: { year?: number | null } | null;
+          }>;
+        };
+        characters?: {
+          nodes?: Array<{
+            id: number;
+            name?: { userPreferred?: string; full?: string } | null;
+            image?: { medium?: string | null; large?: string | null } | null;
+          }>;
+        };
+        staff?: {
+          nodes?: Array<{
+            id: number;
+            name?: { userPreferred?: string; full?: string } | null;
+            image?: { medium?: string | null; large?: string | null } | null;
+            primaryOccupations?: string[] | null;
+          }>;
+        };
+      };
+      statistics?: {
+        anime?: {
+          count: number;
+          meanScore: number;
+          minutesWatched?: number;
+          episodesWatched?: number;
+          statuses?: Array<{ status: string; count: number; meanScore?: number | null; minutesWatched?: number | null }>;
+          formats?: Array<{ format: string; count: number }>;
+          scores?: Array<{ score: number; count: number }>;
+          genres?: Array<{ genre: string; count: number; meanScore?: number | null; minutesWatched?: number | null }>;
+          studios?: Array<{ studio?: { id: number; name: string } | null; count: number; meanScore?: number | null }>;
+          voiceActors?: Array<{ voiceActor?: { id: number; name?: { userPreferred?: string } | null; image?: { medium?: string | null } | null } | null; count: number; meanScore?: number | null }>;
+        };
+        manga?: {
+          count: number;
+          meanScore: number;
+          chaptersRead?: number;
+          volumesRead?: number;
+          statuses?: Array<{ status: string; count: number; meanScore?: number | null }>;
+          formats?: Array<{ format: string; count: number }>;
+          scores?: Array<{ score: number; count: number }>;
+          genres?: Array<{ genre: string; count: number; meanScore?: number | null }>;
+        };
+      };
+    };
+  }>(
+    `query ($name: String) {
+      User(name: $name) {
+        id
+        name
+        about(asHtml: false)
+        avatar { large medium }
+        bannerImage
+        siteUrl
+        favourites {
+          anime {
+            nodes {
+              id
+              title { userPreferred english romaji }
+              coverImage { medium large }
+              format
+              seasonYear
+            }
+          }
+          manga {
+            nodes {
+              id
+              title { userPreferred english romaji }
+              coverImage { medium large }
+              format
+              startDate { year }
+            }
+          }
+          characters {
+            nodes {
+              id
+              name { userPreferred full }
+              image { medium large }
+            }
+          }
+          staff {
+            nodes {
+              id
+              name { userPreferred full }
+              image { medium large }
+              primaryOccupations
+            }
+          }
+        }
+        statistics {
+          anime {
+            count
+            meanScore
+            minutesWatched
+            episodesWatched
+            statuses { status count meanScore minutesWatched }
+            formats { format count }
+            scores { score count }
+            genres { genre count meanScore minutesWatched }
+            studios { studio { id name } count meanScore }
+            voiceActors { voiceActor { id name { userPreferred } image { medium } } count meanScore }
+          }
+          manga {
+            count
+            meanScore
+            chaptersRead
+            volumesRead
+            statuses { status count meanScore }
+            formats { format count }
+            scores { score count }
+            genres { genre count meanScore }
+          }
+        }
+      }
+    }`,
+    { name: username },
+  );
+
+  const u = data.User;
+  if (!u) return null;
+
+  return {
+    id: u.id,
+    name: u.name,
+    about: u.about ?? null,
+    avatar: u.avatar?.large ?? u.avatar?.medium ?? null,
+    banner: u.bannerImage ?? null,
+    siteUrl: u.siteUrl ?? null,
+    favorites: {
+      anime:
+        u.favourites?.anime?.nodes?.map((a) => ({
+          id: a.id,
+          title:
+            a.title?.userPreferred ??
+            a.title?.english ??
+            a.title?.romaji ??
+            "Unknown",
+          cover: a.coverImage?.large ?? a.coverImage?.medium ?? null,
+          format: a.format ?? null,
+          year: a.seasonYear ?? null,
+        })) ?? [],
+      manga:
+        u.favourites?.manga?.nodes?.map((m) => ({
+          id: m.id,
+          title:
+            m.title?.userPreferred ??
+            m.title?.english ??
+            m.title?.romaji ??
+            "Unknown",
+          cover: m.coverImage?.large ?? m.coverImage?.medium ?? null,
+          format: m.format ?? null,
+          year: m.startDate?.year ?? null,
+        })) ?? [],
+      characters:
+        u.favourites?.characters?.nodes?.map((c) => ({
+          id: c.id,
+          name: c.name?.userPreferred ?? c.name?.full ?? "Unknown",
+          image: c.image?.large ?? c.image?.medium ?? null,
+        })) ?? [],
+      voiceActors:
+        u.favourites?.staff?.nodes?.map((s) => ({
+          id: s.id,
+          name: s.name?.userPreferred ?? s.name?.full ?? "Unknown",
+          image: s.image?.large ?? s.image?.medium ?? null,
+          occupations: s.primaryOccupations ?? [],
+        })) ?? [],
+    },
+    animeStats: u.statistics?.anime
+      ? {
+          count: u.statistics.anime.count,
+          meanScore: u.statistics.anime.meanScore,
+          minutesWatched: u.statistics.anime.minutesWatched ?? 0,
+          episodesWatched: u.statistics.anime.episodesWatched ?? 0,
+          statuses:
+            u.statistics.anime.statuses?.map((s) => ({
+              label: s.status,
+              count: s.count,
+              meanScore: s.meanScore ?? null,
+              minutesWatched: s.minutesWatched ?? null,
+            })) ?? [],
+          formats:
+            u.statistics.anime.formats?.map((f) => ({
+              label: f.format,
+              count: f.count,
+            })) ?? [],
+          scores:
+            u.statistics.anime.scores?.map((sc) => ({
+              label: String(sc.score),
+              count: sc.count,
+            })) ?? [],
+          genres:
+            u.statistics.anime.genres?.map((g) => ({
+              label: g.genre,
+              count: g.count,
+              meanScore: g.meanScore ?? null,
+              minutesWatched: g.minutesWatched ?? null,
+            })) ?? [],
+          studios:
+            u.statistics.anime.studios
+              ?.filter((st) => st.studio?.name)
+              .map((st) => ({
+                label: st.studio!.name,
+                count: st.count,
+                meanScore: st.meanScore ?? null,
+              })) ?? [],
+          voiceActors:
+            u.statistics.anime.voiceActors
+              ?.filter((va) => va.voiceActor?.name?.userPreferred)
+              .map((va) => ({
+                label: va.voiceActor!.name!.userPreferred!,
+                count: va.count,
+                meanScore: va.meanScore ?? null,
+                image: va.voiceActor?.image?.medium ?? null,
+              })) ?? [],
+        }
+      : null,
+    mangaStats: u.statistics?.manga
+      ? {
+          count: u.statistics.manga.count,
+          meanScore: u.statistics.manga.meanScore,
+          chaptersRead: u.statistics.manga.chaptersRead ?? 0,
+          volumesRead: u.statistics.manga.volumesRead ?? 0,
+          statuses:
+            u.statistics.manga.statuses?.map((s) => ({
+              label: s.status,
+              count: s.count,
+              meanScore: s.meanScore ?? null,
+            })) ?? [],
+          formats:
+            u.statistics.manga.formats?.map((f) => ({
+              label: f.format,
+              count: f.count,
+            })) ?? [],
+          scores:
+            u.statistics.manga.scores?.map((sc) => ({
+              label: String(sc.score),
+              count: sc.count,
+            })) ?? [],
+          genres:
+            u.statistics.manga.genres?.map((g) => ({
+              label: g.genre,
+              count: g.count,
+              meanScore: g.meanScore ?? null,
+            })) ?? [],
+        }
+      : null,
+    updatedAt: Date.now(),
+  };
 }
 
 export function currentSeason(date = new Date()) {

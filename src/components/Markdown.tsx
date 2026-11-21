@@ -78,6 +78,18 @@ function preprocessMarkdown(text: string): string {
   // Single <br> becomes a hard line break
   out = out.replace(/<br\s*\/?>/gi, "  \n");
 
+  // Prevent Setext headings: entering `-`, `---`, or `=` after a line must NEVER turn that line into a heading.
+  // Headings are only created using `#` (ATX headings).
+  out = out.replace(/([^\n])\n([ \t]*(?:-+|=+)[ \t]*)$/gm, "$1\n\n$2");
+
+  // Ensure divider lines (---) have blank lines before and after
+  out = out.replace(/^[ \t]*---+[ \t]+([^\s\-].*)$/gm, "---\n\n$1");
+  out = out.replace(/(?:^|\n)[ \t]*---+[ \t]*(?:\n|$)/g, (match, offset, str) => {
+    const isStart = offset === 0;
+    const isEnd = offset + match.length >= str.length;
+    return (isStart ? "" : "\n\n") + "---" + (isEnd ? "" : "\n\n");
+  });
+
   // Preserve multiple consecutive blank lines (prevent collapsing into a single paragraph)
   out = out.replace(/\n{3,}/g, (m) => "\n\n" + "&nbsp;\n\n".repeat(m.length - 2));
 

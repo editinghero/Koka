@@ -1,4 +1,10 @@
-import type { LibraryEntry, MediaType, Note, WatchStatus } from "./types";
+import type {
+  LibraryEntry,
+  MediaType,
+  Note,
+  UserProfile,
+  WatchStatus,
+} from "./types";
 
 export type ImportItem = {
   anilistId?: number | undefined;
@@ -12,12 +18,17 @@ export type ImportItem = {
   startedAt?: string | undefined;
   completedAt?: string | undefined;
   repeat?: number | undefined;
+  updatedAt?: number | undefined;
 };
 
 export type ParsedImport = {
   source: string;
   items: ImportItem[];
-  backup?: { library: LibraryEntry[]; notes: Note[] };
+  backup?: {
+    library: LibraryEntry[];
+    notes: Note[];
+    userProfile?: UserProfile | null;
+  };
 };
 
 const MAL_STATUS: Record<string, WatchStatus> = {
@@ -154,6 +165,25 @@ function fromEntry(e: Loose): ImportItem | null {
           e["my_times_read"] ??
           0,
       ) || undefined,
+    updatedAt: (() => {
+      const rawUpdated =
+        listStatus["updated_at"] ??
+        e["updated_at"] ??
+        e["updatedAt"] ??
+        e["my_last_updated"];
+      if (typeof rawUpdated === "number") {
+        return rawUpdated > 100000000000 ? rawUpdated : rawUpdated * 1000;
+      }
+      if (typeof rawUpdated === "string" && rawUpdated.trim()) {
+        const parsed = Date.parse(rawUpdated);
+        if (!isNaN(parsed)) return parsed;
+        if (/^\d+$/.test(rawUpdated)) {
+          const n = Number(rawUpdated);
+          return n > 100000000000 ? n : n * 1000;
+        }
+      }
+      return undefined;
+    })(),
   };
 }
 
@@ -249,6 +279,14 @@ function parseXml(raw: string): ParsedImport {
             mediaType === "MANGA" ? "my_times_read" : "my_times_watched",
           ),
         ) || undefined,
+      updatedAt: (() => {
+        const rawUpdated = xmlText(el, "my_last_updated");
+        if (rawUpdated && /^\d+$/.test(rawUpdated)) {
+          const n = Number(rawUpdated);
+          return n > 100000000000 ? n : n * 1000;
+        }
+        return undefined;
+      })(),
     });
   };
 
@@ -294,6 +332,7 @@ export function parseImport(raw: string): ParsedImport {
       backup: {
         library: (json["library"] as LibraryEntry[]) ?? [],
         notes: (json["notes"] as Note[]) ?? [],
+        userProfile: (json["userProfile"] as UserProfile) ?? null,
       },
     };
   }

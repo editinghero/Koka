@@ -155,7 +155,13 @@ export function GlobalSearch({
               <CommandItem
                 key={`note-${n.animeId}`}
                 value={`${n.title} ${n.body.slice(0, 60)} ${(n.tags ?? []).join(" ")} note-${n.animeId}`}
-                onSelect={() => go("/anime/$id", { id: String(n.animeId) })}
+                onSelect={() => {
+                  if (n.animeId === 0) {
+                    go("/notes", undefined);
+                  } else {
+                    go("/anime/$id", { id: String(n.animeId) });
+                  }
+                }}
               >
                 <span className="truncate">{n.title}</span>
                 <span className="ml-auto truncate text-[11px] text-muted-foreground">

@@ -18,12 +18,20 @@ export const NEWS_SOURCES: NewsSource[] = [
     priority: 2,
   },
   {
+    id: "animetv-jp",
+    name: "AnimeTV Japan",
+    url: "https://animetv-jp.net/feed/",
+    description: "Anime news, previews, broadcast updates and Japanese anime culture",
+    defaultEnabled: true,
+    priority: 3,
+  },
+  {
     id: "mal",
     name: "MyAnimeList News",
     url: "https://myanimelist.net/rss/news.xml",
     description: "Curated anime community and industry news from MAL",
     defaultEnabled: true,
-    priority: 3,
+    priority: 4,
   },
   {
     id: "anime-corner",
@@ -31,7 +39,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: "https://animecorner.me/feed/",
     description: "Polls, anime announcements, seasonal news and reviews",
     defaultEnabled: true,
-    priority: 4,
+    priority: 5,
   },
   {
     id: "anime-trending",
@@ -39,7 +47,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: "https://anitrendz.net/news/feed/",
     description: "Charts, awards and community news updates",
     defaultEnabled: true,
-    priority: 5,
+    priority: 6,
   },
   {
     id: "anime-news-india",
@@ -47,7 +55,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: "https://animenewsindia.com/feed/",
     description: "Regional and global anime broadcasting and streaming updates",
     defaultEnabled: true,
-    priority: 6,
+    priority: 7,
   },
   {
     id: "kotaku",
@@ -55,7 +63,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: "https://kotaku.com/anime/feed",
     description: "Mainstream gaming & anime features and news coverage",
     defaultEnabled: false,
-    priority: 7,
+    priority: 8,
   },
   {
     id: "anime-herald",
@@ -63,7 +71,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: "https://animeherald.com/feed/",
     description: "Independent anime commentary, releases and reporting",
     defaultEnabled: false,
-    priority: 8,
+    priority: 9,
   },
   {
     id: "honeys-anime",
@@ -71,7 +79,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: "https://honeysanime.com/feed/",
     description: "Anime, manga & gaming culture and news feeds",
     defaultEnabled: false,
-    priority: 9,
+    priority: 10,
   },
   // ── Adult (18+) sources. Never selected by default; shown last, in red. ──
   {
@@ -80,7 +88,7 @@ export const NEWS_SOURCES: NewsSource[] = [
     url: "https://eroeronews.com/feed/",
     description: "Hentai, doujin and adult-anime news (Spanish, 18+)",
     defaultEnabled: false,
-    priority: 10,
+    priority: 11,
     adult: true,
   },
 ];
