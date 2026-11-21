@@ -104,14 +104,17 @@ Keep the tone calm, thoughtful, spoiler-free, and formatted cleanly in Markdown.
           {/* User taste preview badges */}
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
             <span className="font-medium text-foreground">Based on your taste:</span>
-            {tasteContext.topGenres.slice(0, 3).map((g) => (
-              <span
-                key={g}
-                className="rounded-full bg-secondary/80 px-2 py-0.5 text-[10px] text-foreground"
-              >
-                {g}
-              </span>
-            ))}
+            {tasteContext.topGenres
+              .filter((g) => g && g !== "undefined" && g !== "null")
+              .slice(0, 3)
+              .map((g) => (
+                <span
+                  key={g}
+                  className="rounded-full bg-secondary/80 px-2 py-0.5 text-[10px] text-foreground"
+                >
+                  {g}
+                </span>
+              ))}
             {tasteContext.favorites[0] ? (
               <span className="truncate max-w-[140px] text-[10px] text-muted-foreground">
                 like &ldquo;{tasteContext.favorites[0].split(" (")[0]}&rdquo;

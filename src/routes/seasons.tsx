@@ -99,15 +99,21 @@ function SeasonsPage() {
     const genreCounts: Record<string, number> = {};
     library.forEach((e) =>
       e.media.genres?.forEach((g) => {
-        genreCounts[g] = (genreCounts[g] ?? 0) + 1;
+        if (g && typeof g === "string" && g !== "undefined") {
+          genreCounts[g] = (genreCounts[g] ?? 0) + 1;
+        }
       }),
     );
     if (userProfile?.animeStats?.genres?.length) {
       userProfile.animeStats.genres.slice(0, 5).forEach((g) => {
-        genreCounts[g.genre] = (genreCounts[g.genre] ?? 0) + g.count;
+        const name = g.label;
+        if (name && typeof name === "string" && name !== "undefined") {
+          genreCounts[name] = (genreCounts[name] ?? 0) + g.count;
+        }
       });
     }
     const topGenres = Object.entries(genreCounts)
+      .filter(([g]) => g && g !== "undefined" && g !== "null")
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
       .map(([g]) => g);
