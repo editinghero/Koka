@@ -148,10 +148,12 @@ export type CardEnv = {
   /** CSS colour strings + font stack of the active theme */
   theme: {
     background: string;
+    card: string;
     foreground: string;
     mutedForeground: string;
     primary: string;
     primaryForeground: string;
+    border: string;
     fontSans: string;
     fontDisplay: string;
   };
@@ -187,11 +189,13 @@ export function browserEnv(): CardEnv {
   const fontDisplay = getRaw("--font-display", fontSans);
 
   const themeColors = {
-    background: resolveColor("--background", "#141414"),
-    foreground: resolveColor("--foreground", "#f2f2f2"),
-    mutedForeground: resolveColor("--muted-foreground", "#a3a3a3"),
+    background: resolveColor("--background", "#121316"),
+    card: resolveColor("--card", "#1c1e24"),
+    foreground: resolveColor("--foreground", "#f2f4f8"),
+    mutedForeground: resolveColor("--muted-foreground", "#949aa6"),
     primary: resolveColor("--primary", "#6fd6dc"),
-    primaryForeground: resolveColor("--primary-foreground", "#141414"),
+    primaryForeground: resolveColor("--primary-foreground", "#121316"),
+    border: resolveColor("--border", "rgba(255, 255, 255, 0.12)"),
     fontSans,
     fontDisplay,
   };
@@ -511,140 +515,173 @@ export async function renderStatsCanvas(
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is not supported in this browser.");
 
-  const bg = parseColor(env.theme.background, env, [20, 20, 20]);
-  const fg = parseColor(env.theme.foreground, env, [242, 242, 242]);
-  const muted = parseColor(env.theme.mutedForeground, env, [163, 163, 163]);
+  const bg = parseColor(env.theme.background, env, [18, 19, 22]);
+  const card = parseColor(env.theme.card, env, [26, 28, 34]);
+  const fg = parseColor(env.theme.foreground, env, [242, 244, 248]);
+  const muted = parseColor(env.theme.mutedForeground, env, [148, 154, 166]);
   const primary = parseColor(env.theme.primary, env, [111, 214, 220]);
-  const primaryFg = parseColor(env.theme.primaryForeground, env, [20, 20, 20]);
-  const isDark = luminance(bg) < 0.25;
-  const sans = env.theme.fontSans;
-  const display = env.theme.fontDisplay;
+  const primaryFg = parseColor(env.theme.primaryForeground, env, [18, 19, 22]);
+  const border = parseColor(env.theme.border, env, [255, 255, 255]);
+  const isDark = luminance(bg) < 0.35;
+  const sans = `${env.theme.fontSans}, "Manrope", "Inter", -apple-system, sans-serif`;
+  const display = `${env.theme.fontDisplay}, "Sora", "Outfit", "Inter", -apple-system, sans-serif`;
 
   const covers = await Promise.all(
     data.top.map((t) => (t.cover ? env.loadImage(t.cover) : Promise.resolve(null))),
   );
 
-  /* ---- backdrop (small canvas → blur → upscale) ---- */
-  const k = 8;
-  const sw = Math.ceil(W / k);
-  const sh = Math.ceil(H / k);
-  const amb = env.createCanvas(sw, sh);
-  const actx = amb.getContext("2d");
-  if (!actx) throw new Error("Canvas is not supported in this browser.");
-  actx.fillStyle = rgba(bg, 1);
-  actx.fillRect(0, 0, sw, sh);
+  /* ---- Ambient Theme Backdrop ---- */
+  ctx.fillStyle = rgba(bg, 1);
+  ctx.fillRect(0, 0, W, H);
 
-  const blob = (cx: number, cy: number, r: number, c: RGB, a: number) => {
-    const g = actx.createRadialGradient(cx * sw, cy * sh, 0, cx * sw, cy * sh, r * sw);
-    g.addColorStop(0, rgba(c, a));
-    g.addColorStop(1, rgba(c, 0));
-    actx.fillStyle = g;
-    actx.fillRect(0, 0, sw, sh);
+  // Large smooth ambient glow orbs keyed to the active theme palette
+  const drawOrb = (cx: number, cy: number, r: number, color: RGB, alpha: number) => {
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    g.addColorStop(0, rgba(color, alpha));
+    g.addColorStop(0.5, rgba(color, alpha * 0.4));
+    g.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
   };
-  blob(0.15, 0.1, 0.9, primary, 0.5);
-  blob(0.95, 0.5, 0.8, mix(primary, fg, 0.35), 0.3);
-  blob(0.2, 0.95, 0.9, mix(primary, bg, 0.4), 0.45);
 
-  const loaded = covers.filter((c): c is Img => c !== null);
-  if (loaded.length) {
-    // Fill the whole card with large, offset covers; blur turns them into colour fields.
-    const slots: [number, number, number, number][] = [
-      [0, 0, 0.75, 0.42],
-      [0.35, 0.18, 0.75, 0.42],
-      [0, 0.5, 0.75, 0.42],
-      [0.3, 0.68, 0.75, 0.42],
-      [0.1, 0.32, 0.75, 0.42],
+  drawOrb(W * 0.85, H * 0.12, W * 0.80, primary, isDark ? 0.38 : 0.22);
+  drawOrb(W * 0.12, H * 0.50, W * 0.70, mix(primary, card, 0.4), isDark ? 0.30 : 0.18);
+  drawOrb(W * 0.80, H * 0.88, W * 0.75, mix(primary, bg, 0.55), isDark ? 0.35 : 0.20);
+
+  // Soft atmospheric anime covers in upper corner
+  const loadedCovers = covers.filter((c): c is Img => c !== null);
+  if (loadedCovers.length > 0) {
+    ctx.save();
+    ctx.globalCompositeOperation = isDark ? "screen" : "multiply";
+    const bgSlots: [number, number, number, number, number][] = [
+      [W * 0.52, -H * 0.04, W * 0.55, H * 0.36, isDark ? 0.18 : 0.08],
+      [-W * 0.08, H * 0.36, W * 0.48, H * 0.34, isDark ? 0.14 : 0.06],
+      [W * 0.62, H * 0.64, W * 0.46, H * 0.34, isDark ? 0.15 : 0.06],
     ];
-    loaded.forEach((img, i) => {
-      const s = slots[i % slots.length]!;
-      actx.globalAlpha = 0.9;
-      drawCover(actx, img, s[0] * sw, s[1] * sh, s[2] * sw, s[3] * sh);
+    loadedCovers.slice(0, 3).forEach((img, i) => {
+      const slot = bgSlots[i % bgSlots.length]!;
+      ctx.globalAlpha = slot[4];
+      drawCover(ctx, img, slot[0], slot[1], slot[2], slot[3]);
     });
-    actx.globalAlpha = 1;
+    ctx.restore();
   }
-  blurCanvas(amb, Math.max(3, Math.round(sw * 0.055)), 3);
-  // Calm the backdrop so panels and headings stay readable.
-  // Dark themes get a heavier wash so the theme's light text passes everywhere.
-  actx.fillStyle = rgba(bg, isDark ? 0.7 : 0.55);
-  actx.fillRect(0, 0, sw, sh);
 
-  const frost = env.createCanvas(sw, sh);
-  const fctx = frost.getContext("2d");
-  if (!fctx) throw new Error("Canvas is not supported in this browser.");
-  fctx.drawImage(amb, 0, 0);
-  blurCanvas(frost, Math.max(2, Math.round(sw * 0.03)), 2);
+  // Smooth cinematic vignette
+  const vignette = ctx.createRadialGradient(W / 2, H / 2, W * 0.35, W / 2, H / 2, W * 0.95);
+  vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
+  vignette.addColorStop(1, isDark ? "rgba(0, 0, 0, 0.50)" : "rgba(0, 0, 0, 0.12)");
+  ctx.fillStyle = vignette;
+  ctx.fillRect(0, 0, W, H);
 
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(amb, 0, 0, W, H);
-
-  const noise = makeNoise(env);
-  const noisePattern = ctx.createPattern(noise, "repeat");
-
-  /* ---- frosted panel ---- */
+  /* ---- Floating Frosted Glass Panel ---- */
   const panel = (x: number, y: number, pw: number, ph: number, r: number): Ink => {
+    // 1. Soft Realistic Drop Shadow
+    ctx.save();
+    ctx.shadowColor = isDark ? "rgba(0, 0, 0, 0.40)" : "rgba(0, 0, 0, 0.08)";
+    ctx.shadowBlur = story ? 38 : 28;
+    ctx.shadowOffsetY = story ? 16 : 12;
+    ctx.fillStyle = rgba(card, isDark ? 0.52 : 0.72);
+    roundRect(ctx, x, y, pw, ph, r);
+    ctx.fill();
+    ctx.restore();
+
+    // 2. Translucent Glass Body with gradient
     ctx.save();
     roundRect(ctx, x, y, pw, ph, r);
     ctx.clip();
-    ctx.drawImage(frost, 0, 0, W, H);
-    ctx.fillStyle = isDark ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.52)";
+
+    const glass = ctx.createLinearGradient(x, y, x, y + ph);
+    if (isDark) {
+      glass.addColorStop(0, rgba(mix(card, [255, 255, 255], 0.09), 0.64));
+      glass.addColorStop(0.5, rgba(card, 0.50));
+      glass.addColorStop(1, rgba(mix(card, [0, 0, 0], 0.15), 0.58));
+    } else {
+      glass.addColorStop(0, rgba([255, 255, 255], 0.88));
+      glass.addColorStop(0.5, rgba(card, 0.74));
+      glass.addColorStop(1, rgba(card, 0.62));
+    }
+    ctx.fillStyle = glass;
     ctx.fillRect(x, y, pw, ph);
-    const sheen = ctx.createLinearGradient(0, y, 0, y + ph * 0.55);
-    sheen.addColorStop(0, "rgba(255,255,255,0.14)");
-    sheen.addColorStop(1, "rgba(255,255,255,0)");
+
+    // Diagonal specular sheen
+    const sheen = ctx.createLinearGradient(x, y, x + pw * 0.35, y + ph * 0.55);
+    sheen.addColorStop(0, isDark ? "rgba(255, 255, 255, 0.16)" : "rgba(255, 255, 255, 0.50)");
+    sheen.addColorStop(0.6, "rgba(255, 255, 255, 0)");
     ctx.fillStyle = sheen;
     ctx.fillRect(x, y, pw, ph);
-    if (noisePattern) {
-      ctx.globalAlpha = isDark ? 0.05 : 0.035;
-      ctx.fillStyle = noisePattern;
-      ctx.fillRect(x, y, pw, ph);
-      ctx.globalAlpha = 1;
-    }
     ctx.restore();
 
+    // 3. Crisp Glass Refraction Border
     ctx.save();
     roundRect(ctx, x + 0.75, y + 0.75, pw - 1.5, ph - 1.5, r);
-    const edge = ctx.createLinearGradient(x, y, x + pw, y + ph);
-    edge.addColorStop(0, "rgba(255,255,255,0.55)");
-    edge.addColorStop(0.5, "rgba(255,255,255,0.12)");
-    edge.addColorStop(1, "rgba(255,255,255,0.32)");
-    ctx.strokeStyle = edge;
-    ctx.lineWidth = 1.5;
+    const borderGrad = ctx.createLinearGradient(x, y, x + pw, y + ph);
+    if (isDark) {
+      borderGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+      borderGrad.addColorStop(0.35, "rgba(255, 255, 255, 0.14)");
+      borderGrad.addColorStop(0.7, rgba(primary, 0.22));
+      borderGrad.addColorStop(1, "rgba(255, 255, 255, 0.08)");
+    } else {
+      borderGrad.addColorStop(0, "rgba(255, 255, 255, 0.90)");
+      borderGrad.addColorStop(0.35, "rgba(255, 255, 255, 0.45)");
+      borderGrad.addColorStop(0.7, rgba(primary, 0.35));
+      borderGrad.addColorStop(1, "rgba(255, 255, 255, 0.25)");
+    }
+    ctx.strokeStyle = borderGrad;
+    ctx.lineWidth = 1.75;
     ctx.stroke();
     ctx.restore();
-    return inkFor(ctx, x, y, pw, ph, fg, muted);
+
+    const inkColor: RGB = isDark ? [255, 255, 255] : fg;
+    const subColor: RGB = isDark ? mix([255, 255, 255], muted, 0.4) : muted;
+    return { ink: inkColor, sub: subColor };
   };
 
   const L = story
-    ? { m: 72, gap: 24, hdrY: 96, hero: [300, 400], mini: [724, 200], gen: [948, 424], top: [1396, 412], foot: 1862 }
-    : { m: 60, gap: 20, hdrY: 64, hero: [206, 270], mini: [496, 150], gen: [666, 176], top: [862, 404], foot: 1314 };
+    ? { m: 64, gap: 22, hdrY: 92, hero: [290, 396], mini: [710, 196], gen: [930, 420], top: [1374, 424], foot: 1856 }
+    : { m: 54, gap: 18, hdrY: 60, hero: [200, 268], mini: [488, 148], gen: [656, 176], top: [852, 412], foot: 1308 };
   const s = story ? 1 : 0.8;
   const px = L.m;
   const pw = W - L.m * 2;
-  const R = story ? 44 : 38;
-  const pad = story ? 44 : 36;
+  const R = story ? 38 : 32;
+  const pad = story ? 40 : 32;
 
   /* ---- header ---- */
   {
-    const hh = story ? 170 : 130;
-    const ink = inkFor(ctx, L.m, L.hdrY - 20, pw, hh, fg, muted);
     ctx.textBaseline = "alphabetic";
     ctx.textAlign = "left";
-    ctx.fillStyle = rgba(ink.ink, 1);
-    font(ctx, 800, 26 * s + 2, sans);
-    tracked(ctx, "KOKA", px, L.hdrY + 22, 7);
-    font(ctx, 700, story ? 66 : 54, display);
+
+    // Frosted KOKA badge
+    ctx.save();
+    font(ctx, 800, 22 * s, sans);
+    const badgeText = "KOKA";
+    const bw = ctx.measureText(badgeText).width + 36;
+    const bh = story ? 44 : 36;
+    ctx.fillStyle = isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.06)";
+    roundRect(ctx, px, L.hdrY, bw, bh, bh / 2);
+    ctx.fill();
+    ctx.strokeStyle = isDark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.10)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = rgba(primary, 1);
+    ctx.fillText(badgeText, px + 18, L.hdrY + bh / 2 + 7 * s);
+    ctx.restore();
+
+    // Title
+    ctx.fillStyle = rgba(isDark ? [255, 255, 255] : fg, 1);
+    font(ctx, 800, story ? 64 : 52, display);
     ctx.fillText(
       ellipsize(ctx, data.title, pw),
       px,
-      L.hdrY + (story ? 92 : 78),
+      L.hdrY + (story ? 104 : 86),
     );
-    ctx.fillStyle = rgba(ink.sub, 1);
-    font(ctx, 500, story ? 30 : 26, sans);
+
+    // Subtitle
+    ctx.fillStyle = rgba(muted, 1);
+    font(ctx, 600, story ? 28 : 24, sans);
     const sub = [data.username ? `@${data.username}` : null, data.dateLabel]
       .filter(Boolean)
       .join("  ·  ");
-    ctx.fillText(sub, px, L.hdrY + (story ? 138 : 114));
+    ctx.fillText(sub, px, L.hdrY + (story ? 152 : 124));
   }
 
   /* ---- hero ---- */
@@ -823,51 +860,64 @@ export async function renderStatsCanvas(
       data.top.forEach((t, i) => {
         const cx = px + pad + i * (cw + gapC);
         ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.38)";
-        ctx.shadowBlur = 22;
-        ctx.shadowOffsetY = 10;
-        ctx.fillStyle = "rgba(0,0,0,0.5)";
-        roundRect(ctx, cx, cy, cw, ch, 16);
+        ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+        ctx.shadowBlur = 24;
+        ctx.shadowOffsetY = 12;
+        ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+        roundRect(ctx, cx, cy, cw, ch, 18);
         ctx.fill();
         ctx.restore();
 
         ctx.save();
-        roundRect(ctx, cx, cy, cw, ch, 16);
+        roundRect(ctx, cx, cy, cw, ch, 18);
         ctx.clip();
         const img = covers[i];
         if (img) {
           drawCover(ctx, img, cx, cy, cw, ch);
         } else {
           const g = ctx.createLinearGradient(cx, cy, cx + cw, cy + ch);
-          g.addColorStop(0, rgba(primary, 1));
-          g.addColorStop(1, rgba(mix(primary, bg, 0.7), 1));
+          g.addColorStop(0, rgba(primary, 0.9));
+          g.addColorStop(1, rgba(card, 0.95));
           ctx.fillStyle = g;
           ctx.fillRect(cx, cy, cw, ch);
-          ctx.fillStyle = rgba(primaryFg, 0.9);
+          ctx.fillStyle = rgba(primaryFg, 0.95);
           ctx.textAlign = "center";
-          font(ctx, 800, cw * 0.5, display);
-          ctx.fillText((t.title.trim()[0] ?? "?").toUpperCase(), cx + cw / 2, cy + ch / 2 + cw * 0.17);
+          font(ctx, 800, cw * 0.45, display);
+          ctx.fillText((t.title.trim()[0] ?? "?").toUpperCase(), cx + cw / 2, cy + ch / 2 + cw * 0.15);
           ctx.textAlign = "left";
         }
         ctx.restore();
 
-        // score badge
+        // Refined glass border around cover
+        ctx.save();
+        roundRect(ctx, cx + 0.75, cy + 0.75, cw - 1.5, ch - 1.5, 18);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        // Glass rating badge at bottom of cover
         const badge = `★ ${formatScore(t.score)}`;
         font(ctx, 800, story ? 22 : 19, sans);
-        const bw = ctx.measureText(badge).width + 26;
-        const bh = story ? 36 : 32;
-        ctx.fillStyle = "rgba(0,0,0,0.66)";
-        roundRect(ctx, cx + 10, cy + ch - bh - 10, bw, bh, bh / 2);
+        const bw = ctx.measureText(badge).width + 24;
+        const bh = story ? 36 : 30;
+        ctx.save();
+        ctx.fillStyle = "rgba(10, 10, 14, 0.75)";
+        roundRect(ctx, cx + 8, cy + ch - bh - 8, bw, bh, bh / 2);
         ctx.fill();
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(badge, cx + 23, cy + ch - 10 - bh / 2 + (story ? 8 : 7));
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = "#ffdd55";
+        ctx.fillText(badge, cx + 18, cy + ch - 8 - bh / 2 + (story ? 8 : 7));
+        ctx.restore();
 
         // title
-        ctx.fillStyle = rgba(ink.sub, 1);
+        ctx.fillStyle = rgba(ink.ink, 0.9);
         font(ctx, 600, story ? 22 : 19, sans);
         const lh = story ? 26 : 22;
         wrapLines(ctx, t.title, cw, 2).forEach((line, li) =>
-          ctx.fillText(line, cx, cy + ch + (story ? 38 : 32) + li * lh),
+          ctx.fillText(line, cx, cy + ch + (story ? 36 : 30) + li * lh),
         );
       });
     }
@@ -875,9 +925,8 @@ export async function renderStatsCanvas(
 
   /* ---- footer ---- */
   {
-    const ink = inkFor(ctx, L.m, L.foot - 36, pw, 48, fg, muted);
     ctx.textAlign = "center";
-    ctx.fillStyle = rgba(ink.sub, 1);
+    ctx.fillStyle = rgba(muted, 0.75);
     font(ctx, 600, 24, sans);
     ctx.fillText("Made with Koka", W / 2, L.foot);
     ctx.textAlign = "left";
