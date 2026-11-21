@@ -945,7 +945,7 @@ export async function renderStatsCanvas(
     ctx.textAlign = "center";
     ctx.fillStyle = rgba(muted, 0.75);
     font(ctx, 600, 24, sans);
-    ctx.fillText("Made with Koka", W / 2, L.foot);
+    ctx.fillText("Made with koka.pages.dev", W / 2, L.foot);
     ctx.textAlign = "left";
   }
 

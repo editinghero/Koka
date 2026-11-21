@@ -47,6 +47,20 @@ function formatMarkdownToHtml(md: string): string {
     .join("\n");
 }
 
+function parseRgb(colorStr: string): [number, number, number] {
+  const m = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
+  return [18, 19, 22];
+}
+
+function getLuminance(rgb: [number, number, number]): number {
+  const a = rgb.map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * a[0]! + 0.7152 * a[1]! + 0.0722 * a[2]!;
+}
+
 export function exportAnimeAsHtml({
   media,
   entry,
@@ -57,7 +71,7 @@ export function exportAnimeAsHtml({
   note?: Note | null;
 }) {
   try {
-    // Resolve active theme variables from current document
+    // Resolve active theme variables accurately from current document
     let bg = "#121316";
     let card = "#1c1e24";
     let fg = "#f2f4f8";
@@ -90,7 +104,10 @@ export function exportAnimeAsHtml({
       border = resolveColor("--border", border);
 
       probe.remove();
-      isDark = document.documentElement.classList.contains("dark") || !document.documentElement.classList.contains("light");
+
+      // Check luminance for dark vs light theme
+      const bgRgb = parseRgb(bg);
+      isDark = getLuminance(bgRgb) < 0.35;
     }
 
     const cleanSynopsis = media.description
@@ -123,7 +140,7 @@ export function exportAnimeAsHtml({
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>${media.title} — Koka</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -137,7 +154,7 @@ export function exportAnimeAsHtml({
       --primary: ${primary};
       --primary-fg: ${primaryFg};
       --border: ${border};
-      --radius: 20px;
+      --radius: 22px;
     }
 
     * {
@@ -157,17 +174,18 @@ export function exportAnimeAsHtml({
       padding: 24px 16px 48px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    /* Ambient background glow */
+    /* Ambient background glow for genuine glassmorphism refraction */
     .ambient-glow {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
       background:
-        radial-gradient(circle 800px at 85% 15%, color-mix(in srgb, var(--primary) ${isDark ? "25%" : "18%"}, transparent), transparent 70%),
-        radial-gradient(circle 600px at 15% 75%, color-mix(in srgb, var(--card) ${isDark ? "35%" : "20%"}, transparent), transparent 60%);
+        radial-gradient(circle 800px at 85% 15%, color-mix(in srgb, var(--primary) ${isDark ? "32%" : "20%"}, transparent), transparent 70%),
+        radial-gradient(circle 600px at 15% 75%, color-mix(in srgb, var(--card) ${isDark ? "40%" : "25%"}, transparent), transparent 60%);
     }
 
     .container {
@@ -178,14 +196,16 @@ export function exportAnimeAsHtml({
       margin: 0 auto;
     }
 
-    /* Floating Glass Card */
+    /* Floating Glass Card with modern blur & specular sheen */
     .glass-card {
-      background: color-mix(in srgb, var(--card) ${isDark ? "68%" : "82%"}, transparent);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
-      border: 1px solid color-mix(in srgb, var(--border) 80%, rgba(255,255,255, ${isDark ? "0.15" : "0.5"}));
+      background: color-mix(in srgb, var(--card) ${isDark ? "62%" : "78%"}, transparent);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid color-mix(in srgb, var(--border) 75%, rgba(255,255,255, ${isDark ? "0.2" : "0.6"}));
       border-radius: var(--radius);
-      box-shadow: 0 20px 48px -12px rgba(0, 0, 0, ${isDark ? "0.45" : "0.12"}), 0 0 0 1px rgba(255, 255, 255, ${isDark ? "0.06" : "0.4"});
+      box-shadow:
+        0 24px 64px -16px rgba(0, 0, 0, ${isDark ? "0.45" : "0.14"}),
+        inset 0 1px 1px 0 rgba(255, 255, 255, ${isDark ? "0.20" : "0.60"});
       overflow: hidden;
       margin-bottom: 24px;
     }
@@ -215,7 +235,7 @@ export function exportAnimeAsHtml({
     .card-content {
       padding: 0 28px 32px;
       position: relative;
-      margin-top: -80px;
+      margin-top: -75px;
     }
 
     .header-layout {
@@ -237,8 +257,8 @@ export function exportAnimeAsHtml({
       height: 245px;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 16px 32px rgba(0,0,0, ${isDark ? "0.5" : "0.2"});
-      border: 2px solid rgba(255, 255, 255, ${isDark ? "0.2" : "0.8"});
+      box-shadow: 0 16px 36px rgba(0,0,0, ${isDark ? "0.55" : "0.22"});
+      border: 2px solid rgba(255, 255, 255, ${isDark ? "0.25" : "0.8"});
       background: color-mix(in srgb, var(--card) 90%, black);
       flex-shrink: 0;
     }
@@ -252,7 +272,7 @@ export function exportAnimeAsHtml({
     .title-info {
       flex: 1;
       min-width: 0;
-      padding-top: 12px;
+      padding-top: 10px;
     }
 
     .pill-row {
@@ -269,7 +289,7 @@ export function exportAnimeAsHtml({
       letter-spacing: 0.04em;
       padding: 4px 10px;
       border-radius: 999px;
-      background: color-mix(in srgb, var(--card) 80%, rgba(255,255,255,0.08));
+      background: color-mix(in srgb, var(--card) 75%, rgba(255,255,255,0.08));
       border: 1px solid var(--border);
       color: var(--muted);
     }
@@ -287,6 +307,7 @@ export function exportAnimeAsHtml({
       line-height: 1.25;
       color: var(--fg);
       margin-bottom: 6px;
+      word-break: break-word;
     }
 
     .sub-titles {
@@ -298,18 +319,21 @@ export function exportAnimeAsHtml({
     /* ── BIG USER RATING SHOWCASE ── */
     .rating-showcase {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.2fr 1fr;
       gap: 12px;
       margin: 18px 0 20px;
-      padding: 16px;
-      border-radius: 16px;
-      background: color-mix(in srgb, var(--primary) ${isDark ? "10%" : "6%"}, transparent);
-      border: 1px solid color-mix(in srgb, var(--primary) ${isDark ? "30%" : "20%"}, transparent);
+      padding: 18px;
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--card) 48%, rgba(255,255,255,0.04));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid color-mix(in srgb, var(--primary) 35%, rgba(255,255,255,0.18));
+      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
     }
 
     .rating-box.user-rating {
-      border-right: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
-      padding-right: 12px;
+      border-right: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+      padding-right: 14px;
     }
 
     .rating-label {
@@ -327,7 +351,7 @@ export function exportAnimeAsHtml({
 
     .big-score {
       font-family: "Outfit", sans-serif;
-      font-size: 2.3rem;
+      font-size: 2.4rem;
       font-weight: 800;
       line-height: 1;
       color: var(--primary);
@@ -337,11 +361,11 @@ export function exportAnimeAsHtml({
     }
 
     .big-score .star {
-      font-size: 1.8rem;
+      font-size: 1.9rem;
     }
 
     .big-score .scale {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: var(--muted);
     }
@@ -364,7 +388,7 @@ export function exportAnimeAsHtml({
       font-weight: 600;
       text-transform: capitalize;
       color: var(--fg);
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
     .status-dot {
@@ -374,7 +398,7 @@ export function exportAnimeAsHtml({
       background: var(--primary);
     }
 
-    /* Section Boxes */
+    /* Section Blocks */
     .section-block {
       margin-top: 24px;
       padding-top: 22px;
@@ -400,13 +424,16 @@ export function exportAnimeAsHtml({
       line-height: 1.7;
     }
 
-    /* User Personal Notes Box */
+    /* User Personal Notes Box with Frosted Glass */
     .notes-box {
       margin-top: 24px;
-      padding: 20px;
-      border-radius: 16px;
-      background: color-mix(in srgb, var(--card) 90%, rgba(255,255,255,0.05));
-      border: 1px solid color-mix(in srgb, var(--border) 90%, rgba(255,255,255,0.1));
+      padding: 22px;
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--card) 50%, rgba(255,255,255,0.04));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid color-mix(in srgb, var(--border) 65%, rgba(255,255,255,0.15));
+      box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
     }
 
     .notes-heading {
@@ -436,7 +463,9 @@ export function exportAnimeAsHtml({
 
     /* Footer */
     footer.card-footer {
-      margin-top: 24px;
+      margin-top: 28px;
+      padding-top: 16px;
+      border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
       text-align: center;
       font-size: 0.78rem;
       color: var(--muted);
@@ -451,6 +480,70 @@ export function exportAnimeAsHtml({
       letter-spacing: 0.08em;
       color: var(--primary);
       text-transform: uppercase;
+    }
+
+    /* ── Mobile Responsiveness (< 640px) ── */
+    @media (max-width: 639px) {
+      body {
+        padding: 12px 10px 36px;
+      }
+      .glass-card {
+        border-radius: 20px;
+      }
+      .hero-banner {
+        height: 180px;
+      }
+      .card-content {
+        padding: 0 16px 24px;
+        margin-top: -55px;
+      }
+      .header-layout {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .cover-box {
+        width: 145px;
+        height: 210px;
+        margin: 0 auto;
+      }
+      .pill-row {
+        justify-content: center;
+      }
+      .anime-title {
+        font-size: 1.45rem;
+      }
+      .rating-showcase {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 14px;
+      }
+      .rating-box.user-rating {
+        border-right: none;
+        border-bottom: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+        padding-right: 0;
+        padding-bottom: 14px;
+      }
+      .big-score {
+        justify-content: center;
+        font-size: 2.2rem;
+      }
+      .status-badge {
+        justify-content: center;
+      }
+      .secondary-score {
+        justify-content: center;
+      }
+      .section-heading {
+        justify-content: center;
+      }
+      .notes-heading {
+        justify-content: center;
+      }
+      .card-footer {
+        flex-direction: column;
+        gap: 8px;
+      }
     }
   </style>
 </head>
@@ -526,7 +619,7 @@ export function exportAnimeAsHtml({
         </div>
 
         <footer class="card-footer">
-          <span class="koka-brand">Koka Anime</span>
+          <span class="koka-brand">koka.pages.dev</span>
           <span>Shared on ${exportDate}</span>
         </footer>
       </div>
@@ -538,30 +631,8 @@ export function exportAnimeAsHtml({
     const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
     const fileName = `${titleSlug || "anime"}-koka-card.html`;
 
-    // Try Web Share API with file if supported on mobile
-    const file = new File([blob], fileName, { type: "text/html" });
-    const canShare =
-      typeof navigator !== "undefined" &&
-      typeof navigator.canShare === "function" &&
-      navigator.canShare({ files: [file] });
-
-    if (canShare) {
-      navigator
-        .share({
-          files: [file],
-          title: `${media.title} — Koka`,
-        })
-        .then(() => {
-          toast.success("Shared HTML card!");
-        })
-        .catch((e: unknown) => {
-          if (e instanceof DOMException && e.name === "AbortError") return;
-          // Fall back to auto-download
-          triggerDownload(blob, fileName);
-        });
-    } else {
-      triggerDownload(blob, fileName);
-    }
+    // Auto-save download directly
+    triggerDownload(blob, fileName);
   } catch (err) {
     toast.error(err instanceof Error ? err.message : "Failed to generate HTML card.");
   }

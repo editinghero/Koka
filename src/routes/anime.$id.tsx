@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   BarChart3,
   Check,
+  Download,
   Edit3,
   ExternalLink,
   Minus,
@@ -17,6 +18,7 @@ import {
   Trash2,
   Trophy,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Cover, countdown } from "@/components/AnimeCard";
 import { AiPanel } from "@/components/AiPanel";
 import { ChatPanel } from "@/components/ChatPanel";
@@ -262,6 +264,29 @@ function AnimeDetail() {
   );
   const primaryLink = validLinks[0] ?? null;
 
+  async function handleShareAnilist() {
+    if (!media) return;
+    const anilistUrl = `https://anilist.co/${mode === "MANGA" ? "manga" : "anime"}/${media.id}`;
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: media.title,
+          text: `Check out ${media.title} on AniList`,
+          url: anilistUrl,
+        });
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+      }
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(anilistUrl);
+      toast.success("AniList link copied to clipboard!");
+    } else {
+      window.open(anilistUrl, "_blank", "noopener,noreferrer");
+    }
+  }
+
   return (
     <div className="animate-in duration-150 fade-in-0">
       <Link
@@ -278,7 +303,7 @@ function AnimeDetail() {
       </Link>
 
       <div className="panel relative overflow-hidden">
-        {/* Banner with top-right Edit button */}
+        {/* Banner with top-right Save, Share, and Edit buttons */}
         <div className="relative h-32 w-full bg-surface-2 md:h-44">
           {media.banner ? (
             <img
@@ -293,12 +318,21 @@ function AnimeDetail() {
           )}
           <div className="pointer-events-none absolute inset-0 bg-background/60" />
 
-          {/* Top-right Share and Edit/Done toggle buttons */}
+          {/* Top-right Save, Share, and Edit/Done toggle buttons */}
           <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
             <button
               type="button"
               onClick={() => exportAnimeAsHtml({ media, entry, note })}
-              title="Share / Save HTML card"
+              title="Save HTML card"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface/90 px-3 py-1.5 text-xs font-semibold text-foreground shadow-md backdrop-blur-md transition-all duration-150 hover:bg-surface hover:text-primary active:scale-95"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>Save</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleShareAnilist}
+              title="Share AniList link"
               className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-surface/90 px-3 py-1.5 text-xs font-semibold text-foreground shadow-md backdrop-blur-md transition-all duration-150 hover:bg-surface hover:text-primary active:scale-95"
             >
               <Share2 className="h-3.5 w-3.5" />
