@@ -1634,3 +1634,58 @@ button:not(:disabled):active,
 :root[data-font-force="true"] :is(h1, h2) {
   font-family: var(--font-display);
 }
+
+/* ── Theme-aligned Sonner Toast Styling ── */
+[data-sonner-toaster] {
+  --normal-bg: var(--card) !important;
+  --normal-text: var(--foreground) !important;
+  --normal-border: var(--border) !important;
+}
+
+[data-sonner-toast] {
+  background-color: var(--card) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+}
+
+[data-sonner-toast] [data-title] {
+  color: var(--foreground) !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: var(--muted-foreground) !important;
+}
+
+[data-sonner-toast] [data-button] {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-radius: 0.75rem !important;
+}
+
+[data-sonner-toast] [data-cancel] {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+  border-radius: 0.75rem !important;
+}
+
+[data-sonner-toast][data-type="success"] {
+  border-color: color-mix(in srgb, var(--success, #22c55e) 35%, var(--border)) !important;
+}
+
+[data-sonner-toast][data-type="error"] {
+  border-color: color-mix(in srgb, var(--destructive, #ef4444) 35%, var(--border)) !important;
+}
+
+[data-sonner-toast][data-type="info"] {
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border)) !important;
+}
+
+[data-sonner-toast][data-type="warning"] {
+  border-color: color-mix(in srgb, var(--warning, #f59e0b) 35%, var(--border)) !important;
+}
+
