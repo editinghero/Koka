@@ -87,6 +87,52 @@ export type MediaRanking = {
   allTime?: boolean | null;
 };
 
+export type MediaCharacter = {
+  id: number;
+  role: string;
+  name: string;
+  image?: string | null;
+};
+
+export type MediaStaff = {
+  id: number;
+  role: string;
+  name: string;
+  image?: string | null;
+};
+
+export type MediaExternalLink = {
+  id: number;
+  site: string;
+  url: string;
+  type?: string | null;
+  icon?: string | null;
+};
+
+export type MediaRelation = {
+  relationType: string;
+  id: number;
+  type?: MediaType;
+  title: string;
+  format?: string | null;
+  status?: string | null;
+  cover?: string | null;
+};
+
+export type MediaRecommendation = {
+  id: number;
+  type?: MediaType;
+  title: string;
+  cover?: string | null;
+  format?: string | null;
+  averageScore?: number | null;
+};
+
+export type AiringScheduleItem = {
+  episode: number;
+  airingAt: number;
+};
+
 export type AnimeMedia = {
   id: number;
   malId?: number | null;
@@ -113,6 +159,7 @@ export type AnimeMedia = {
   seasonYear?: number | null;
   genres?: string[];
   studios?: string[];
+  allStudios?: { name: string; isMain?: boolean }[];
   averageScore?: number | null;
   meanScore?: number | null;
   popularity?: number | null;
@@ -125,6 +172,12 @@ export type AnimeMedia = {
   tags?: string[];
   isAdult?: boolean | null;
   countryOfOrigin?: string | null;
+  characters?: MediaCharacter[];
+  staff?: MediaStaff[];
+  externalLinks?: MediaExternalLink[];
+  relations?: MediaRelation[];
+  recommendations?: MediaRecommendation[];
+  airingSchedule?: AiringScheduleItem[];
 };
 
 /** Total units (episodes for anime, chapters for manga). */
@@ -220,7 +273,7 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   geminiKey: "",
-  model: "gemini-2.5-flash",
+  model: "gemini-3.5-flash-lite",
   anilistUser: "",
   spoilerFree: true,
   theme: "dark",
@@ -229,17 +282,20 @@ export const DEFAULT_SETTINGS: Settings = {
   font: "default",
 };
 
-/** Models available on Google's free tier of the Gemini API. */
+/** Models available on Google's Gemini API (with latest 3.5+, 3.8, and 4 Hydrogen). */
 export const GEMINI_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-3-flash",
   "gemini-3.5-flash-lite",
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
   "gemini-3.6-flash",
+  "gemini-3.5-flash",
   "gemini-3.1-flash-lite",
   "gemini-4-hydrogen",
+  "gemini-3-flash-preview",
   "gemini-flash-latest",
   "gemini-flash-lite-latest",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
 ];
 
 export type FavoriteMedia = {

@@ -81,6 +81,9 @@ function SeasonsPage() {
   const [season, setSeason] = useState(now.season);
   const [year, setYear] = useState(now.year);
   const [genre, setGenre] = useState<string>("ALL");
+  const [format, setFormat] = useState<string>("ALL");
+  const [status, setStatus] = useState<string>("ALL");
+  const [minScore, setMinScore] = useState<number>(0);
   const [sort, setSort] = useState<DiscoverSort>("POPULARITY_DESC");
   const { library, upsert } = useLibrary();
   const { profile: userProfile } = useUserProfile();
@@ -138,6 +141,9 @@ function SeasonsPage() {
       isSeasonalActive ? season : null,
       isSeasonalActive ? year : null,
       genre,
+      format,
+      status,
+      minScore,
       sort,
     ],
     queryFn: () =>
@@ -147,6 +153,9 @@ function SeasonsPage() {
         seasonYear: isSeasonalActive ? year : null,
         sort,
         genre: genre !== "ALL" ? genre : null,
+        format: format !== "ALL" ? format : null,
+        status: status !== "ALL" ? status : null,
+        minScore: minScore > 0 ? minScore : undefined,
         isAdult: isAdultSelected,
       }),
     staleTime: 1000 * 60 * 30,
@@ -249,20 +258,70 @@ function SeasonsPage() {
             </div>
           ) : null}
 
-          {/* Sort selector */}
-          <div className="flex items-center gap-1.5 ml-auto text-xs">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+          {/* Filters & Sort selectors */}
+          <div className="flex flex-wrap items-center gap-1.5 ml-auto text-xs">
             <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as DiscoverSort)}
-              className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground"
+              value={format}
+              onChange={(e) => setFormat(e.target.value)}
+              className="rounded-lg border border-border bg-surface px-2 py-1.5 text-xs font-medium text-foreground"
             >
-              {DISCOVER_SORTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  Sort: {s.label}
-                </option>
-              ))}
+              <option value="ALL">Format: All</option>
+              {mode !== "MANGA" ? (
+                <>
+                  <option value="TV">TV</option>
+                  <option value="TV_SHORT">TV Short</option>
+                  <option value="MOVIE">Movie</option>
+                  <option value="SPECIAL">Special</option>
+                  <option value="OVA">OVA</option>
+                  <option value="ONA">ONA</option>
+                </>
+              ) : (
+                <>
+                  <option value="MANGA">Manga</option>
+                  <option value="NOVEL">Light Novel</option>
+                  <option value="ONE_SHOT">One Shot</option>
+                </>
+              )}
             </select>
+
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="rounded-lg border border-border bg-surface px-2 py-1.5 text-xs font-medium text-foreground"
+            >
+              <option value="ALL">Status: All</option>
+              <option value="RELEASING">Releasing</option>
+              <option value="FINISHED">Finished</option>
+              <option value="NOT_YET_RELEASED">Upcoming</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+
+            <select
+              value={minScore}
+              onChange={(e) => setMinScore(Number(e.target.value))}
+              className="rounded-lg border border-border bg-surface px-2 py-1.5 text-xs font-medium text-foreground"
+            >
+              <option value={0}>Rating: Any</option>
+              <option value={70}>70%+ (Good)</option>
+              <option value={75}>75%+ (Great)</option>
+              <option value={80}>80%+ (High)</option>
+              <option value={85}>85%+ (Masterpiece)</option>
+            </select>
+
+            <div className="flex items-center gap-1.5">
+              <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as DiscoverSort)}
+                className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground"
+              >
+                {DISCOVER_SORTS.map((s) => (
+                  <option key={s.value} value={s.value}>
+                    Sort: {s.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 

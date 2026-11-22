@@ -8,7 +8,12 @@ import {
   Globe,
   Trash2,
 } from "lucide-react";
-import { chatGemini, SPOILER_FREE_SYSTEM, type ChatTurn } from "@/lib/gemini";
+import {
+  chatGemini,
+  getSpoilerFreeSystem,
+  SPOILER_FREE_SYSTEM,
+  type ChatTurn,
+} from "@/lib/gemini";
 import {
   getAnimeChatHistory,
   getGlobalChatHistory,
@@ -17,7 +22,7 @@ import {
   clearAnimeChatHistory,
   clearGlobalChatHistory,
 } from "@/lib/chat-storage";
-import { useNotes, useSettings } from "@/lib/store";
+import { useMediaMode, useNotes, useSettings } from "@/lib/store";
 import { Markdown } from "./Markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +69,7 @@ export function ChatPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { settings } = useSettings();
+  const { mode } = useMediaMode();
   const [spoilerFree, setSpoilerFree] = useState(
     defaultSpoilerFree && settings.spoilerFree
   );
@@ -126,8 +132,17 @@ export function ChatPanel({
     setError(null);
     setLoading(true);
     try {
+      const isManga = mode === "MANGA";
+      const baseSystem = isManga
+        ? "You are Koka, a calm and knowledgeable manga reading assistant inside a personal manga reading dashboard. " +
+          "Help the user explore manga, manhwa, manhua, and light novels, answer questions about chapters, volumes, publication status, suggest reading order, and keep track of what they read. " +
+          "Answer in clean, compact markdown. Be direct and avoid filler. " +
+          "When referencing any specific title from the user's library or given context that has a known numeric ID, format it as [Title Name](/anime/ID). " +
+          "When recommending or discussing titles whose numeric ID is not known, write the title in bold (e.g. **Title Name**)."
+        : BASE_SYSTEM;
+
       const system = [
-        BASE_SYSTEM,
+        baseSystem,
         allowNoteFetching
           ? "You can use the `getAnimeNote` tool to fetch the user's personal notes for any specific anime or manga. Only call this if the user asks about their notes, or if checking their thoughts on a specific title is highly relevant to answering their question."
           : "",
@@ -136,7 +151,7 @@ export function ChatPanel({
           ? `User's personal notes for this title:\n${notesContext}`
           : "",
         spoilerFree
-          ? SPOILER_FREE_SYSTEM
+          ? getSpoilerFreeSystem(mode)
           : "Spoilers are allowed — the user asked for full detail.",
       ]
         .filter(Boolean)

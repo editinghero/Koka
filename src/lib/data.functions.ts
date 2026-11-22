@@ -134,6 +134,48 @@ export const callGeminiServer = createServerFn({ method: "POST" })
     return json;
   });
 
+export const listGeminiModelsServer = createServerFn({ method: "GET" }).handler(
+  async (): Promise<string[]> => {
+    const { currentUser } = await import("@/server/session.server");
+    const { getRepo } = await import("@/server/repo.server");
+    const { decryptValue } = await import("@/server/crypto.server");
+
+    let apiKey = "";
+    const user = await currentUser();
+    if (user) {
+      const settings = await getRepo().getSettings(user.id);
+      if (settings.gemini_key) {
+        apiKey = await decryptValue(settings.gemini_key);
+      }
+    }
+
+    if (!apiKey) {
+      return [];
+    }
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
+      );
+      if (!res.ok) return [];
+      const data = (await res.json()) as {
+        models?: Array<{
+          name: string;
+          supportedGenerationMethods?: string[];
+        }>;
+      };
+      return (data.models || [])
+        .filter((m) =>
+          m.supportedGenerationMethods?.includes("generateContent"),
+        )
+        .map((m) => m.name.replace(/^models\//, ""))
+        .filter((name) => name.startsWith("gemini"));
+    } catch {
+      return [];
+    }
+  },
+);
+
 export const saveEntries = createServerFn({ method: "POST" })
   .inputValidator((data: { entries: LibraryEntry[] }) => data)
   .handler(async ({ data }) => {

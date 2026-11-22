@@ -47,7 +47,7 @@ export type ImportLogRow = {
 
 export const DEFAULT_SETTINGS_ROW: SettingsRow = {
   gemini_key: "",
-  model: "gemini-2.5-flash",
+  model: "gemini-3.5-flash-lite",
   anilist_user: "",
   spoiler_free: 1,
   theme: "dark",

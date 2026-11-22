@@ -24,6 +24,7 @@ import {
 import { clearPin, isLocked } from "@/lib/pin";
 import { signOut } from "@/lib/auth.functions";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { initTapLock } from "@/lib/tap-lock";
 
 function NotFoundComponent() {
@@ -172,11 +173,50 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function NetworkStatusNotifier() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+
+    const handleOffline = () => {
+      toast.error("You are currently offline. Showing cached content.", {
+        id: "network-status",
+        duration: Infinity,
+      });
+    };
+
+    const handleOnline = () => {
+      toast.success("Back online!", {
+        id: "network-status",
+        duration: 3500,
+      });
+    };
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+
+    if (!navigator.onLine) {
+      handleOffline();
+    }
+
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
+      <NetworkStatusNotifier />
       <AuthGate>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <AppShell>

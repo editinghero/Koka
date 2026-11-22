@@ -17,7 +17,8 @@ const MEDIA_FIELDS = `
   id
   idMal
   type
-  title { romaji english native }
+  title { userPreferred romaji english native }
+  synonyms
   coverImage { large extraLarge color }
   bannerImage
   format
@@ -29,14 +30,23 @@ const MEDIA_FIELDS = `
   season
   seasonYear
   genres
+  tags { id name rank isMediaSpoiler isGeneralSpoiler }
   averageScore
   meanScore
   popularity
+  isAdult
+  countryOfOrigin
   siteUrl
   description(asHtml: false)
   startDate { year month day }
-  studios(isMain: true) { nodes { name } }
+  studios { edges { isMain node { id name siteUrl } } }
   nextAiringEpisode { episode airingAt }
+  airingSchedule(perPage: 25) { nodes { episode airingAt } }
+  externalLinks { id site url type icon }
+  relations { edges { relationType node { id type title { userPreferred romaji english } coverImage { medium large } format status } } }
+  recommendations(perPage: 10, sort: [RATING_DESC]) { nodes { mediaRecommendation { id type title { userPreferred romaji english } coverImage { medium large } format averageScore } } }
+  characters(perPage: 12, sort: [ROLE, RELEVANCE]) { edges { role node { id name { full native } image { large medium } } } }
+  staff(perPage: 8) { edges { role node { id name { full native } image { large medium } } } }
   rankings {
     id
     rank
@@ -58,8 +68,9 @@ type RawMedia = {
   id: number;
   idMal?: number | null;
   type?: string | null;
-  title: { romaji?: string; english?: string; native?: string };
-  coverImage?: { large?: string; extraLarge?: string };
+  title: { userPreferred?: string; romaji?: string; english?: string; native?: string };
+  synonyms?: string[];
+  coverImage?: { large?: string; extraLarge?: string; color?: string };
   bannerImage?: string | null;
   format?: string | null;
   episodes?: number | null;
@@ -70,14 +81,67 @@ type RawMedia = {
   season?: string | null;
   seasonYear?: number | null;
   genres?: string[];
+  tags?: { id: number; name: string; rank?: number; isMediaSpoiler?: boolean }[];
   averageScore?: number | null;
   meanScore?: number | null;
   popularity?: number | null;
+  isAdult?: boolean | null;
+  countryOfOrigin?: string | null;
   siteUrl?: string | null;
   description?: string | null;
   startDate?: { year?: number; month?: number; day?: number };
-  studios?: { nodes?: { name: string }[] };
+  studios?: {
+    edges?: { isMain?: boolean; node?: { id: number; name: string; siteUrl?: string } }[];
+    nodes?: { name: string }[];
+  };
   nextAiringEpisode?: { episode: number; airingAt: number } | null;
+  airingSchedule?: { nodes?: { episode: number; airingAt: number }[] };
+  externalLinks?: { id: number; site: string; url: string; type?: string; icon?: string }[];
+  relations?: {
+    edges?: {
+      relationType: string;
+      node?: {
+        id: number;
+        type?: string;
+        title?: { userPreferred?: string; romaji?: string; english?: string };
+        coverImage?: { medium?: string; large?: string };
+        format?: string;
+        status?: string;
+      };
+    }[];
+  };
+  recommendations?: {
+    nodes?: {
+      mediaRecommendation?: {
+        id: number;
+        type?: string;
+        title?: { userPreferred?: string; romaji?: string; english?: string };
+        coverImage?: { medium?: string; large?: string };
+        format?: string;
+        averageScore?: number;
+      };
+    }[];
+  };
+  characters?: {
+    edges?: {
+      role: string;
+      node?: {
+        id: number;
+        name?: { full?: string; native?: string };
+        image?: { large?: string; medium?: string };
+      };
+    }[];
+  };
+  staff?: {
+    edges?: {
+      role: string;
+      node?: {
+        id: number;
+        name?: { full?: string; native?: string };
+        image?: { large?: string; medium?: string };
+      };
+    }[];
+  };
   rankings?: MediaRanking[];
   stats?: {
     statusDistribution?: StatusDistributionItem[];
@@ -86,14 +150,32 @@ type RawMedia = {
 
 export function normalizeMedia(m: RawMedia): AnimeMedia {
   const d = m.startDate;
+  const mainStudios =
+    m.studios?.edges
+      ?.filter((e) => e.isMain && e.node?.name)
+      .map((e) => e.node!.name) ??
+    m.studios?.nodes?.map((s) => s.name) ??
+    [];
+
+  const allStudiosList =
+    m.studios?.edges
+      ?.filter((e) => e.node?.name)
+      .map((e) => ({ name: e.node!.name, isMain: Boolean(e.isMain) })) ?? [];
+
   return {
     id: m.id,
     malId: m.idMal ?? null,
     type: m.type === "MANGA" ? "MANGA" : "ANIME",
-    title: m.title?.english || m.title?.romaji || m.title?.native || "Untitled",
+    title:
+      m.title?.userPreferred ||
+      m.title?.english ||
+      m.title?.romaji ||
+      m.title?.native ||
+      "Untitled",
     titleNative: m.title?.native ?? null,
     englishTitle: m.title?.english ?? null,
     romajiTitle: m.title?.romaji ?? null,
+    synonyms: m.synonyms ?? [],
     cover: m.coverImage?.extraLarge || m.coverImage?.large || null,
     banner: m.bannerImage ?? null,
     format: m.format ?? null,
@@ -106,16 +188,80 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
     season: m.season ?? null,
     seasonYear: m.seasonYear ?? null,
     genres: m.genres ?? [],
-    studios: m.studios?.nodes?.map((s) => s.name) ?? [],
+    studios: mainStudios,
+    allStudios: allStudiosList,
+    tags: m.tags?.map((t) => t.name) ?? [],
     averageScore: m.averageScore ?? null,
     meanScore: m.meanScore ?? null,
     popularity: m.popularity ?? null,
+    isAdult: m.isAdult ?? null,
+    countryOfOrigin: m.countryOfOrigin ?? null,
     siteUrl: m.siteUrl ?? null,
     description: m.description ? m.description.replace(/<[^>]+>/g, "") : null,
     startDate: d?.year ? `${d.year}-${d.month ?? 1}-${d.day ?? 1}` : null,
     nextEpisode: m.nextAiringEpisode ?? null,
     rankings: m.rankings ?? [],
     statusDistribution: m.stats?.statusDistribution ?? [],
+    characters:
+      m.characters?.edges?.map((e) => ({
+        id: e.node?.id ?? 0,
+        role: e.role,
+        name: e.node?.name?.full || e.node?.name?.native || "Unknown",
+        image: e.node?.image?.large || e.node?.image?.medium || null,
+      })) ?? [],
+    staff:
+      m.staff?.edges?.map((e) => ({
+        id: e.node?.id ?? 0,
+        role: e.role,
+        name: e.node?.name?.full || e.node?.name?.native || "Unknown",
+        image: e.node?.image?.large || e.node?.image?.medium || null,
+      })) ?? [],
+    externalLinks:
+      m.externalLinks?.map((l) => ({
+        id: l.id,
+        site: l.site,
+        url: l.url,
+        type: l.type ?? null,
+        icon: l.icon ?? null,
+      })) ?? [],
+    relations:
+      m.relations?.edges?.map((e) => ({
+        relationType: e.relationType,
+        id: e.node?.id ?? 0,
+        type: (e.node?.type as MediaType) || "ANIME",
+        title:
+          e.node?.title?.userPreferred ||
+          e.node?.title?.english ||
+          e.node?.title?.romaji ||
+          "Untitled",
+        format: e.node?.format ?? null,
+        status: e.node?.status ?? null,
+        cover: e.node?.coverImage?.large || e.node?.coverImage?.medium || null,
+      })) ?? [],
+    recommendations:
+      m.recommendations?.nodes
+        ?.filter((n) => n.mediaRecommendation)
+        .map((n) => {
+          const rec = n.mediaRecommendation!;
+          return {
+            id: rec.id,
+            type: (rec.type as MediaType) || "ANIME",
+            title:
+              rec.title?.userPreferred ||
+              rec.title?.english ||
+              rec.title?.romaji ||
+              "Untitled",
+            format: rec.format ?? null,
+            averageScore: rec.averageScore ?? null,
+            cover:
+              rec.coverImage?.large || rec.coverImage?.medium || null,
+          };
+        }) ?? [],
+    airingSchedule:
+      m.airingSchedule?.nodes?.map((s) => ({
+        episode: s.episode,
+        airingAt: s.airingAt,
+      })) ?? [],
   };
 }
 
@@ -144,8 +290,16 @@ export type DiscoverParams = {
   seasonYear?: number | null | undefined;
   sort?: string | undefined;
   genre?: string | null | undefined;
+  genres?: string[] | undefined;
+  format?: string | null | undefined;
+  formats?: string[] | undefined;
+  status?: string | null | undefined;
+  source?: string | null | undefined;
+  minScore?: number | undefined;
   isAdult?: boolean | undefined;
   page?: number | undefined;
+  perPage?: number | undefined;
+  search?: string | undefined;
 };
 
 export async function fetchDiscover(
@@ -157,8 +311,16 @@ export async function fetchDiscover(
     seasonYear,
     sort = "POPULARITY_DESC",
     genre,
+    genres,
+    format,
+    formats,
+    status,
+    source,
+    minScore,
     isAdult = false,
     page = 1,
+    perPage = 40,
+    search,
   } = params;
 
   const isAdultFlag = isAdult || genre === "Hentai" || genre === "Adult (18+)";
@@ -174,6 +336,7 @@ export async function fetchDiscover(
     sort: [sort],
     isAdult: isAdultFlag,
     page,
+    perPage,
   };
   if (season && seasonYear) {
     variables["season"] = season;
@@ -182,15 +345,75 @@ export async function fetchDiscover(
   if (genreParam) {
     variables["genre"] = genreParam;
   }
+  if (genres && genres.length > 0) {
+    variables["genres"] = genres.filter((g) => g !== "ALL");
+  }
+  if (format && format !== "ALL") {
+    variables["format"] = format;
+  }
+  if (formats && formats.length > 0) {
+    variables["formats"] = formats.filter((f) => f !== "ALL");
+  }
+  if (status && status !== "ALL") {
+    variables["status"] = status;
+  }
+  if (source && source !== "ALL") {
+    variables["source"] = source;
+  }
+  if (search && search.trim()) {
+    variables["search"] = search.trim();
+  }
 
-  const query = `query ($type: MediaType, $sort: [MediaSort], $genre: String, $season: MediaSeason, $seasonYear: Int, $isAdult: Boolean, $page: Int) {
-    Page(page: $page, perPage: 40) {
-      media(type: $type, sort: $sort, genre: $genre, season: $season, seasonYear: $seasonYear, isAdult: $isAdult) { ${MEDIA_FIELDS} }
+  const query = `query (
+    $type: MediaType,
+    $sort: [MediaSort],
+    $genre: String,
+    $genres: [String],
+    $format: MediaFormat,
+    $formats: [MediaFormat],
+    $status: MediaStatus,
+    $source: MediaSource,
+    $season: MediaSeason,
+    $seasonYear: Int,
+    $isAdult: Boolean,
+    $search: String,
+    $page: Int,
+    $perPage: Int
+  ) {
+    Page(page: $page, perPage: $perPage) {
+      pageInfo {
+        total
+        perPage
+        currentPage
+        lastPage
+        hasNextPage
+      }
+      media(
+        type: $type,
+        sort: $sort,
+        genre: $genre,
+        genre_in: $genres,
+        format: $format,
+        format_in: $formats,
+        status: $status,
+        source: $source,
+        season: $season,
+        seasonYear: $seasonYear,
+        isAdult: $isAdult,
+        search: $search
+      ) { ${MEDIA_FIELDS} }
     }
   }`;
 
-  const data = await anilist<{ Page: { media: RawMedia[] } }>(query, variables);
-  return data.Page.media.map(normalizeMedia);
+  const data = await anilist<{ Page: { media: RawMedia[]; pageInfo?: unknown } }>(
+    query,
+    variables,
+  );
+  let list = data.Page.media.map(normalizeMedia);
+  if (minScore && minScore > 0) {
+    list = list.filter((m) => (m.averageScore ?? m.meanScore ?? 0) >= minScore);
+  }
+  return list;
 }
 
 export async function fetchSeason(

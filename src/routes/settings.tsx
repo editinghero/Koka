@@ -23,7 +23,10 @@ import {
   signOut,
   updateProfileName,
 } from "@/lib/auth.functions";
-import { clearLibraryAndNotes } from "@/lib/data.functions";
+import {
+  clearLibraryAndNotes,
+  listGeminiModelsServer,
+} from "@/lib/data.functions";
 import { clearPin, hasPin, lockNow, setPin } from "@/lib/pin";
 import { GEMINI_MODELS, normalizeTags, type FontOption } from "@/lib/types";
 import { DARK_THEMES, LIGHT_THEMES, type ThemePreset } from "@/lib/themes";
@@ -63,6 +66,27 @@ function SettingsPage() {
   const { setNotes } = useNotes();
   const [show, setShow] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [liveModels, setLiveModels] = useState<string[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  useEffect(() => {
+    if (settings.geminiKey) {
+      setLoadingModels(true);
+      listGeminiModelsServer()
+        .then((models) => {
+          if (models && models.length > 0) {
+            setLiveModels(models);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoadingModels(false));
+    }
+  }, [settings.geminiKey]);
+
+  const availableModels = useMemo(
+    () => Array.from(new Set([...GEMINI_MODELS, ...liveModels])),
+    [liveModels],
+  );
 
   return (
     <>
@@ -116,11 +140,18 @@ function SettingsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="model">Model</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="model">Model</Label>
+                {loadingModels && (
+                  <span className="text-[11px] text-muted-foreground animate-pulse">
+                    Refreshing models…
+                  </span>
+                )}
+              </div>
               <select
                 id="model"
                 value={
-                  GEMINI_MODELS.includes(settings.model)
+                  availableModels.includes(settings.model)
                     ? settings.model
                     : "__custom"
                 }
@@ -131,14 +162,14 @@ function SettingsPage() {
                 }
                 className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
               >
-                {GEMINI_MODELS.map((m) => (
+                {availableModels.map((m) => (
                   <option key={m} value={m}>
                     {m}
                   </option>
                 ))}
                 <option value="__custom">Custom model ID…</option>
               </select>
-              {!GEMINI_MODELS.includes(settings.model) ? (
+              {!availableModels.includes(settings.model) ? (
                 <Input
                   value={settings.model}
                   onChange={(e) => update({ model: e.target.value })}

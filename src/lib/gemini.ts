@@ -218,3 +218,13 @@ export const SPOILER_FREE_SYSTEM =
   "Never reveal plot twists, endings, deaths, or late-story developments. " +
   "Do not describe individual characters, their names, arcs, or relationships unless explicitly asked. " +
   "Focus on premise, setting, tone, themes, production and viewing context. Be concise and calm in tone.";
+
+export const SPOILER_FREE_SYSTEM_MANGA =
+  "You are a manga research and reading assistant. Write in clean markdown. " +
+  "Never reveal plot twists, endings, character deaths, or late-chapter developments. " +
+  "Do not describe individual characters, their names, arcs, or relationships unless explicitly asked. " +
+  "Focus on premise, setting, tone, themes, art style, serialization and reading order. Be concise and calm in tone.";
+
+export function getSpoilerFreeSystem(mode?: "ANIME" | "MANGA"): string {
+  return mode === "MANGA" ? SPOILER_FREE_SYSTEM_MANGA : SPOILER_FREE_SYSTEM;
+}
