@@ -1091,7 +1091,7 @@ export function exportAnimeAsHtml({
           <div class="title-info">
             <div class="pill-row">
               <span class="pill format">${media.format || "ANIME"}</span>
-              ${media.status ? `<span class="pill">${media.status.replace("_", " ")}</span>` : ""}
+              ${(media.airingStatus || media.status) ? `<span class="pill">${(media.airingStatus || media.status)!.replace("_", " ")}</span>` : ""}
               ${media.seasonYear ? `<span class="pill">${media.season ? `${media.season} ` : ""}${media.seasonYear}</span>` : ""}
               ${media.episodes ? `<span class="pill">${media.episodes} EPS</span>` : ""}
             </div>

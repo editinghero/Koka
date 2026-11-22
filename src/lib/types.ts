@@ -94,6 +94,9 @@ export type AnimeMedia = {
   type?: MediaType;
   title: string;
   titleNative?: string | null;
+  englishTitle?: string | null;
+  romajiTitle?: string | null;
+  synonyms?: string[];
   cover?: string | null;
   banner?: string | null;
   format?: string | null;
@@ -104,6 +107,8 @@ export type AnimeMedia = {
   volumes?: number | null;
   duration?: number | null;
   airingStatus?: string | null;
+  /** Alias for airingStatus for convenience & exports */
+  status?: string | null;
   season?: string | null;
   seasonYear?: number | null;
   genres?: string[];
@@ -117,6 +122,9 @@ export type AnimeMedia = {
   nextEpisode?: { episode: number; airingAt: number } | null;
   rankings?: MediaRanking[];
   statusDistribution?: StatusDistributionItem[];
+  tags?: string[];
+  isAdult?: boolean | null;
+  countryOfOrigin?: string | null;
 };
 
 /** Total units (episodes for anime, chapters for manga). */

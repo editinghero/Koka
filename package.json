@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
+    "typecheck": "tsc --noEmit",
     "build": "vite build && node scripts/postbuild-pages.js",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",

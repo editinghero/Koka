@@ -14,6 +14,7 @@ import {
   type Note,
   type UserProfile,
 } from "@/lib/types";
+import type { CommunityItem } from "@/lib/community-utils";
 import { getD1, type D1Database } from "./runtime.server";
 
 export type StoredUser = {
@@ -97,6 +98,13 @@ export type Repo = {
 
   getUserProfile(userId: string): Promise<UserProfile | null>;
   saveUserProfile(userId: string, profile: UserProfile): Promise<void>;
+
+  listCommunities(userId: string): Promise<CommunityItem[]>;
+  upsertCommunities(
+    userId: string,
+    communities: CommunityItem[],
+  ): Promise<void>;
+  deleteCommunity(userId: string, id: string): Promise<void>;
 };
 
 const typeOf = (e: LibraryEntry): MediaType =>
@@ -168,6 +176,30 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS user_profiles (
      user_id TEXT PRIMARY KEY,
      profile_data TEXT NOT NULL,
+     updated_at INTEGER NOT NULL
+   )`,
+  `CREATE TABLE IF NOT EXISTS communities (
+     user_id TEXT NOT NULL,
+     id TEXT NOT NULL,
+     platform TEXT NOT NULL,
+     name TEXT NOT NULL,
+     handle TEXT NOT NULL,
+     url TEXT NOT NULL,
+     category TEXT NOT NULL,
+     description TEXT,
+     media_id INTEGER,
+     media_type TEXT,
+     media_title TEXT,
+     media_cover TEXT,
+     is_default INTEGER NOT NULL DEFAULT 0,
+     pinned INTEGER NOT NULL DEFAULT 0,
+     created_at INTEGER NOT NULL,
+     PRIMARY KEY (user_id, id)
+   )`,
+  `CREATE TABLE IF NOT EXISTS rate_limits (
+     key TEXT PRIMARY KEY,
+     attempts INTEGER NOT NULL DEFAULT 0,
+     locked_until INTEGER NOT NULL DEFAULT 0,
      updated_at INTEGER NOT NULL
    )`,
 ];
@@ -530,6 +562,78 @@ function d1Repo(db: D1Database): Repo {
         .bind(userId, JSON.stringify(profile), profile.updatedAt || Date.now())
         .run();
     },
+
+    async listCommunities(userId) {
+      await ready();
+      const rows = await db
+        .prepare("SELECT * FROM communities WHERE user_id = ?")
+        .bind(userId)
+        .all<Record<string, unknown>>();
+      return (rows.results ?? []).map((r) => ({
+        id: String(r["id"]),
+        platform: String(r["platform"]) as "reddit" | "x" | "custom",
+        name: String(r["name"]),
+        handle: String(r["handle"]),
+        url: String(r["url"]),
+        category: String(r["category"]) as
+          | "news"
+          | "discussion"
+          | "art"
+          | "memes"
+          | "general",
+        description: r["description"] ? String(r["description"]) : undefined,
+        mediaId: r["media_id"] ? Number(r["media_id"]) : undefined,
+        mediaType: r["media_type"]
+          ? (String(r["media_type"]) as "ANIME" | "MANGA")
+          : undefined,
+        mediaTitle: r["media_title"] ? String(r["media_title"]) : undefined,
+        mediaCover: r["media_cover"] ? String(r["media_cover"]) : undefined,
+        isDefault: Boolean(r["is_default"]),
+        pinned: Boolean(r["pinned"]),
+        createdAt: Number(r["created_at"]) || Date.now(),
+      }));
+    },
+    async upsertCommunities(userId, communities) {
+      if (!communities.length) return;
+      await ready();
+      const stmts = communities.map((c) =>
+        db
+          .prepare(
+            `INSERT INTO communities (user_id, id, platform, name, handle, url, category, description, media_id, media_type, media_title, media_cover, is_default, pinned, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(user_id, id) DO UPDATE SET
+               platform = excluded.platform, name = excluded.name, handle = excluded.handle, url = excluded.url,
+               category = excluded.category, description = excluded.description, media_id = excluded.media_id,
+               media_type = excluded.media_type, media_title = excluded.media_title, media_cover = excluded.media_cover,
+               is_default = excluded.is_default, pinned = excluded.pinned`,
+          )
+          .bind(
+            userId,
+            c.id,
+            c.platform,
+            c.name,
+            c.handle,
+            c.url,
+            c.category,
+            c.description ?? null,
+            c.mediaId ?? null,
+            c.mediaType ?? null,
+            c.mediaTitle ?? null,
+            c.mediaCover ?? null,
+            c.isDefault ? 1 : 0,
+            c.pinned ? 1 : 0,
+            c.createdAt || Date.now(),
+          ),
+      );
+      await db.batch(stmts);
+    },
+    async deleteCommunity(userId, id) {
+      await ready();
+      await db
+        .prepare("DELETE FROM communities WHERE user_id = ? AND id = ?")
+        .bind(userId, id)
+        .run();
+    },
   };
 }
 
@@ -542,6 +646,7 @@ type LocalShape = {
   notes: Record<string, Note[]>;
   log: Record<string, ImportLogRow[]>;
   profiles: Record<string, UserProfile | null>;
+  communities?: Record<string, CommunityItem[]>;
 };
 
 const LOCAL_FILE = ".data/koka-dev-db.json";
@@ -556,6 +661,7 @@ async function loadLocal(): Promise<LocalShape> {
     notes: {},
     log: {},
     profiles: {},
+    communities: {},
   };
   try {
     const fs = await import("node:fs/promises");
@@ -712,6 +818,29 @@ function localRepo(): Repo {
       const s = await loadLocal();
       if (!s.profiles) s.profiles = {};
       s.profiles[userId] = profile;
+      await persistLocal();
+    },
+
+    async listCommunities(userId) {
+      const s = await loadLocal();
+      return s.communities?.[userId] ?? [];
+    },
+    async upsertCommunities(userId, communities) {
+      const s = await loadLocal();
+      if (!s.communities) s.communities = {};
+      const map = new Map(
+        (s.communities[userId] ?? []).map((c) => [c.id, c]),
+      );
+      for (const c of communities) map.set(c.id, c);
+      s.communities[userId] = [...map.values()];
+      await persistLocal();
+    },
+    async deleteCommunity(userId, id) {
+      const s = await loadLocal();
+      if (!s.communities) s.communities = {};
+      s.communities[userId] = (s.communities[userId] ?? []).filter(
+        (c) => c.id !== id,
+      );
       await persistLocal();
     },
   };

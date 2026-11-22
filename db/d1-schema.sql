@@ -91,3 +91,16 @@ CREATE TABLE IF NOT EXISTS import_log (
   count      INTEGER NOT NULL,
   created_at INTEGER NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS user_profiles (
+  user_id      TEXT PRIMARY KEY,
+  profile_data TEXT NOT NULL,
+  updated_at   INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key          TEXT PRIMARY KEY,
+  attempts     INTEGER NOT NULL DEFAULT 0,
+  locked_until INTEGER NOT NULL DEFAULT 0,
+  updated_at   INTEGER NOT NULL
+);

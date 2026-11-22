@@ -58,8 +58,10 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      const { setCloudflareEnv } = await import("./server/runtime.server");
+      const { setCloudflareEnv, setCurrentRequest } =
+        await import("./server/runtime.server");
       setCloudflareEnv(env);
+      setCurrentRequest(request);
 
       // Cloudflare Pages / Workers static assets fetcher (only for GET/HEAD non-server-function requests)
       const url = new URL(request.url);

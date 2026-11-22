@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Sparkles, Loader2, AlertCircle, Compass, Flame } from "lucide-react";
 import { askGemini, SPOILER_FREE_SYSTEM } from "@/lib/gemini";
-import { currentSeason, fetchDiscover, nextSeason, type AnimeMedia } from "@/lib/anilist";
+import { currentSeason, fetchDiscover, nextSeason } from "@/lib/anilist";
+import type { AnimeMedia } from "@/lib/types";
 import { Markdown } from "./Markdown";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

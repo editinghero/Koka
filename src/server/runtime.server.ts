@@ -22,11 +22,26 @@ export type D1Database = {
 };
 
 let cloudflareEnv: Record<string, unknown> | undefined;
+let currentRequest: Request | undefined;
 
 export function setCloudflareEnv(env: unknown) {
   if (env && typeof env === "object") {
     cloudflareEnv = env as Record<string, unknown>;
   }
+}
+
+export function setCurrentRequest(req: Request) {
+  currentRequest = req;
+}
+
+export function getClientIp(): string {
+  if (!currentRequest) return "127.0.0.1";
+  return (
+    currentRequest.headers.get("cf-connecting-ip") ??
+    currentRequest.headers.get("x-real-ip") ??
+    currentRequest.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "127.0.0.1"
+  );
 }
 
 /** The D1 binding named `DB` in wrangler.toml, when the app runs on Cloudflare. */

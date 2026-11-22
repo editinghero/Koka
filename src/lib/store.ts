@@ -594,9 +594,11 @@ export function useNotes(forceMode?: MediaType) {
         const k = keyOf(noteType(note), note.animeId);
         const existing = map.get(k);
         if (existing) {
-          const newTags = [...new Set([...existing.tags, ...note.tags])];
+          const existingTags = existing.tags ?? [];
+          const incomingTags = note.tags ?? [];
+          const newTags = [...new Set([...existingTags, ...incomingTags])];
           const exactBodyMatch = existing.body.trim() === note.body.trim();
-          const tagsIncluded = newTags.length === existing.tags.length;
+          const tagsIncluded = newTags.length === existingTags.length;
           if (exactBodyMatch && tagsIncluded) continue;
 
           const merged: Note = {

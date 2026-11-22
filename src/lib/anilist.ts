@@ -9,6 +9,8 @@ import type {
   WatchStatus,
 } from "./types";
 
+export type { AnimeMedia };
+
 const ENDPOINT = "https://graphql.anilist.co";
 
 const MEDIA_FIELDS = `
@@ -90,6 +92,8 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
     type: m.type === "MANGA" ? "MANGA" : "ANIME",
     title: m.title?.english || m.title?.romaji || m.title?.native || "Untitled",
     titleNative: m.title?.native ?? null,
+    englishTitle: m.title?.english ?? null,
+    romajiTitle: m.title?.romaji ?? null,
     cover: m.coverImage?.extraLarge || m.coverImage?.large || null,
     banner: m.bannerImage ?? null,
     format: m.format ?? null,
@@ -98,6 +102,7 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
     volumes: m.volumes ?? null,
     duration: m.duration ?? null,
     airingStatus: m.status ?? null,
+    status: m.status ?? null,
     season: m.season ?? null,
     seasonYear: m.seasonYear ?? null,
     genres: m.genres ?? [],

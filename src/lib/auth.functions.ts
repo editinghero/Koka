@@ -60,14 +60,23 @@ export const signUp = createServerFn({ method: "POST" })
 export const signIn = createServerFn({ method: "POST" })
   .inputValidator((data: { email: string; password: string }) => data)
   .handler(async ({ data }) => {
+    const { getClientIp } = await import("@/server/runtime.server");
+    const { checkLoginRateLimit, recordFailedLogin, resetLoginRateLimit } =
+      await import("@/server/rate-limit.server");
     const { getRepo } = await import("@/server/repo.server");
     const { verifyPassword } = await import("@/server/crypto.server");
     const { startSession } = await import("@/server/session.server");
 
+    const ip = getClientIp();
+    await checkLoginRateLimit(ip);
+
     const user = await getRepo().userByEmail(data.email.trim().toLowerCase());
     if (!user || !(await verifyPassword(data.password, user.password_hash))) {
+      await recordFailedLogin(ip);
       throw new Error("Wrong email or password.");
     }
+
+    await resetLoginRateLimit(ip);
     await startSession(user.id);
     return {
       id: user.id,

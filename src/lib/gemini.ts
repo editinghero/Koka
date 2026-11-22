@@ -14,16 +14,51 @@ type Part = {
   functionResponse?: { name: string; response: { content: string } };
 };
 
+type GeminiApiResponse = {
+  error?: { message?: string };
+  candidates?: {
+    content?: { parts?: Part[] };
+    groundingMetadata?: {
+      groundingChunks?: { web?: { title?: string; uri?: string } }[];
+    };
+  }[];
+};
+
+async function postGemini(
+  model: string,
+  body: Record<string, unknown>,
+  geminiKey?: string,
+): Promise<GeminiApiResponse> {
+  // If a direct key is present and not masked, use direct client fetch (local dev)
+  if (geminiKey && geminiKey !== "••••••••") {
+    const res = await fetch(
+      `${BASE}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
+
+    const json = (await res.json()) as GeminiApiResponse;
+    if (!res.ok) {
+      throw new Error(json.error?.message ?? `Gemini error ${res.status}`);
+    }
+    return json;
+  }
+
+  // Secure server-side execution: API key is never exposed to the client/devtools
+  const { callGeminiServer } = await import("./data.functions");
+  return (await callGeminiServer({
+    data: { model, body },
+  })) as GeminiApiResponse;
+}
+
 export async function askGemini(
   prompt: string,
   opts: { system?: string; search?: boolean; temperature?: number } = {},
 ): Promise<GeminiResult> {
   const { geminiKey, model } = getSettings();
-  if (!geminiKey) {
-    throw new Error(
-      "No Gemini API key set. Add one in Settings to use AI features.",
-    );
-  }
 
   const body: Record<string, unknown> = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -34,28 +69,7 @@ export async function askGemini(
   }
   if (opts.search !== false) body["tools"] = [{ google_search: {} }];
 
-  const res = await fetch(
-    `${BASE}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    },
-  );
-
-  const json = (await res.json()) as {
-    error?: { message?: string };
-    candidates?: {
-      content?: { parts?: Part[] };
-      groundingMetadata?: {
-        groundingChunks?: { web?: { title?: string; uri?: string } }[];
-      };
-    }[];
-  };
-
-  if (!res.ok) {
-    throw new Error(json.error?.message ?? `Gemini error ${res.status}`);
-  }
+  const json = await postGemini(model, body, geminiKey);
 
   const candidate = json.candidates?.[0];
   const text = (candidate?.content?.parts ?? [])
@@ -88,11 +102,6 @@ export async function chatGemini(
   } = {},
 ): Promise<GeminiResult> {
   const { geminiKey, model } = getSettings();
-  if (!geminiKey) {
-    throw new Error(
-      "No Gemini API key set. Add one in Settings to use AI features.",
-    );
-  }
 
   // Handle older saved chats that only have `text`
   const normalizedTurns: ChatTurn[] = turns.map((t) => ({
@@ -139,28 +148,7 @@ export async function chatGemini(
       body["tools"] = tools;
     }
 
-    const res = await fetch(
-      `${BASE}/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      },
-    );
-
-    const json = (await res.json()) as {
-      error?: { message?: string };
-      candidates?: {
-        content?: { parts?: Part[] };
-        groundingMetadata?: {
-          groundingChunks?: { web?: { title?: string; uri?: string } }[];
-        };
-      }[];
-    };
-
-    if (!res.ok) {
-      throw new Error(json.error?.message ?? `Gemini error ${res.status}`);
-    }
+    const json = await postGemini(model, body, geminiKey);
 
     const candidate = json.candidates?.[0];
     const responseParts = candidate?.content?.parts ?? [];

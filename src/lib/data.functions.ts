@@ -45,7 +45,7 @@ export const getBootstrap = createServerFn({ method: "GET" }).handler(
     return {
       user,
       settings: {
-        geminiKey: await decryptValue(row.gemini_key),
+        geminiKey: row.gemini_key ? "••••••••" : "",
         model: row.model,
         anilistUser: row.anilist_user,
         spoilerFree: row.spoiler_free === 1,
@@ -69,8 +69,18 @@ export const saveSettings = createServerFn({ method: "POST" })
     const { getRepo } = await import("@/server/repo.server");
     const { encryptValue } = await import("@/server/crypto.server");
     const user = await requireUser();
-    await getRepo().saveSettings(user.id, {
-      gemini_key: await encryptValue(data.settings.geminiKey ?? ""),
+    const repo = getRepo();
+    const existing = await repo.getSettings(user.id);
+    let keyToSave = existing.gemini_key;
+    const incomingKey = data.settings.geminiKey?.trim();
+    if (incomingKey && incomingKey !== "••••••••") {
+      keyToSave = await encryptValue(incomingKey);
+    } else if (incomingKey === "") {
+      keyToSave = "";
+    }
+
+    await repo.saveSettings(user.id, {
+      gemini_key: keyToSave,
       model: data.settings.model,
       anilist_user: data.settings.anilistUser ?? "",
       spoiler_free: data.settings.spoilerFree ? 1 : 0,
@@ -81,6 +91,47 @@ export const saveSettings = createServerFn({ method: "POST" })
       media_mode: data.mode === "MANGA" ? "MANGA" : "ANIME",
     });
     return { ok: true };
+  });
+
+export const callGeminiServer = createServerFn({ method: "POST" })
+  .inputValidator(
+    (data: { model: string; body: Record<string, unknown> }) => data,
+  )
+  .handler(async ({ data }) => {
+    const { currentUser } = await import("@/server/session.server");
+    const { getRepo } = await import("@/server/repo.server");
+    const { decryptValue } = await import("@/server/crypto.server");
+
+    let apiKey = "";
+    const user = await currentUser();
+    if (user) {
+      const settings = await getRepo().getSettings(user.id);
+      if (settings.gemini_key) {
+        apiKey = await decryptValue(settings.gemini_key);
+      }
+    }
+
+    if (!apiKey) {
+      throw new Error(
+        "No Gemini API key configured. Please add one in Settings to use AI features.",
+      );
+    }
+
+    const BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+    const res = await fetch(
+      `${BASE}/${encodeURIComponent(data.model)}:generateContent?key=${encodeURIComponent(apiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data.body),
+      },
+    );
+
+    const json = (await res.json()) as { error?: { message?: string } };
+    if (!res.ok) {
+      throw new Error(json.error?.message ?? `Gemini error ${res.status}`);
+    }
+    return json;
   });
 
 export const saveEntries = createServerFn({ method: "POST" })
