@@ -235,7 +235,7 @@ function SeasonsPage() {
                   if (genre === "Adult (18+)") setGenre("ALL");
                 }}
                 className={cn(
-                  "rounded-md px-3 py-1 transition-colors",
+                  "pill-pressable rounded-md px-3 py-1 transition-all duration-150 active:scale-95",
                   browseMode === "seasonal"
                     ? "bg-primary text-primary-foreground font-medium"
                     : "text-muted-foreground hover:text-foreground",
@@ -247,7 +247,7 @@ function SeasonsPage() {
                 type="button"
                 onClick={() => setBrowseMode("category")}
                 className={cn(
-                  "rounded-md px-3 py-1 transition-colors",
+                  "pill-pressable rounded-md px-3 py-1 transition-all duration-150 active:scale-95",
                   browseMode === "category"
                     ? "bg-primary text-primary-foreground font-medium"
                     : "text-muted-foreground hover:text-foreground",

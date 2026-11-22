@@ -165,7 +165,7 @@ Keep the tone calm, thoughtful, spoiler-free, and formatted cleanly in Markdown.
             type="button"
             onClick={() => setTarget("current")}
             className={cn(
-              "rounded-md px-2.5 py-1 text-xs capitalize transition-colors",
+              "pill-pressable rounded-md px-2.5 py-1 text-xs capitalize transition-all duration-150 active:scale-95",
               target === "current"
                 ? "bg-primary text-primary-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground",
@@ -177,7 +177,7 @@ Keep the tone calm, thoughtful, spoiler-free, and formatted cleanly in Markdown.
             type="button"
             onClick={() => setTarget("next")}
             className={cn(
-              "rounded-md px-2.5 py-1 text-xs capitalize transition-colors",
+              "pill-pressable rounded-md px-2.5 py-1 text-xs capitalize transition-all duration-150 active:scale-95",
               target === "next"
                 ? "bg-primary text-primary-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground",
@@ -189,7 +189,7 @@ Keep the tone calm, thoughtful, spoiler-free, and formatted cleanly in Markdown.
             type="button"
             onClick={() => setTarget("custom")}
             className={cn(
-              "rounded-md px-2.5 py-1 text-xs capitalize transition-colors",
+              "pill-pressable rounded-md px-2.5 py-1 text-xs capitalize transition-all duration-150 active:scale-95",
               target === "custom"
                 ? "bg-primary text-primary-foreground font-medium"
                 : "text-muted-foreground hover:text-foreground",

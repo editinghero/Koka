@@ -128,7 +128,6 @@ function AnimeDetail() {
   const { id } = Route.useParams();
   const animeId = Number(id);
   const { mode, setMode } = useMediaMode();
-  const copy = MODE_COPY[mode];
   const { library, upsert, patch, remove } = useLibrary();
   const { notes } = useNotes();
   const { communities, markCommunityOpened, deleteCommunity } =
@@ -151,14 +150,24 @@ function AnimeDetail() {
   }, [animeId]);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["media", mode, animeId],
-    queryFn: async () => (await fetchByIds([animeId], mode))[0] ?? null,
+    queryKey: ["media", animeId],
+    queryFn: async () => (await fetchByIds([animeId]))[0] ?? null,
     staleTime: 1000 * 60 * 30,
   });
 
   const media = data
     ? { ...(entry?.media ?? {}), ...data }
     : (entry?.media ?? null);
+
+  const effectiveMode = media?.type ?? entry?.media?.type ?? mode;
+  const copy = MODE_COPY[effectiveMode];
+
+  useEffect(() => {
+    const targetType = data?.type || entry?.media?.type;
+    if (targetType && targetType !== mode) {
+      setMode(targetType);
+    }
+  }, [data?.type, entry?.media?.type, mode, setMode]);
 
   const totalStatusAmount = (media?.statusDistribution || []).reduce(
     (sum, item) => sum + (item.amount || 0),
@@ -179,7 +188,7 @@ function AnimeDetail() {
   function ensureEntry(): LibraryEntry {
     if (entry) return entry;
     const newEntry: LibraryEntry = {
-      media: { ...media!, type: mode },
+      media: { ...media!, type: effectiveMode },
       status: "PLANNING",
       progress: 0,
       score: null,
@@ -327,7 +336,7 @@ function AnimeDetail() {
             window.history.back();
           }
         }}
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+        className="pill-pressable mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-all duration-150 hover:text-foreground active:scale-95"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> {backNav.label}
       </Link>
@@ -1089,6 +1098,7 @@ function AnimeDetail() {
                   key={`${rel.id}-${rel.relationType}`}
                   to="/anime/$id"
                   params={{ id: String(rel.id) }}
+                  data-card-press
                   onClick={() => {
                     if (isManga) {
                       setMode("MANGA");
@@ -1096,7 +1106,7 @@ function AnimeDetail() {
                       setMode("ANIME");
                     }
                   }}
-                  className="group flex items-center gap-3 rounded-xl border border-border/60 bg-surface/60 p-2.5 transition-all hover:border-primary/40 hover:bg-surface-elevated/80"
+                  className="group card-pressable flex items-center gap-3 rounded-xl border border-border/60 bg-surface/60 p-2.5 transition-all duration-150 hover:border-primary/40 hover:bg-surface-elevated/80 active:scale-[0.97] active:opacity-85 cursor-pointer"
                 >
                   <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary">
                     {rel.cover ? (
@@ -1165,6 +1175,7 @@ function AnimeDetail() {
                   key={rec.id}
                   to="/anime/$id"
                   params={{ id: String(rec.id) }}
+                  data-card-press
                   onClick={() => {
                     if (isManga) {
                       setMode("MANGA");
@@ -1172,7 +1183,7 @@ function AnimeDetail() {
                       setMode("ANIME");
                     }
                   }}
-                  className="group flex flex-col overflow-hidden rounded-xl border border-border/60 bg-surface/60 transition-all hover:border-primary/40 hover:bg-surface-elevated/80 hover:-translate-y-0.5"
+                  className="group card-pressable flex flex-col overflow-hidden rounded-xl border border-border/60 bg-surface/60 transition-all duration-150 hover:border-primary/40 hover:bg-surface-elevated/80 hover:-translate-y-0.5 active:scale-[0.97] active:opacity-85 cursor-pointer"
                 >
                   <div className="relative aspect-[3/4] w-full overflow-hidden bg-secondary">
                     {rec.cover ? (

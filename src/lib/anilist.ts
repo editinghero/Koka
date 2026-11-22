@@ -539,16 +539,16 @@ export async function fetchNextAiringEpisodes(
 
 export async function fetchByIds(
   ids: number[],
-  type: MediaType = "ANIME",
+  type?: MediaType,
 ): Promise<AnimeMedia[]> {
   const out: AnimeMedia[] = [];
   for (let i = 0; i < ids.length; i += 50) {
     const chunk = ids.slice(i, i + 50);
     const data = await anilist<{ Page: { media: RawMedia[] } }>(
-      `query ($ids: [Int], $type: MediaType) {
-        Page(page: 1, perPage: 50) { media(id_in: $ids, type: $type) { ${MEDIA_FIELDS} } }
+      `query ($ids: [Int]${type ? ", $type: MediaType" : ""}) {
+        Page(page: 1, perPage: 50) { media(id_in: $ids${type ? ", type: $type" : ""}) { ${MEDIA_FIELDS} } }
       }`,
-      { ids: chunk, type },
+      type ? { ids: chunk, type } : { ids: chunk },
     );
     out.push(...data.Page.media.map(normalizeMedia));
     if (i + 50 < ids.length) await new Promise((r) => setTimeout(r, 700));
