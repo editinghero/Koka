@@ -366,11 +366,33 @@ function AnimeDetail() {
           <Cover media={media} className="h-44 w-32 shrink-0" />
           <div className="min-w-0 flex-1">
             <h1 className="font-display text-xl font-semibold md:text-2xl">
-              {media.title}
+              {media.englishTitle || media.title}
             </h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            {media.titleNative ||
+            (media.romajiTitle &&
+              media.romajiTitle !== (media.englishTitle || media.title)) ? (
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                {media.titleNative ? (
+                  <span className="font-medium text-foreground/80">
+                    {media.titleNative}
+                  </span>
+                ) : null}
+                {media.titleNative &&
+                media.romajiTitle &&
+                media.romajiTitle !== (media.englishTitle || media.title) ? (
+                  <span className="text-border">·</span>
+                ) : null}
+                {media.romajiTitle &&
+                media.romajiTitle !== (media.englishTitle || media.title) ? (
+                  <span className="italic">{media.romajiTitle}</span>
+                ) : null}
+              </p>
+            ) : null}
+
+            <div className="my-2.5 border-t border-border" />
+
+            <p className="text-xs text-muted-foreground">
               {[
-                media.titleNative,
                 media.format,
                 media.seasonYear ? `${media.season} ${media.seasonYear}` : null,
                 total ? `${total} ${copy.unit}` : null,

@@ -167,9 +167,9 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
     malId: m.idMal ?? null,
     type: m.type === "MANGA" ? "MANGA" : "ANIME",
     title:
-      m.title?.userPreferred ||
       m.title?.english ||
       m.title?.romaji ||
+      m.title?.userPreferred ||
       m.title?.native ||
       "Untitled",
     titleNative: m.title?.native ?? null,
@@ -233,9 +233,9 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
         id: e.node?.id ?? 0,
         type: (e.node?.type as MediaType) || "ANIME",
         title:
-          e.node?.title?.userPreferred ||
           e.node?.title?.english ||
           e.node?.title?.romaji ||
+          e.node?.title?.userPreferred ||
           "Untitled",
         format: e.node?.format ?? null,
         status: e.node?.status ?? null,
@@ -250,9 +250,9 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
             id: rec.id,
             type: (rec.type as MediaType) || "ANIME",
             title:
-              rec.title?.userPreferred ||
               rec.title?.english ||
               rec.title?.romaji ||
+              rec.title?.userPreferred ||
               "Untitled",
             format: rec.format ?? null,
             averageScore: rec.averageScore ?? null,
@@ -827,9 +827,9 @@ export async function fetchUserProfile(
         u.favourites?.anime?.nodes?.map((a) => ({
           id: a.id,
           title:
-            a.title?.userPreferred ??
             a.title?.english ??
             a.title?.romaji ??
+            a.title?.userPreferred ??
             "Unknown",
           cover: a.coverImage?.large ?? a.coverImage?.medium ?? null,
           format: a.format ?? null,
@@ -839,9 +839,9 @@ export async function fetchUserProfile(
         u.favourites?.manga?.nodes?.map((m) => ({
           id: m.id,
           title:
-            m.title?.userPreferred ??
             m.title?.english ??
             m.title?.romaji ??
+            m.title?.userPreferred ??
             "Unknown",
           cover: m.coverImage?.large ?? m.coverImage?.medium ?? null,
           format: m.format ?? null,
