@@ -17,6 +17,7 @@ import {
   Star,
   Trash2,
   Trophy,
+  Tv,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Cover, countdown } from "@/components/AnimeCard";
@@ -54,6 +55,31 @@ const STATUS_COLORS: Record<string, string> = {
   PAUSED: "#e5a93b",
   REPEATING: "#06b6d4",
 };
+
+function formatRelationType(type: string): string {
+  const map: Record<string, string> = {
+    ADAPTATION: "Adaptation",
+    PREQUEL: "Prequel",
+    SEQUEL: "Sequel",
+    PARENT: "Parent",
+    SIDE_STORY: "Side Story",
+    CHARACTER: "Character",
+    SUMMARY: "Summary",
+    ALTERNATIVE: "Alternative",
+    SPIN_OFF: "Spin-Off",
+    OTHER: "Other",
+    SOURCE: "Source",
+    COMPILATION: "Compilation",
+    CONTAINS: "Contains",
+  };
+  return (
+    map[type] ||
+    type
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+}
 
 export const Route = createFileRoute("/anime/$id")({
   head: () => ({
@@ -101,7 +127,7 @@ function getBackDestination(): { label: string; to: string } {
 function AnimeDetail() {
   const { id } = Route.useParams();
   const animeId = Number(id);
-  const { mode } = useMediaMode();
+  const { mode, setMode } = useMediaMode();
   const copy = MODE_COPY[mode];
   const { library, upsert, patch, remove } = useLibrary();
   const { notes } = useNotes();
@@ -119,6 +145,10 @@ function AnimeDetail() {
   useEffect(() => {
     setBackNav(getBackDestination());
   }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [animeId]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["media", mode, animeId],
@@ -1047,6 +1077,139 @@ function AnimeDetail() {
           ) : null}
         </div>
       )}
+
+      {/* Media Relations & Links (Section with no name header) */}
+      {media.relations && media.relations.length > 0 ? (
+        <div className="panel mt-6 p-4 sm:p-5">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {media.relations.map((rel) => {
+              const isManga = rel.type === "MANGA";
+              return (
+                <Link
+                  key={`${rel.id}-${rel.relationType}`}
+                  to="/anime/$id"
+                  params={{ id: String(rel.id) }}
+                  onClick={() => {
+                    if (isManga) {
+                      setMode("MANGA");
+                    } else if (rel.type === "ANIME") {
+                      setMode("ANIME");
+                    }
+                  }}
+                  className="group flex items-center gap-3 rounded-xl border border-border/60 bg-surface/60 p-2.5 transition-all hover:border-primary/40 hover:bg-surface-elevated/80"
+                >
+                  <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                    {rel.cover ? (
+                      <img
+                        src={rel.cover}
+                        alt={rel.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                        <Tv className="h-4 w-4" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-1 min-w-0 flex-col justify-between self-stretch py-0.5">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/25">
+                          {formatRelationType(rel.relationType)}
+                        </span>
+                        {isManga && (
+                          <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                            Manga
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="line-clamp-2 text-xs sm:text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+                        {rel.title}
+                      </h4>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      {rel.format && <span>{rel.format.replace(/_/g, " ")}</span>}
+                      {rel.status && (
+                        <>
+                          <span>•</span>
+                          <span className="capitalize">
+                            {rel.status.toLowerCase().replace(/_/g, " ")}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Recommendations Section */}
+      {media.recommendations && media.recommendations.length > 0 ? (
+        <div className="panel mt-6 p-4 sm:p-5 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span>Recommendations</span>
+            <span className="text-xs text-muted-foreground font-normal">
+              ({media.recommendations.length})
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {media.recommendations.map((rec) => {
+              const isManga = rec.type === "MANGA";
+              return (
+                <Link
+                  key={rec.id}
+                  to="/anime/$id"
+                  params={{ id: String(rec.id) }}
+                  onClick={() => {
+                    if (isManga) {
+                      setMode("MANGA");
+                    } else if (rec.type === "ANIME") {
+                      setMode("ANIME");
+                    }
+                  }}
+                  className="group flex flex-col overflow-hidden rounded-xl border border-border/60 bg-surface/60 transition-all hover:border-primary/40 hover:bg-surface-elevated/80 hover:-translate-y-0.5"
+                >
+                  <div className="relative aspect-[3/4] w-full overflow-hidden bg-secondary">
+                    {rec.cover ? (
+                      <img
+                        src={rec.cover}
+                        alt={rec.title}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-muted-foreground">
+                        <Tv className="h-6 w-6" />
+                      </div>
+                    )}
+                    {rec.averageScore ? (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 rounded-md bg-background/85 px-1.5 py-0.5 text-[11px] font-bold text-foreground backdrop-blur-md shadow-xs">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        <span>{rec.averageScore}%</span>
+                      </div>
+                    ) : null}
+                    {rec.format ? (
+                      <div className="absolute bottom-2 left-2 rounded bg-background/85 px-1.5 py-0.5 text-[10px] font-semibold text-foreground/90 backdrop-blur-md">
+                        {rec.format.replace(/_/g, " ")}
+                      </div>
+                    ) : null}
+                  </div>
+                  <div className="p-2.5">
+                    <h4 className="line-clamp-2 text-xs font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+                      {rec.title}
+                    </h4>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       {/* Community Panel on Anime Detail Page */}
       {(() => {
