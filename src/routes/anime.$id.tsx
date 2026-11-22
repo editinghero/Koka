@@ -1144,11 +1144,25 @@ function AnimeDetail() {
           description="Toggle spoilers on when you want the full picture, or toggle notes to include your personal notes."
           compact
           notesContext={note?.body}
-          context={`The user is asking about the ${copy.noun} "${media.title}"${
-            media.seasonYear ? ` (${media.season} ${media.seasonYear})` : ""
-          }. Genres: ${media.genres?.join(", ") || "unknown"}. Their progress: ${progress}/${
-            total ?? "?"
-          } ${copy.unit}${entry?.score ? `, their score ${entry.score}/10` : ""}.`}
+          context={`Title: "${media.title}" (${media.format || "TV"}${
+            media.seasonYear ? `, ${media.season} ${media.seasonYear}` : ""
+          }, ${media.airingStatus || media.status || "Unknown"}).
+AniList Public Score: ${media.averageScore ? `${media.averageScore}%` : "Unrated"}. Studio: ${media.studios?.[0] || "Unknown"}.
+Genres: ${media.genres?.join(", ") || "Unknown"}.
+${
+  media.synopsis
+    ? `Synopsis: ${media.synopsis
+        .replace(/<[^>]*>/g, "")
+        .replace(/\s+/g, " ")
+        .slice(0, 260)
+        .trim()}...`
+    : ""
+}
+User Progress: ${progress}/${total ?? "?"} ${copy.unit}.
+User Rating: ${entry?.score ? `${entry.score}/10` : "Unrated"}.
+User Started: ${entry?.startedAt || "Not set"}. User Completed: ${
+            entry?.completedAt || "Not set"
+          }.`}
           suggestions={[
             "Is it worth finishing?",
             mode === "MANGA"

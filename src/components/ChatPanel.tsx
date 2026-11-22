@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   Loader2,
   NotebookPen,
@@ -82,9 +82,27 @@ export function ChatPanel({
   const [spoilerFree, setSpoilerFree] = useState(
     defaultSpoilerFree && settings.spoilerFree
   );
+  // Web option is ON by default; notes option is OFF by default (mutually exclusive)
   const [search, setSearch] = useState(true);
-  const [includeNotes, setIncludeNotes] = useState(Boolean(notesContext));
+  const [includeNotes, setIncludeNotes] = useState(false);
+  const [noteInjected, setNoteInjected] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+
+  const toggleNotes = useCallback(() => {
+    setIncludeNotes((prev) => {
+      const next = !prev;
+      if (next) setSearch(false); // Turn OFF Web when Notes is turned ON
+      return next;
+    });
+  }, []);
+
+  const toggleSearch = useCallback(() => {
+    setSearch((prev) => {
+      const next = !prev;
+      if (next) setIncludeNotes(false); // Turn OFF Notes when Web is turned ON
+      return next;
+    });
+  }, []);
 
   // Load chat history from localStorage after client hydration or when animeId changes
   useEffect(() => {
@@ -94,6 +112,9 @@ export function ChatPanel({
     // Older saved chats only have `text`; ChatPanel falls back to it when `parts` is missing.
     setMessages(initial as unknown as Msg[]);
     setHydrated(true);
+    if (!initial || initial.length === 0) {
+      setNoteInjected(false);
+    }
   }, [animeId]);
 
   // Sync message state changes to local storage only after initial hydration
@@ -109,12 +130,50 @@ export function ChatPanel({
   function handleClear() {
     setMessages([]);
     setError(null);
+    setNoteInjected(false);
     if (animeId) {
       clearAnimeChatHistory(animeId);
     } else {
       clearGlobalChatHistory();
     }
   }
+
+  // Calculate concise insight metrics (top genres, top tags, library counts - NO bio text)
+  const userInsights = useMemo(() => {
+    if (!library.length) return "";
+    const genreCounts = new Map<string, number>();
+    const tagCounts = new Map<string, number>();
+
+    for (const e of library) {
+      e.media.genres?.forEach((g) => {
+        if (g) genreCounts.set(g, (genreCounts.get(g) ?? 0) + 1);
+      });
+      e.tags?.forEach((t) => {
+        if (t && t.toLowerCase() !== "anilist") {
+          tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+        }
+      });
+    }
+
+    const topGenres = [...genreCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([g]) => g)
+      .join(", ");
+
+    const topTags = [...tagCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([t]) => `#${t}`)
+      .join(" ");
+
+    const completed = library.filter((e) => e.status === "COMPLETED").length;
+    const current = library.filter((e) => e.status === "CURRENT").length;
+
+    return `User Taste Insights:
+- Top Genres: ${topGenres || "Diverse"}
+${topTags ? `- Favorite Tags: ${topTags}\n` : ""}- Library: ${completed} completed, ${current} in progress.`;
+  }, [library]);
 
   const getAnimeNote = useCallback(
     (targetTitle: string) => {
@@ -149,25 +208,12 @@ export function ChatPanel({
           "When recommending or discussing titles whose numeric ID is not known, write the title in bold (e.g. **Title Name**)."
         : BASE_SYSTEM;
 
-      // Build insight-only user data (no bio text, concise library overview)
-      const userTasteContext =
-        userProfile || library.length > 0
-          ? `User Insight & Library Overview:
-- Library Size: ${library.length} titles (${library.filter((e) => e.status === "COMPLETED").length} completed, ${library.filter((e) => e.status === "CURRENT").length} currently ${isManga ? "reading" : "watching"})
-- Top Rated / High Scoring: ${
-              library
-                .filter((e) => (e.score ?? 0) >= 8)
-                .map((e) => e.media.title)
-                .slice(0, 5)
-                .join(", ") || "Diverse taste"
-            }`
-          : "";
-
-      // Single per-entry note context (only when on a specific anime/manga and toggled on)
-      const notesBlock =
-        notesContext && includeNotes
-          ? `User's Personal Note for this title:\n${notesContext}`
-          : "";
+      // Single per-entry note context: only injected once per chat session, never duplicated
+      let notesBlock = "";
+      if (includeNotes && notesContext && !noteInjected) {
+        notesBlock = `User's Personal Note for this title:\n${notesContext}`;
+        setNoteInjected(true);
+      }
 
       // Instructions for notes lookup vs Google Search
       const notesInstruction = search
@@ -181,8 +227,8 @@ export function ChatPanel({
 
       const system = [
         baseSystem,
-        userTasteContext,
-        context ? `Title / Route Context:\n${context}` : "",
+        userInsights,
+        context ? `Title Details:\n${context}` : "",
         notesBlock,
         notesInstruction,
         spoilerBlock,
@@ -244,7 +290,7 @@ export function ChatPanel({
           {notesContext ? (
             <Toggle
               active={includeNotes}
-              onClick={() => setIncludeNotes((n) => !n)}
+              onClick={toggleNotes}
               label={includeNotes ? "Note on" : "Note off"}
               icon={NotebookPen}
             />
@@ -257,7 +303,7 @@ export function ChatPanel({
           />
           <Toggle
             active={search}
-            onClick={() => setSearch((s) => !s)}
+            onClick={toggleSearch}
             label="Web"
             icon={Globe}
           />
