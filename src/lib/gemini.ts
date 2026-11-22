@@ -113,8 +113,8 @@ export async function chatGemini(
   const newTurns: ChatTurn[] = [];
 
   const tools: any[] = [];
-  if (opts.search !== false) tools.push({ google_search: {} });
-  if (opts.getAnimeNote) {
+  // Google Gemini API rule: Built-in tools ({google_search}) and Function Calling cannot be combined in the same request.
+  if (opts.getAnimeNote && opts.search === false) {
     tools.push({
       functionDeclarations: [
         {
@@ -134,6 +134,8 @@ export async function chatGemini(
         },
       ],
     });
+  } else if (opts.search !== false) {
+    tools.push({ google_search: {} });
   }
 
   while (true) {

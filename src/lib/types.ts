@@ -227,7 +227,9 @@ export function normalizeTag(tag: string): string {
 
 export function normalizeTags(tags?: string[] | null): string[] {
   if (!tags || !tags.length) return [];
-  const clean = tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean);
+  const clean = tags
+    .map((t) => String(t).trim().toLowerCase())
+    .filter((t) => Boolean(t) && t !== "anilist");
   return Array.from(new Set(clean));
 }
 

@@ -190,7 +190,10 @@ export function normalizeMedia(m: RawMedia): AnimeMedia {
     genres: m.genres ?? [],
     studios: mainStudios,
     allStudios: allStudiosList,
-    tags: m.tags?.map((t) => t.name) ?? [],
+    tags:
+      m.tags
+        ?.map((t) => t.name)
+        .filter((name) => name.toLowerCase().trim() !== "anilist") ?? [],
     averageScore: m.averageScore ?? null,
     meanScore: m.meanScore ?? null,
     popularity: m.popularity ?? null,

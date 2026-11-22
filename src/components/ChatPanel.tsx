@@ -22,7 +22,13 @@ import {
   clearAnimeChatHistory,
   clearGlobalChatHistory,
 } from "@/lib/chat-storage";
-import { useMediaMode, useNotes, useSettings } from "@/lib/store";
+import {
+  useLibrary,
+  useMediaMode,
+  useNotes,
+  useSettings,
+  useUserProfile,
+} from "@/lib/store";
 import { Markdown } from "./Markdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,13 +76,16 @@ export function ChatPanel({
   const [error, setError] = useState<string | null>(null);
   const { settings } = useSettings();
   const { mode } = useMediaMode();
+  const { library } = useLibrary();
+  const { profile: userProfile } = useUserProfile();
+  const { notes } = useNotes();
   const [spoilerFree, setSpoilerFree] = useState(
     defaultSpoilerFree && settings.spoilerFree
   );
   const [search, setSearch] = useState(true);
+  const hasNotesAvailable = Boolean(notesContext || notes.length > 0);
   const [includeNotes, setIncludeNotes] = useState(Boolean(notesContext));
   const scroller = useRef<HTMLDivElement>(null);
-  const { notes } = useNotes();
 
   // Load chat history from localStorage after client hydration or when animeId changes
   useEffect(() => {
@@ -141,21 +150,50 @@ export function ChatPanel({
           "When recommending or discussing titles whose numeric ID is not known, write the title in bold (e.g. **Title Name**)."
         : BASE_SYSTEM;
 
+      // Build rich user profile & taste context
+      const userTasteContext =
+        userProfile || library.length > 0
+          ? `User Profile & Taste Context:
+- User / Handle: ${userProfile?.name || settings.anilistUser || "User"}
+- Library Size: ${library.length} titles (${library.filter((e) => e.status === "COMPLETED").length} completed, ${library.filter((e) => e.status === "CURRENT").length} currently ${isManga ? "reading" : "watching"})
+- Favorite / Top-Rated: ${
+              library
+                .filter((e) => (e.score ?? 0) >= 8)
+                .map((e) => e.media.title)
+                .slice(0, 6)
+                .join(", ") || "Diverse taste"
+            }`
+          : "";
+
+      // Notes context
+      const notesBlock = includeNotes
+        ? `User's Personal Notes:
+${notesContext ? `Notes for current title:\n${notesContext}\n` : ""}${
+            notes.length > 0
+              ? `Saved notes in user library:\n${notes
+                  .slice(0, 15)
+                  .map((n) => `• ${n.title}: ${n.body.slice(0, 140)}`)
+                  .join("\n")}`
+              : ""
+          }`
+        : "User notes: Not included.";
+
+      // Spoiler status
+      const spoilerBlock = spoilerFree
+        ? getSpoilerFreeSystem(mode)
+        : "SPOILERS ARE ALLOWED: The user explicitly turned spoilers ON. Feel free to openly discuss full endings, major plot twists, character deaths, and final outcomes.";
+
       const system = [
         baseSystem,
-        allowNoteFetching
-          ? "You can use the `getAnimeNote` tool to fetch the user's personal notes for any specific anime or manga. Only call this if the user asks about their notes, or if checking their thoughts on a specific title is highly relevant to answering their question."
-          : "",
-        context ? `Context about the user:\n${context}` : "",
-        includeNotes && notesContext
-          ? `User's personal notes for this title:\n${notesContext}`
-          : "",
-        spoilerFree
-          ? getSpoilerFreeSystem(mode)
-          : "Spoilers are allowed — the user asked for full detail.",
+        userTasteContext,
+        context ? `Title / Route Context:\n${context}` : "",
+        notesBlock,
+        spoilerBlock,
       ]
         .filter(Boolean)
         .join("\n\n");
+
+      // Only pass getAnimeNote tool if search is disabled (Google Gemini API prohibits combining built-in search with function calling)
       const res = await chatGemini(
         next.map((m) => ({
           role: m.role,
@@ -164,7 +202,7 @@ export function ChatPanel({
         {
           system,
           search,
-          ...(allowNoteFetching ? { getAnimeNote } : {}),
+          ...(!search && allowNoteFetching ? { getAnimeNote } : {}),
         },
       );
 
@@ -206,7 +244,7 @@ export function ChatPanel({
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          {notesContext ? (
+          {hasNotesAvailable ? (
             <Toggle
               active={includeNotes}
               onClick={() => setIncludeNotes((n) => !n)}

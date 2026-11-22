@@ -169,7 +169,7 @@ export const listGeminiModelsServer = createServerFn({ method: "GET" }).handler(
         }>;
       };
       const excludedPatterns =
-        /(tts|speech|voice|robotics|rt-|live|audio|realtime|embedding|aqa|imagen|computer-use)/i;
+        /(tts|speech|voice|robotics|rt-|live|audio|realtime|embedding|aqa|imagen|veo|image|video|diffusion|media|computer-use|vision-image)/i;
       return (data.models || [])
         .filter((m) =>
           m.supportedGenerationMethods?.includes("generateContent"),
@@ -177,7 +177,10 @@ export const listGeminiModelsServer = createServerFn({ method: "GET" }).handler(
         .map((m) => m.name.replace(/^models\//, ""))
         .filter(
           (name) =>
-            name.startsWith("gemini") && !excludedPatterns.test(name),
+            name.startsWith("gemini") &&
+            !excludedPatterns.test(name) &&
+            !name.includes("image") &&
+            !name.includes("video"),
         );
     } catch {
       return [];

@@ -136,7 +136,10 @@ function ImportPage() {
     });
 
     replaceMany(preservedEntries, types);
-    replaceNotes(incomingNotes, types);
+    replaceNotes(
+      incomingNotes.map((n) => ({ ...n, tags: normalizeTags(n.tags) })),
+      types,
+    );
 
     recordImport({
       source,

@@ -67,6 +67,7 @@ const STORAGE_KEYS = {
   sort: "koka:library:sort",
   status: "koka:library:status",
   genre: "koka:library:genre",
+  rating: "koka:library:rating",
 };
 
 function getStoredValue<T extends string>(key: string, fallback: T): T {
@@ -315,6 +316,9 @@ function LibraryPage() {
   const [genre, setGenreState] = useState<string>(() =>
     getStoredValue(STORAGE_KEYS.genre, "ALL"),
   );
+  const [ratingFilter, setRatingFilterState] = useState<string>(() =>
+    getStoredValue(STORAGE_KEYS.rating, "ALL"),
+  );
   const [customList, setCustomList] = useState("ALL");
   const [query, setQuery] = useState("");
 
@@ -336,6 +340,11 @@ function LibraryPage() {
   const setGenre = (g: string) => {
     setGenreState(g);
     setStoredValue(STORAGE_KEYS.genre, g);
+  };
+
+  const setRatingFilter = (r: string) => {
+    setRatingFilterState(r);
+    setStoredValue(STORAGE_KEYS.rating, r);
   };
 
   const genres = useMemo(() => {
@@ -368,6 +377,16 @@ function LibraryPage() {
     return library
       .filter((e) => status === "ALL" || e.status === status)
       .filter((e) => genre === "ALL" || e.media.genres?.includes(genre))
+      .filter((e) => {
+        if (ratingFilter === "ALL") return true;
+        const s =
+          e.score ??
+          (e.media.averageScore ? e.media.averageScore / 10 : null);
+        if (s === null || s === undefined) return false;
+        if (ratingFilter === "10") return s >= 10;
+        const threshold = Number(ratingFilter);
+        return s > threshold;
+      })
       .filter(
         (e) =>
           customList === "ALL" ||
@@ -435,7 +454,7 @@ function LibraryPage() {
         }
         return b.updatedAt - a.updatedAt;
       });
-  }, [library, status, genre, customList, query, sort]);
+  }, [library, status, genre, ratingFilter, customList, query, sort]);
 
   return (
     <>
@@ -558,6 +577,24 @@ function LibraryPage() {
                 ))}
               </select>
             ) : null}
+            <select
+              value={ratingFilter}
+              onChange={(e) => setRatingFilter(e.target.value)}
+              className="rounded-lg border border-border bg-surface px-2.5 py-1.5"
+            >
+              <option value="ALL">All ratings</option>
+              <option value="0">Above &gt; 0</option>
+              <option value="1">Above &gt; 1</option>
+              <option value="2">Above &gt; 2</option>
+              <option value="3">Above &gt; 3</option>
+              <option value="4">Above &gt; 4</option>
+              <option value="5">Above &gt; 5</option>
+              <option value="6">Above &gt; 6</option>
+              <option value="7">Above &gt; 7</option>
+              <option value="8">Above &gt; 8</option>
+              <option value="9">Above &gt; 9</option>
+              <option value="10">10 (Masterpiece)</option>
+            </select>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
