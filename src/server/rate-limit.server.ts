@@ -23,6 +23,26 @@ function getMemRecord(key: string): RateLimitRecord {
   return initial;
 }
 
+let tableReady = false;
+async function ensureRateLimitTable(db: D1Database) {
+  if (tableReady) return;
+  try {
+    await db
+      .prepare(
+        `CREATE TABLE IF NOT EXISTS rate_limits (
+           key TEXT PRIMARY KEY,
+           attempts INTEGER NOT NULL DEFAULT 0,
+           locked_until INTEGER NOT NULL DEFAULT 0,
+           updated_at INTEGER NOT NULL
+         )`,
+      )
+      .run();
+    tableReady = true;
+  } catch {
+    /* fallback to memory */
+  }
+}
+
 export async function checkLoginRateLimit(ip: string): Promise<void> {
   const key = `login:${ip || "unknown"}`;
   const now = Date.now();
@@ -30,6 +50,7 @@ export async function checkLoginRateLimit(ip: string): Promise<void> {
   const db = getD1();
   if (db) {
     try {
+      await ensureRateLimitTable(db);
       const row = await db
         .prepare("SELECT attempts, locked_until FROM rate_limits WHERE key = ?")
         .bind(key)
@@ -68,6 +89,7 @@ export async function recordFailedLogin(ip: string): Promise<void> {
   const db = getD1();
   if (db) {
     try {
+      await ensureRateLimitTable(db);
       const row = await db
         .prepare("SELECT attempts, locked_until FROM rate_limits WHERE key = ?")
         .bind(key)
