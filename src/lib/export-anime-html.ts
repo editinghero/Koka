@@ -322,8 +322,8 @@ export function exportAnimeAsHtml({
   note,
 }: {
   media: AnimeMedia;
-  entry?: LibraryEntry | null;
-  note?: Note | null;
+  entry?: LibraryEntry | null | undefined;
+  note?: Note | null | undefined;
 }) {
   try {
     // Resolve active theme variables accurately from current document

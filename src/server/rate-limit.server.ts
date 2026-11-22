@@ -24,7 +24,7 @@ function getMemRecord(key: string): RateLimitRecord {
 }
 
 let tableReady = false;
-async function ensureRateLimitTable(db: D1Database) {
+async function ensureRateLimitTable(db: import("./runtime.server").D1Database) {
   if (tableReady) return;
   try {
     await db

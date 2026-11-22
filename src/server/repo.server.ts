@@ -14,7 +14,7 @@ import {
   type Note,
   type UserProfile,
 } from "@/lib/types";
-import type { CommunityItem } from "@/lib/community-utils";
+import type { CommunityCategory, CommunityItem } from "@/lib/community-utils";
 import { getD1, type D1Database } from "./runtime.server";
 
 export type StoredUser = {
@@ -575,12 +575,7 @@ function d1Repo(db: D1Database): Repo {
         name: String(r["name"]),
         handle: String(r["handle"]),
         url: String(r["url"]),
-        category: String(r["category"]) as
-          | "news"
-          | "discussion"
-          | "art"
-          | "memes"
-          | "general",
+        category: String(r["category"]) as CommunityCategory,
         description: r["description"] ? String(r["description"]) : undefined,
         mediaId: r["media_id"] ? Number(r["media_id"]) : undefined,
         mediaType: r["media_type"]

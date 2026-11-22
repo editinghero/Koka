@@ -54,8 +54,8 @@ function Bar({
   label: string;
   value: number;
   max: number;
-  sub?: string;
-  image?: string | null;
+  sub?: string | undefined;
+  image?: string | null | undefined;
 }) {
   return (
     <div className="flex items-center gap-3">

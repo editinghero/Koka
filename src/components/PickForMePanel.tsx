@@ -28,7 +28,7 @@ export function PickForMePanel({
   currentSeasonData,
 }: {
   tasteContext: TasteContext;
-  currentSeasonData?: AnimeMedia[];
+  currentSeasonData?: AnimeMedia[] | undefined;
 }) {
   const now = currentSeason();
   const next = nextSeason(now.season, now.year);
@@ -92,12 +92,12 @@ Candidate Lineup for ${activeSeasonLabel}:
 ${titles
   .slice(0, 30)
   .map((m, i) => {
-    const scoreVal = m.score ?? m.averageScore ?? m.meanScore;
+    const scoreVal = m.averageScore ?? m.meanScore;
     const scoreText = scoreVal ? `Score: ${scoreVal}%` : "Unrated";
     const genresText = m.genres?.slice(0, 4).join(", ") || "Anime";
     const studioText = m.studios?.[0] ? `Studio: ${m.studios[0]}` : "";
-    const cleanSynopsis = m.synopsis
-      ? m.synopsis.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").slice(0, 180).trim() + "…"
+    const cleanSynopsis = m.description
+      ? m.description.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").slice(0, 180).trim() + "…"
       : "No synopsis available.";
     return `${i + 1}. **${m.title}** (${m.format || "TV"}) — [${genresText}] | ${scoreText} ${studioText ? `| ${studioText}` : ""}\n   Premise: ${cleanSynopsis}`;
   })

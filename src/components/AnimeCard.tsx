@@ -53,7 +53,7 @@ export const AnimeCommunityCornerButton = memo(
               id: media.id,
               title: media.title,
               type: mediaTypeOf(media),
-              cover: media.cover,
+              cover: media.cover ?? null,
             },
           });
         }}

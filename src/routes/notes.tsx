@@ -149,7 +149,7 @@ function NotesPage() {
               {customNote?.body?.trim()
                 ? customNote.body
                     .split("\n")[0]
-                    .replace(/^[#*>\-\s]+/, "")
+                    ?.replace(/^[#*>\-\s]+/, "")
                     .slice(0, 80)
                 : "Standalone notes, thoughts, and plans not linked to any specific title..."}
             </p>

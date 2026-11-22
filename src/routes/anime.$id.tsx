@@ -1245,7 +1245,7 @@ function AnimeDetail() {
                       id: media.id,
                       title: media.title,
                       type: mode,
-                      cover: media.cover,
+                      cover: media.cover ?? null,
                     },
                   })
                 }
@@ -1318,7 +1318,7 @@ function AnimeDetail() {
                         id: media.id,
                         title: media.title,
                         type: mode,
-                        cover: media.cover,
+                        cover: media.cover ?? null,
                       },
                     })
                   }
@@ -1346,8 +1346,8 @@ function AnimeDetail() {
 AniList Public Score: ${media.averageScore ? `${media.averageScore}%` : "Unrated"}. Studio: ${media.studios?.[0] || "Unknown"}.
 Genres: ${media.genres?.join(", ") || "Unknown"}.
 ${
-  media.synopsis
-    ? `Synopsis: ${media.synopsis
+  media.description
+    ? `Synopsis: ${media.description
         .replace(/<[^>]*>/g, "")
         .replace(/\s+/g, " ")
         .slice(0, 260)

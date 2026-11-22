@@ -946,23 +946,25 @@ export async function fetchUserProfile(
 
 export function currentSeason(date = new Date()) {
   const m = date.getMonth();
-  const season =
+  const season: Season =
     m < 3 ? "WINTER" : m < 6 ? "SPRING" : m < 9 ? "SUMMER" : "FALL";
   return { season, year: date.getFullYear() };
 }
 
-export function nextSeason(season: string, year: number) {
-  const order = ["WINTER", "SPRING", "SUMMER", "FALL"];
-  const i = order.indexOf(season);
+export type Season = "WINTER" | "SPRING" | "SUMMER" | "FALL";
+
+export function nextSeason(season: string, year: number): { season: Season; year: number } {
+  const order: Season[] = ["WINTER", "SPRING", "SUMMER", "FALL"];
+  const i = order.indexOf(season as Season);
   return i === 3
     ? { season: "WINTER", year: year + 1 }
-    : { season: order[i + 1], year };
+    : { season: order[i + 1] ?? "WINTER", year };
 }
 
-export function prevSeason(season: string, year: number) {
-  const order = ["WINTER", "SPRING", "SUMMER", "FALL"];
-  const i = order.indexOf(season);
+export function prevSeason(season: string, year: number): { season: Season; year: number } {
+  const order: Season[] = ["WINTER", "SPRING", "SUMMER", "FALL"];
+  const i = order.indexOf(season as Season);
   return i === 0
     ? { season: "FALL", year: year - 1 }
-    : { season: order[i - 1], year };
+    : { season: order[i - 1] ?? "FALL", year };
 }

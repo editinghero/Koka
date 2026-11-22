@@ -187,7 +187,7 @@ function SeasonsPage() {
                   variant="outline"
                   onClick={() => {
                     const p = prevSeason(season, year);
-                    setSeason(p.season as string);
+                    setSeason(p.season);
                     setYear(p.year);
                   }}
                 >
@@ -198,7 +198,7 @@ function SeasonsPage() {
                   variant="outline"
                   onClick={() => {
                     const n = nextSeason(season, year);
-                    setSeason(n.season as string);
+                    setSeason(n.season);
                     setYear(n.year);
                   }}
                 >
