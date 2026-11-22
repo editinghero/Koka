@@ -83,7 +83,6 @@ export function ChatPanel({
     defaultSpoilerFree && settings.spoilerFree
   );
   const [search, setSearch] = useState(true);
-  const hasNotesAvailable = Boolean(notesContext || notes.length > 0);
   const [includeNotes, setIncludeNotes] = useState(Boolean(notesContext));
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -150,33 +149,30 @@ export function ChatPanel({
           "When recommending or discussing titles whose numeric ID is not known, write the title in bold (e.g. **Title Name**)."
         : BASE_SYSTEM;
 
-      // Build rich user profile & taste context
+      // Build insight-only user data (no bio text, concise library overview)
       const userTasteContext =
         userProfile || library.length > 0
-          ? `User Profile & Taste Context:
-- User / Handle: ${userProfile?.name || settings.anilistUser || "User"}
+          ? `User Insight & Library Overview:
 - Library Size: ${library.length} titles (${library.filter((e) => e.status === "COMPLETED").length} completed, ${library.filter((e) => e.status === "CURRENT").length} currently ${isManga ? "reading" : "watching"})
-- Favorite / Top-Rated: ${
+- Top Rated / High Scoring: ${
               library
                 .filter((e) => (e.score ?? 0) >= 8)
                 .map((e) => e.media.title)
-                .slice(0, 6)
+                .slice(0, 5)
                 .join(", ") || "Diverse taste"
             }`
           : "";
 
-      // Notes context
-      const notesBlock = includeNotes
-        ? `User's Personal Notes:
-${notesContext ? `Notes for current title:\n${notesContext}\n` : ""}${
-            notes.length > 0
-              ? `Saved notes in user library:\n${notes
-                  .slice(0, 15)
-                  .map((n) => `• ${n.title}: ${n.body.slice(0, 140)}`)
-                  .join("\n")}`
-              : ""
-          }`
-        : "User notes: Not included.";
+      // Single per-entry note context (only when on a specific anime/manga and toggled on)
+      const notesBlock =
+        notesContext && includeNotes
+          ? `User's Personal Note for this title:\n${notesContext}`
+          : "";
+
+      // Instructions for notes lookup vs Google Search
+      const notesInstruction = search
+        ? "NOTE ON USER NOTES: Live Web search is currently active. Google Gemini cannot combine web search with tool calls in the same request. If the user asks you to check, read, or inspect their personal notes (e.g. 'check my note on Naruto' or 'what are my thoughts on X?'), politely tell them to disable the 'Web' button in this chat toolbar so you can run the note lookup tool."
+        : "NOTE ON USER NOTES: Web search is OFF. The `getAnimeNote` function tool is active. Call `getAnimeNote` whenever the user asks about their personal notes, thoughts, or ratings on any anime or manga.";
 
       // Spoiler status
       const spoilerBlock = spoilerFree
@@ -188,6 +184,7 @@ ${notesContext ? `Notes for current title:\n${notesContext}\n` : ""}${
         userTasteContext,
         context ? `Title / Route Context:\n${context}` : "",
         notesBlock,
+        notesInstruction,
         spoilerBlock,
       ]
         .filter(Boolean)
@@ -202,7 +199,7 @@ ${notesContext ? `Notes for current title:\n${notesContext}\n` : ""}${
         {
           system,
           search,
-          ...(!search && allowNoteFetching ? { getAnimeNote } : {}),
+          ...(!search ? { getAnimeNote } : {}),
         },
       );
 
@@ -244,11 +241,11 @@ ${notesContext ? `Notes for current title:\n${notesContext}\n` : ""}${
           ) : null}
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
-          {hasNotesAvailable ? (
+          {notesContext ? (
             <Toggle
               active={includeNotes}
               onClick={() => setIncludeNotes((n) => !n)}
-              label={includeNotes ? "Notes on" : "Notes off"}
+              label={includeNotes ? "Note on" : "Note off"}
               icon={NotebookPen}
             />
           ) : null}
