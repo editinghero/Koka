@@ -54,16 +54,18 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+          {isOffline ? "You are offline" : "This page didn't load"}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back
-          home.
+          {isOffline
+            ? "Showing cached content. You can continue accessing your library and saved notes."
+            : "Something went wrong on our end. You can try refreshing or head back home."}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -181,7 +183,10 @@ function NetworkStatusNotifier() {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
 
+    let refreshTimeout: ReturnType<typeof setTimeout> | undefined;
+
     const handleOffline = () => {
+      if (refreshTimeout) clearTimeout(refreshTimeout);
       toast.error("You are currently offline. Showing cached content.", {
         id: "network-status",
         duration: Infinity,
@@ -189,10 +194,14 @@ function NetworkStatusNotifier() {
     };
 
     const handleOnline = () => {
-      toast.success("Back online!", {
+      toast.success("Back online! Refreshing in 3 seconds...", {
         id: "network-status",
-        duration: 3500,
+        duration: 3000,
       });
+      if (refreshTimeout) clearTimeout(refreshTimeout);
+      refreshTimeout = setTimeout(() => {
+        window.location.reload();
+      }, 3000);
     };
 
     window.addEventListener("offline", handleOffline);
@@ -203,6 +212,7 @@ function NetworkStatusNotifier() {
     }
 
     return () => {
+      if (refreshTimeout) clearTimeout(refreshTimeout);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };

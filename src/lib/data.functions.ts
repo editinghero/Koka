@@ -168,12 +168,17 @@ export const listGeminiModelsServer = createServerFn({ method: "GET" }).handler(
           supportedGenerationMethods?: string[];
         }>;
       };
+      const excludedPatterns =
+        /(tts|speech|voice|robotics|rt-|live|audio|realtime|embedding|aqa|imagen|computer-use)/i;
       return (data.models || [])
         .filter((m) =>
           m.supportedGenerationMethods?.includes("generateContent"),
         )
         .map((m) => m.name.replace(/^models\//, ""))
-        .filter((name) => name.startsWith("gemini"));
+        .filter(
+          (name) =>
+            name.startsWith("gemini") && !excludedPatterns.test(name),
+        );
     } catch {
       return [];
     }

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Plus, Check, SlidersHorizontal } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { AnimeCard, GridSkeleton } from "@/components/AnimeCard";
 import { PageHeader } from "@/components/AppShell";
 import { AiPanel } from "@/components/AiPanel";
@@ -308,20 +308,17 @@ function SeasonsPage() {
               <option value={85}>85%+ (Masterpiece)</option>
             </select>
 
-            <div className="flex items-center gap-1.5">
-              <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as DiscoverSort)}
-                className="rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-foreground"
-              >
-                {DISCOVER_SORTS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    Sort: {s.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as DiscoverSort)}
+              className="rounded-lg border border-border bg-surface px-2 py-1.5 text-xs font-medium text-foreground"
+            >
+              {DISCOVER_SORTS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  Sort: {s.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

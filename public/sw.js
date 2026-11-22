@@ -1,6 +1,6 @@
 /* Koka Service Worker — PWA Caching & Push Notifications */
 
-const CACHE_VERSION = "koka-v2";
+const CACHE_VERSION = "koka-v3";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
 const AIRING_IMAGES_CACHE = `${CACHE_VERSION}-airing-images`;
@@ -10,29 +10,39 @@ const PRECACHE_ASSETS = [
   "/",
   "/manifest.webmanifest",
   "/favicon.ico",
+  "/favicon96.png",
   "/icon-192.png",
   "/icon-512.png",
 ];
 
-// Clean up old caches on activate
+// Clean up old caches on activate & precache individually
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(SHELL_CACHE).then((cache) => cache.addAll(PRECACHE_ASSETS)).catch(() => {}),
+    caches.open(SHELL_CACHE).then(async (cache) => {
+      for (const asset of PRECACHE_ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch {}
+      }
+    }),
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((key) => {
-          if (!key.startsWith(CACHE_VERSION)) {
-            return caches.delete(key);
-          }
-        }),
-      ),
-    ).then(() => self.clients.claim()),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (!key.startsWith(CACHE_VERSION)) {
+              return caches.delete(key);
+            }
+          }),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -52,10 +62,40 @@ self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Skip non-GET requests (e.g. server functions, mutations)
+  // 1. AniList GraphQL API caching (POST requests for titles, synopsis, schedules)
+  if (url.hostname === "graphql.anilist.co" && request.method === "POST") {
+    event.respondWith(
+      (async () => {
+        let bodyText = "";
+        try {
+          bodyText = await request.clone().text();
+        } catch {}
+
+        const cacheKey = new Request(
+          `https://koka-graphql.internal/cache?q=${encodeURIComponent(bodyText)}`,
+        );
+
+        try {
+          const networkResponse = await fetch(request);
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(DATA_CACHE).then((cache) => cache.put(cacheKey, clone));
+          }
+          return networkResponse;
+        } catch (err) {
+          const cached = await caches.match(cacheKey);
+          if (cached) return cached;
+          throw err;
+        }
+      })(),
+    );
+    return;
+  }
+
+  // Skip any other non-GET requests (e.g. server mutations)
   if (request.method !== "GET") return;
 
-  // 1. Navigation requests (HTML Pages) -> Network-first with Shell fallback
+  // 2. Navigation requests (HTML Pages) -> Network-first with Shell fallback
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -66,17 +106,26 @@ self.addEventListener("fetch", (event) => {
           }
           return response;
         })
-        .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match("/")),
-        ),
+        .catch(async () => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          const root = await caches.match("/");
+          if (root) return root;
+          return new Response("Offline", {
+            status: 503,
+            statusText: "Offline",
+            headers: { "Content-Type": "text/html" },
+          });
+        }),
     );
     return;
   }
 
-  // 2. Static Assets (Scripts, Styles, Fonts, Manifest, Icons) -> Stale-while-revalidate
+  // 3. Static Assets (Scripts, Styles, Fonts, Manifest, Icons, Chunks) -> Cache-first with network revalidate
   if (
     url.origin === self.location.origin &&
     (url.pathname.startsWith("/assets/") ||
+      url.pathname.startsWith("/_build/") ||
       url.pathname.endsWith(".js") ||
       url.pathname.endsWith(".css") ||
       url.pathname.endsWith(".woff2") ||
@@ -86,23 +135,38 @@ self.addEventListener("fetch", (event) => {
   ) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(SHELL_CACHE).then((cache) => cache.put(request, clone));
+        if (cached) {
+          // Revalidate in background if online
+          if (navigator.onLine) {
+            fetch(request)
+              .then((res) => {
+                if (res && res.status === 200) {
+                  const clone = res.clone();
+                  caches.open(SHELL_CACHE).then((c) => c.put(request, clone));
+                }
+              })
+              .catch(() => {});
           }
-          return networkResponse;
-        }).catch(() => null);
+          return cached;
+        }
 
-        return cached || fetchPromise;
+        return fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              const clone = networkResponse.clone();
+              caches.open(SHELL_CACHE).then((cache) => cache.put(request, clone));
+            }
+            return networkResponse;
+          })
+          .catch(() => {
+            // Never return null or undefined to respondWith
+            return new Response("", {
+              status: 408,
+              statusText: "Offline Asset Unavailable",
+            });
+          });
       }),
     );
-    return;
-  }
-
-  // 3. AniList GraphQL API caching (Titles, Synopsis, Metadata for offline support)
-  if (url.hostname === "graphql.anilist.co") {
-    // Note: AniList queries are usually POST, but if GET or cached via client we handle
     return;
   }
 
@@ -141,7 +205,7 @@ self.addEventListener("fetch", (event) => {
             }
             return networkResponse;
           })
-          .catch(() => cached);
+          .catch(() => cached || new Response("", { status: 404 }));
       }),
     );
     return;
