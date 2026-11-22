@@ -17,11 +17,13 @@ import { applyFontForce } from "./theme-prefs";
 import {
   getBootstrap,
   logImport as logImportFn,
+  removeCommunity as removeCommunityFn,
   removeEntry,
   removeEntries,
   removeNote,
   replaceLibrary as replaceLibraryFn,
   replaceNotes as replaceNotesFn,
+  saveCommunities as saveCommunitiesFn,
   saveEntries,
   saveNotes as saveNotesFn,
   saveSettings as saveSettingsFn,
@@ -221,6 +223,19 @@ export function boot(force = false): Promise<void> {
         userProfile: data.userProfile ?? state.userProfile ?? null,
       });
       applyThemeFromSettings(updatedSettings);
+
+      if (data.communities && data.communities.length > 0) {
+        const map = new Map<string, CommunityItem>();
+        for (const c of data.communities) map.set(c.id, c);
+        for (const c of communityState.communities) {
+          if (!map.has(c.id)) map.set(c.id, c);
+        }
+        setCommunityState({ communities: [...map.values()] });
+      } else if (communityState.communities.length > 0 && data.user) {
+        void saveCommunitiesFn({
+          data: { communities: communityState.communities },
+        }).catch(fail);
+      }
     })
     .catch(() => setState({ ready: true }, false));
   return bootPromise;
@@ -773,28 +788,50 @@ export function useCommunities() {
       map.set(item.id, item);
     }
     setCommunityState({ communities: [...map.values()] });
+    if (signedIn()) {
+      void saveCommunitiesFn({ data: { communities: items } }).catch(fail);
+    }
   }, []);
 
   const deleteCommunity = useCallback((id: string) => {
     setCommunityState({
       communities: communityState.communities.filter((c) => c.id !== id),
     });
+    if (signedIn()) {
+      void removeCommunityFn({ data: { id } }).catch(fail);
+    }
   }, []);
 
   const togglePinCommunity = useCallback((id: string) => {
+    let updated: CommunityItem | undefined;
     setCommunityState({
-      communities: communityState.communities.map((c) =>
-        c.id === id ? { ...c, pinned: !c.pinned } : c,
-      ),
+      communities: communityState.communities.map((c) => {
+        if (c.id === id) {
+          updated = { ...c, pinned: !c.pinned };
+          return updated;
+        }
+        return c;
+      }),
     });
+    if (signedIn() && updated) {
+      void saveCommunitiesFn({ data: { communities: [updated] } }).catch(fail);
+    }
   }, []);
 
   const markCommunityOpened = useCallback((id: string) => {
+    let updated: CommunityItem | undefined;
     setCommunityState({
-      communities: communityState.communities.map((c) =>
-        c.id === id ? { ...c, lastOpenedAt: Date.now() } : c,
-      ),
+      communities: communityState.communities.map((c) => {
+        if (c.id === id) {
+          updated = { ...c, lastOpenedAt: Date.now() };
+          return updated;
+        }
+        return c;
+      }),
     });
+    if (signedIn() && updated) {
+      void saveCommunitiesFn({ data: { communities: [updated] } }).catch(fail);
+    }
   }, []);
 
   return {

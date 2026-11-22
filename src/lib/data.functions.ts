@@ -16,6 +16,7 @@ export type Bootstrap = {
   library: LibraryEntry[];
   notes: Note[];
   userProfile?: UserProfile | null;
+  communities?: CommunityItem[];
 };
 
 /** Everything the client needs after sign-in, in one round trip. */
@@ -31,16 +32,18 @@ export const getBootstrap = createServerFn({ method: "GET" }).handler(
         library: [],
         notes: [],
         userProfile: null,
+        communities: [],
       };
     }
     const { getRepo } = await import("@/server/repo.server");
     const { decryptValue } = await import("@/server/crypto.server");
     const repo = getRepo();
-    const [row, library, notes, userProfile] = await Promise.all([
+    const [row, library, notes, userProfile, communities] = await Promise.all([
       repo.getSettings(user.id),
       repo.listLibrary(user.id),
       repo.listNotes(user.id),
       repo.getUserProfile(user.id),
+      repo.listCommunities(user.id),
     ]);
     return {
       user,
@@ -58,6 +61,7 @@ export const getBootstrap = createServerFn({ method: "GET" }).handler(
       library,
       notes,
       userProfile,
+      communities,
     };
   },
 );
