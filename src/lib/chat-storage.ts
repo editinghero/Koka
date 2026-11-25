@@ -79,3 +79,52 @@ export function clearAllChatHistory() {
     /* ignore */
   }
 }
+
+/** All chat histories, keyed "global" or "anime:<id>", for the full backup. */
+export function exportAllChats(): Record<string, ChatMessage[]> {
+  const out: Record<string, ChatMessage[]> = {};
+  if (typeof window === "undefined") return out;
+  try {
+    const global = getGlobalChatHistory();
+    if (global.length) out["global"] = global;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(ANIME_CHAT_PREFIX)) continue;
+      const raw = localStorage.getItem(key);
+      const parsed = raw ? (JSON.parse(raw) as unknown) : null;
+      if (Array.isArray(parsed) && parsed.length) {
+        out[`anime:${key.slice(ANIME_CHAT_PREFIX.length)}`] =
+          parsed as ChatMessage[];
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return out;
+}
+
+/** Restore chats from a backup, never overwriting a chat that already exists here. */
+export function restoreChatsIfMissing(
+  chats: Record<string, ChatMessage[]>,
+): number {
+  if (typeof window === "undefined") return 0;
+  let restored = 0;
+  for (const [name, messages] of Object.entries(chats)) {
+    if (!Array.isArray(messages) || !messages.length) continue;
+    const key =
+      name === "global"
+        ? GLOBAL_CHAT_KEY
+        : /^anime:\d+$/.test(name)
+          ? `${ANIME_CHAT_PREFIX}${name.slice("anime:".length)}`
+          : null;
+    if (!key) continue;
+    try {
+      if (localStorage.getItem(key)) continue;
+      localStorage.setItem(key, JSON.stringify(messages));
+      restored++;
+    } catch {
+      /* quota */
+    }
+  }
+  return restored;
+}

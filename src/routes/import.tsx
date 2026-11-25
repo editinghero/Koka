@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { restoreBackupExtras } from "@/lib/backup-extras";
 import { useEffect, useState } from "react";
 import {
   Loader2,
@@ -14,6 +15,7 @@ import { parseImport, type ImportItem } from "@/lib/importers";
 import {
   exportAll,
   recordImport,
+  useCommunities,
   useLibrary,
   useMediaMode,
   useNotes,
@@ -70,6 +72,7 @@ function ImportPage() {
   const { notes, all: allNotes, setNotes, mergeNotes, replaceNotes } = useNotes();
   const { settings, update } = useSettings();
   const { setProfile } = useUserProfile();
+  const { upsertCommunities } = useCommunities();
   const [busy, setBusy] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("merge");
   const [log, setLog] = useState<string[]>([]);
@@ -276,6 +279,17 @@ function ImportPage() {
         if (parsed.backup.userProfile) {
           setProfile(parsed.backup.userProfile);
         }
+        // Communities, custom themes, preferences and AI chats (added, never deleted).
+        const restored = restoreBackupExtras(
+          parsed.backup.extras,
+          upsertCommunities,
+        );
+        const extraParts = [
+          restored.communities && `${restored.communities} communities`,
+          restored.themes && `${restored.themes} custom themes`,
+          restored.chats && `${restored.chats} chats`,
+        ].filter(Boolean);
+        if (extraParts.length) say(`Also restored ${extraParts.join(", ")}`);
         const types: MediaType[] = ["ANIME", "MANGA"];
         if (mode === "replace") {
           applyReplace(

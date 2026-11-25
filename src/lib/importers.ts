@@ -5,6 +5,11 @@ import type {
   UserProfile,
   WatchStatus,
 } from "./types";
+import {
+  normalizeBackupNotes,
+  parseBackupExtras,
+  type BackupExtras,
+} from "./backup-extras";
 
 export type ImportItem = {
   anilistId?: number | undefined;
@@ -28,6 +33,8 @@ export type ParsedImport = {
     library: LibraryEntry[];
     notes: Note[];
     userProfile?: UserProfile | null;
+    /** communities, custom themes, preferences and chats (backup v2+) */
+    extras?: BackupExtras;
   };
 };
 
@@ -331,8 +338,9 @@ export function parseImport(raw: string): ParsedImport {
       items: [],
       backup: {
         library: (json["library"] as LibraryEntry[]) ?? [],
-        notes: (json["notes"] as Note[]) ?? [],
+        notes: normalizeBackupNotes(json["notes"]),
         userProfile: (json["userProfile"] as UserProfile) ?? null,
+        extras: parseBackupExtras(json),
       },
     };
   }

@@ -610,3 +610,40 @@ export function blankTheme(mode: ThemeMode = "dark"): CustomTheme {
         radius: 0.75,
       };
 }
+
+/** Current custom themes and which one is active per mode (for the full backup). */
+export function getCustomThemeData(): { themes: CustomTheme[]; active: Active } {
+  ensureLoaded();
+  return { themes: snapshot.themes, active: snapshot.active };
+}
+
+/**
+ * Add themes from a backup. Existing themes are never replaced; an "active"
+ * pointer is only restored where this device has none. Returns how many were added.
+ */
+export function restoreCustomThemes(
+  incoming: unknown[],
+  active?: Partial<Active>,
+): number {
+  ensureLoaded();
+  const have = new Set(snapshot.themes.map((t) => t.id));
+  const added: CustomTheme[] = [];
+  for (const raw of incoming) {
+    const t = sanitizeTheme(raw);
+    if (!t || have.has(t.id)) continue;
+    have.add(t.id);
+    added.push(t);
+  }
+  const themes = [...snapshot.themes, ...added].slice(0, MAX_THEMES);
+  const next: Active = { ...snapshot.active };
+  (["dark", "light"] as const).forEach((m) => {
+    const id = active?.[m];
+    if (!next[m] && typeof id === "string" && themes.some((t) => t.id === id && t.mode === m)) {
+      next[m] = id;
+    }
+  });
+  if (added.length || next.dark !== snapshot.active.dark || next.light !== snapshot.active.light) {
+    commit({ themes, active: next }, true);
+  }
+  return added.length;
+}

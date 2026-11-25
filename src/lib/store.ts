@@ -1,5 +1,11 @@
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
+  BACKUP_VERSION,
+  notesForBackup,
+  readBackupExtras,
+  validTime,
+} from "./backup-extras";
+import {
   DEFAULT_SETTINGS,
   normalizeTags,
   type FontOption,
@@ -620,13 +626,18 @@ export function useNotes(forceMode?: MediaType) {
             ...existing,
             body: note.body.trim(),
             tags: newTags,
-            updatedAt: Date.now(),
+            // Keep the date the imported note was last edited (not the import time).
+            updatedAt: validTime(note.updatedAt) ?? Date.now(),
           };
           map.set(k, merged);
           touched.push(merged);
         } else {
-          map.set(k, note);
-          touched.push(note);
+          const added: Note = {
+            ...note,
+            updatedAt: validTime(note.updatedAt) ?? Date.now(),
+          };
+          map.set(k, added);
+          touched.push(added);
         }
       }
       setState({ notes: [...map.values()] });
@@ -718,12 +729,16 @@ export function useUserProfile() {
 export function exportAll() {
   return {
     kind: "koka-backup",
-    version: 1,
+    version: BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
+    // The Gemini key never leaves the device.
     settings: { ...state.settings, geminiKey: "" },
     library: state.library,
-    notes: state.notes,
+    // Each note carries updatedAt (last edited) + a readable lastEditedAt.
+    notes: notesForBackup(state.notes),
     userProfile: state.userProfile,
+    // Communities, custom themes, preferences and AI chats.
+    ...readBackupExtras(communityState.communities),
   };
 }
 
