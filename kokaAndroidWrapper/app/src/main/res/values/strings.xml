@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Koka</string>
+    <string name="offline_title">No connection</string>
+    <string name="offline_subtitle">Unable to reach Koka right now.</string>
+    <string name="error_title">Page unavailable</string>
+    <string name="error_subtitle">Check your connection and try again.</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_open_browser">Open in browser</string>
+    <string name="download_saved">Saved to Downloads</string>
+    <string name="download_failed">Download failed</string>
+    <string name="cd_koka_logo">Koka</string>
+    <string name="cd_offline_icon">Offline</string>
+    <string name="cd_retry_icon">Retry</string>
+    <string name="notif_channel_airing_name">Airing Episodes</string>
+    <string name="notif_channel_airing_desc">Episode release alerts for tracked anime</string>
+</resources>

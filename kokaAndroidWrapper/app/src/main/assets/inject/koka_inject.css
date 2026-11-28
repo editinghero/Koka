@@ -1,0 +1,40 @@
+html, body {
+  -webkit-tap-highlight-color: transparent !important;
+  overscroll-behavior-y: contain;
+  touch-action: manipulation;
+}
+
+header,
+nav,
+button,
+[role="tab"],
+[role="tablist"],
+a {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+[contenteditable="true"],
+.prose,
+article,
+p,
+pre,
+code {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+  display: none;
+}
+
+[data-pwa-install],
+[data-web-only],
+.pwa-install-banner {
+  display: none !important;
+}
